@@ -8,6 +8,7 @@ import adminRoutes from "./routes/adminRoutes.js";
 import productRoutes from "./routes/productRoutes.js";
 import orderRoutes from "./routes/orderRoutes.js";
 import uploadRoute from "./routes/upload.js";
+import healthRoutes from "./routes/healthRoutes.js";
 import { notFound, errorHandler } from "./middleware/errorMiddleware.js";
 
 validateEnv();
@@ -37,10 +38,7 @@ app.use(express.json({ limit: "5mb" }));
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan("dev"));
 
-app.get("/api/health", (_req, res) => {
-  res.json({ status: "ok", timestamp: new Date().toISOString() });
-});
-
+app.use("/api/health", healthRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/orders", orderRoutes);
