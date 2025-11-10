@@ -1,11 +1,11 @@
 import jwt from "jsonwebtoken";
 import { Admin } from "../models/Admin.js";
 
-export const authMiddleware = async (req, res, next) => {
+export const protect = async (req, res, next) => {
   const authHeader = req.headers.authorization;
 
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    return res.status(401).json({ message: "غير مصرح به" });
+    return res.status(401).json({ message: "غير مصرح" });
   }
 
   const token = authHeader.split(" ")[1];
@@ -15,13 +15,14 @@ export const authMiddleware = async (req, res, next) => {
     const admin = await Admin.findById(decoded.id).select("-passwordHash");
 
     if (!admin) {
-      return res.status(401).json({ message: "المستخدم غير موجود" });
+      return res.status(401).json({ message: "غير مصرح" });
     }
 
     req.admin = admin;
     next();
   } catch (error) {
-    return res.status(401).json({ message: "رمز غير صالح" });
+    return res.status(401).json({ message: "غير مصرح" });
   }
 };
 
+export const authMiddleware = protect;

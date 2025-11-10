@@ -1,7 +1,10 @@
+import { useTranslation } from "react-i18next";
 import { useCart } from "../context/CartContext.jsx";
 
 const CartModal = () => {
   const { items, isOpen, closeCart, removeItem, updateQty, totalPrice } = useCart();
+  const { t, i18n } = useTranslation();
+  const isRTL = i18n.language === "ar";
 
   if (!isOpen) return null;
 
@@ -12,19 +15,23 @@ const CartModal = () => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-      <div className="max-h-[80vh] w-[90vw] max-w-2xl overflow-hidden rounded-2xl border border-purple-400/20 bg-purple-900/60 p-6 text-right text-white shadow-lg shadow-purple-900/40">
+      <div
+        className={`max-h-[80vh] w-[90vw] max-w-2xl overflow-hidden rounded-2xl border border-purple-400/20 bg-purple-900/60 p-6 text-white shadow-lg shadow-purple-900/40 ${
+          isRTL ? "text-right" : "text-left"
+        }`}
+      >
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-2xl font-semibold tracking-wide">السلة</h2>
+          <h2 className="text-2xl font-semibold tracking-wide">{t("cart.title")}</h2>
           <button
             onClick={closeCart}
             className="rounded-full bg-white/10 px-4 py-2 text-sm transition hover:scale-[1.02] hover:bg-white/20"
           >
-            إغلاق السلة
+            {t("cart.close")}
           </button>
         </div>
-        <div className="max-h-[55vh] space-y-4 overflow-y-auto pr-2">
+        <div className={`max-h-[55vh] space-y-4 overflow-y-auto ${isRTL ? "pr-2" : "pl-2"}`}>
           {items.length === 0 ? (
-            <p className="text-sm text-white/70">سلتك فارغة حالياً.</p>
+            <p className="text-sm text-white/70">{t("cart.empty")}</p>
           ) : (
             items.map((item) => (
               <div
@@ -47,20 +54,29 @@ const CartModal = () => {
                       onClick={() => removeItem(item.lineId)}
                       className="text-xs text-secondary-200 transition hover:scale-[1.05]"
                     >
-                      إزالة
+                      {t("cart.remove")}
                     </button>
                   </div>
                   <div className="flex flex-wrap items-center gap-2 text-xs text-white/70">
-                    <span>المقاس: <span className="text-white">{item.size}</span></span>
-                    <span>اللون: <span className="text-white">{item.color}</span></span>
-                    <span>السعر: <span className="text-white">{item.price} د.أ</span></span>
+                    <span>
+                      {t("cart.size")}: <span className="text-white">{item.size}</span>
+                    </span>
+                    <span>
+                      {t("cart.color")}: <span className="text-white">{item.color}</span>
+                    </span>
+                    <span>
+                      {t("cart.price")}:{" "}
+                      <span className="text-white">
+                        {item.price} {t("product.priceSuffix")}
+                      </span>
+                    </span>
                   </div>
                   <div className="flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-2">
+                    <div className={`flex items-center gap-2 ${isRTL ? "flex-row-reverse" : ""}`}>
                       <button
                         onClick={() => updateQty(item.lineId, item.qty - 1)}
                         className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-lg transition hover:scale-[1.05]"
-                        aria-label="إنقاص الكمية"
+                        aria-label={t("cart.decrease")}
                       >
                         -
                       </button>
@@ -74,13 +90,13 @@ const CartModal = () => {
                       <button
                         onClick={() => updateQty(item.lineId, item.qty + 1)}
                         className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-lg transition hover:scale-[1.05]"
-                        aria-label="زيادة الكمية"
+                        aria-label={t("cart.increase")}
                       >
                         +
                       </button>
                     </div>
                     <span className="text-base font-semibold text-secondary-200">
-                      {(item.price * item.qty).toFixed(2)} د.أ
+                      {(item.price * item.qty).toFixed(2)} {t("product.priceSuffix")}
                     </span>
                   </div>
                 </div>
@@ -90,22 +106,24 @@ const CartModal = () => {
         </div>
         <div className="mt-6 space-y-4 border-t border-white/10 pt-4">
           <div className="flex items-center justify-between text-lg font-semibold">
-            <span>المجموع الكلي</span>
-            <span>{totalPrice.toFixed(2)} د.أ</span>
+            <span>{t("cart.total")}</span>
+            <span>
+              {totalPrice.toFixed(2)} {t("product.priceSuffix")}
+            </span>
           </div>
-          <div className="flex flex-wrap justify-end gap-3">
+          <div className={`flex flex-wrap gap-3 ${isRTL ? "justify-start" : "justify-end"}`}>
             <button
               onClick={handleCheckout}
               disabled={items.length === 0}
               className="rounded-full bg-gradient-to-r from-primary-500 via-secondary-500 to-primary-400 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-purple-900/30 transition-transform hover:scale-[1.02] disabled:cursor-not-allowed disabled:opacity-60"
             >
-              إتمام الطلب
+              {t("cart.checkout")}
             </button>
             <button
               onClick={closeCart}
               className="rounded-full border border-white/30 px-6 py-3 text-sm font-semibold text-white/90 transition hover:scale-[1.02] hover:bg-white/10"
             >
-              إغلاق السلة
+              {t("cart.closeShort")}
             </button>
           </div>
         </div>

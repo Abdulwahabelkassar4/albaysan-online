@@ -1,16 +1,31 @@
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import axiosClient from "../api/axiosClient.js";
 import ProductCard from "../components/ProductCard.jsx";
 
-const categories = ["عباءات", "ادناءات", "سبورات شرعية", "نقابات", "حقائب"];
-const collections = ["الكوليكشن الصيفي", "الكوليكشن الخريفي", "الكوليكشن الشتوي", "الكوليكشن الربيعي"];
+const categoryOptions = [
+  { value: "عباءات", key: "abayas" },
+  { value: "ادناءات", key: "idnaas" },
+  { value: "سبورات شرعية", key: "sports" },
+  { value: "نقابات", key: "niqabs" },
+  { value: "حقائب", key: "bags" },
+];
+
+const collectionOptions = [
+  { value: "الكوليكشن الصيفي", key: "summer" },
+  { value: "الكوليكشن الخريفي", key: "autumn" },
+  { value: "الكوليكشن الشتوي", key: "winter" },
+  { value: "الكوليكشن الربيعي", key: "spring" },
+];
 
 const Shop = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [totalPages, setTotalPages] = useState(1);
+  const { t, i18n } = useTranslation();
+  const isRTL = i18n.language === "ar";
 
   const filters = useMemo(
     () => ({
@@ -61,19 +76,23 @@ const Shop = () => {
   return (
     <div className="mx-auto max-w-6xl px-6 py-16">
       <section className="glass-card p-6">
-        <div className="flex flex-col justify-between gap-6 md:flex-row md:items-end">
+        <div
+          className={`flex flex-col justify-between gap-6 md:flex-row md:items-end ${
+            isRTL ? "md:text-right" : "md:text-left"
+          }`}
+        >
           <div>
-            <h1 className="text-3xl font-bold text-white">المتجر</h1>
-            <p className="mt-2 text-sm text-white/70">
-              اختاري من تصاميم البيلسان المميزة، مع خيار الحجز والاستلام خلال يومين.
-            </p>
+            <h1 className="text-3xl font-bold text-white">{t("shop.title")}</h1>
+            <p className="mt-2 text-sm text-white/70">{t("shop.intro")}</p>
           </div>
           <input
             type="search"
-            placeholder="ابحثي عن تصميم..."
+            placeholder={t("shop.searchPlaceholder")}
             value={filters.search}
             onChange={(event) => updateFilter("search", event.target.value)}
-            className="w-full rounded-full border border-white/20 bg-white/10 px-5 py-3 text-sm text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-primary-300 md:w-72"
+            className={`w-full rounded-full border border-white/20 bg-white/10 px-5 py-3 text-sm text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-primary-300 md:w-72 ${
+              isRTL ? "text-right" : "text-left"
+            }`}
           />
         </div>
         <div className="mt-6 flex flex-wrap gap-3">
@@ -83,17 +102,19 @@ const Shop = () => {
               filters.category ? "bg-white/10 text-white/70" : "bg-primary-500 text-white"
             }`}
           >
-            جميع الفئات
+            {t("shop.allCategories")}
           </button>
-          {categories.map((category) => (
+          {categoryOptions.map((category) => (
             <button
-              key={category}
-              onClick={() => updateFilter("category", category)}
+              key={category.value}
+              onClick={() => updateFilter("category", category.value)}
               className={`rounded-full px-4 py-2 text-xs font-semibold transition ${
-                filters.category === category ? "bg-primary-500 text-white" : "bg-white/10 text-white/70"
+                filters.category === category.value
+                  ? "bg-primary-500 text-white"
+                  : "bg-white/10 text-white/70"
               }`}
             >
-              {category}
+              {t(`shop.categories.${category.key}`)}
             </button>
           ))}
         </div>
@@ -104,19 +125,19 @@ const Shop = () => {
               filters.collection ? "bg-white/10 text-white/70" : "bg-secondary-500 text-white"
             }`}
           >
-            جميع المجموعات
+            {t("shop.allCollections")}
           </button>
-          {collections.map((collection) => (
+          {collectionOptions.map((collection) => (
             <button
-              key={collection}
-              onClick={() => updateFilter("collection", collection)}
+              key={collection.value}
+              onClick={() => updateFilter("collection", collection.value)}
               className={`rounded-full px-4 py-2 text-xs font-semibold transition ${
-                filters.collection === collection
+                filters.collection === collection.value
                   ? "bg-secondary-500 text-white"
                   : "bg-white/10 text-white/70"
               }`}
             >
-              {collection}
+              {t(`shop.collections.${collection.key}`)}
             </button>
           ))}
         </div>
@@ -130,7 +151,7 @@ const Shop = () => {
           : products.map((product) => <ProductCard key={product._id} product={product} />)}
         {!loading && products.length === 0 && (
           <div className="col-span-full glass-card p-10 text-center text-white/60">
-            لا توجد منتجات مطابقة للبحث حالياً.
+            {t("shop.empty")}
           </div>
         )}
       </section>

@@ -1,12 +1,14 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import axiosClient from "../api/axiosClient.js";
 import { useToast } from "../context/ToastContext.jsx";
 
-const statuses = [
-  { value: "pending", label: "قيد المتابعة" },
-  { value: "confirmed", label: "تم التأكيد" },
-  { value: "delivered", label: "تم التوصيل" },
-  { value: "picked_up", label: "تم الاستلام" },
+const statusOptions = [
+  { value: "pending", labelKey: "adminOrdersPage.statuses.pending" },
+  { value: "confirmed", labelKey: "adminOrdersPage.statuses.confirmed" },
+  { value: "delivered", labelKey: "adminOrdersPage.statuses.delivered" },
+  { value: "picked_up", labelKey: "adminOrdersPage.statuses.picked_up" },
 ];
 
 const AdminOrders = () => {
@@ -14,6 +16,29 @@ const AdminOrders = () => {
   const [filters, setFilters] = useState({ type: "", status: "" });
   const [loading, setLoading] = useState(true);
   const { showToast } = useToast();
+  const { t, i18n } = useTranslation();
+  const isRTL = i18n.language === "ar";
+  const locale = isRTL ? "ar-JO" : "en-US";
+
+  const statusLabelMap = useMemo(() => {
+    return statusOptions.reduce((acc, option) => {
+      acc[option.value] = t(option.labelKey);
+      return acc;
+    }, {});
+  }, [t, i18n.language]);
+
+  const getOrderTypeLabel = (type) =>
+    type === "delivery"
+      ? t("adminOrdersPage.cards.typeDelivery")
+      : t("adminOrdersPage.cards.typeReservation");
+
+  const formatDate = (value) =>
+    value ? new Date(value).toLocaleDateString(locale) : "";
+
+  const getWhatsappMessage = (type) =>
+    type === "delivery"
+      ? t("adminOrdersPage.whatsappMessage.delivery")
+      : t("adminOrdersPage.whatsappMessage.reservation");
 
   const loadOrders = async () => {
     setLoading(true);
@@ -26,7 +51,7 @@ const AdminOrders = () => {
       });
       setOrders(data);
     } catch (error) {
-      showToast("تعذر تحميل الطلبات", "error");
+      showToast(t("adminOrdersPage.toast.loadError"), "error");
     } finally {
       setLoading(false);
     }
@@ -44,45 +69,66 @@ const AdminOrders = () => {
   const updateStatus = async (orderId, status) => {
     try {
       await axiosClient.put(`/api/orders/${orderId}/status`, { status });
-      showToast("تم تحديث الحالة", "success");
+      showToast(t("adminOrdersPage.toast.updateSuccess"), "success");
       loadOrders();
     } catch (error) {
-      showToast("تعذر تحديث الحالة", "error");
+      showToast(t("adminOrdersPage.toast.updateError"), "error");
     }
   };
 
   const whatsappLink = (phone, type) => {
     const base = phone.startsWith("0") ? `962${phone.slice(1)}` : phone;
-    const message =
-      type === "delivery"
-        ? "السلام عليكم، نود تأكيد طلب التوصيل من البيلسان أونلاين."
-        : "السلام عليكم، نود تأكيد حجزك من البيلسان أونلاين.";
+    const message = getWhatsappMessage(type);
     return `https://wa.me/${base}?text=${encodeURIComponent(message)}`;
   };
 
   return (
     <div className="mx-auto max-w-6xl px-6 py-16">
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <h1 className="text-3xl font-bold text-white">إدارة الطلبات والحجوزات</h1>
-        <div className="flex flex-wrap items-center gap-3 text-sm">
+      <div className={`mb-6 flex ${isRTL ? "justify-start" : "justify-end"}`}>
+        <Link
+          to="/admin/dashboard"
+          className="inline-flex items-center gap-2 rounded-full border border-white/30 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/10"
+        >
+          {isRTL
+            ? `${t("adminOrdersPage.backToDashboard")} →`
+            : `← ${t("adminOrdersPage.backToDashboard")}`}
+        </Link>
+      </div>
+      <div
+        className={`flex flex-col gap-4 md:flex-row md:items-center md:justify-between ${
+          isRTL ? "text-right" : "text-left"
+        }`}
+      >
+        <h1 className="text-3xl font-bold text-white">{t("adminOrdersPage.title")}</h1>
+        <div
+          className={`flex flex-wrap items-center gap-3 text-sm ${
+            isRTL ? "justify-start" : "justify-end"
+          }`}
+        >
           <select
             value={filters.type}
             onChange={(event) => setFilters((prev) => ({ ...prev, type: event.target.value }))}
-            className="px-4 py-2 text-sm"
+            aria-label={t("adminOrdersPage.filters.type")}
+            className={`rounded-full border border-white/20 bg-white/10 px-4 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-secondary-300 ${
+              isRTL ? "text-right" : "text-left"
+            }`}
           >
-            <option value="">كل الأنواع</option>
-            <option value="delivery">توصيل</option>
-            <option value="reservation">حجز</option>
+            <option value="">{t("adminOrdersPage.filters.allTypes")}</option>
+            <option value="delivery">{t("adminOrdersPage.filters.typeDelivery")}</option>
+            <option value="reservation">{t("adminOrdersPage.filters.typeReservation")}</option>
           </select>
           <select
             value={filters.status}
             onChange={(event) => setFilters((prev) => ({ ...prev, status: event.target.value }))}
-            className="px-4 py-2 text-sm"
+            aria-label={t("adminOrdersPage.filters.status")}
+            className={`rounded-full border border-white/20 bg-white/10 px-4 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-secondary-300 ${
+              isRTL ? "text-right" : "text-left"
+            }`}
           >
-            <option value="">كل الحالات</option>
-            {statuses.map((status) => (
-              <option key={status.value} value={status.value}>
-                {status.label}
+            <option value="">{t("adminOrdersPage.filters.allStatuses")}</option>
+            {statusOptions.map((status) => (
+              <option key={status.value} value={status.value} className="text-black">
+                {t(status.labelKey)}
               </option>
             ))}
           </select>
@@ -92,67 +138,114 @@ const AdminOrders = () => {
         {loading ? (
           <div className="glass-card h-32 animate-pulse bg-white/5" />
         ) : (
-          orders.map((order) => (
-            <div key={order._id} className="glass-card flex flex-col gap-4 p-6 md:flex-row md:items-center md:justify-between">
-              <div>
-                <div className="flex items-center gap-3 text-sm text-white/60">
-                  <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-semibold">
-                    {order.type === "delivery" ? "توصيل" : "حجز"}
-                  </span>
-                  <span>الحالة: {statuses.find((s) => s.value === order.status)?.label || order.status}</span>
-                  <span>التاريخ: {new Date(order.createdAt).toLocaleDateString("ar-JO")}</span>
-                </div>
-                <h3 className="mt-3 text-lg font-semibold text-white">{order.customerName}</h3>
-                <p className="text-sm text-white/70">هاتف: {order.phone}</p>
-                {order.type === "delivery" && (
-                  <p className="mt-2 text-sm text-white/70">العنوان: {order.address}</p>
-                )}
-                {order.type === "reservation" && order.pickupDate && (
-                  <p className="mt-2 text-sm text-white/70">
-                    موعد الاستلام: {new Date(order.pickupDate).toLocaleDateString("ar-JO")}
-                  </p>
-                )}
-                {order.notes && <p className="mt-2 text-sm text-white/60">ملاحظات: {order.notes}</p>}
-                {order.items && order.items.length > 0 && (
-                  <div className="mt-3 space-y-2 text-xs text-white/75">
-                    {order.items.map((item, index) => (
-                      <p key={`${order._id}-item-${index}`}>
-                        {item.name || "منتج"} - مقاس {item.size || "حر"} - لون {item.color || "غير محدد"} -
-                        {(item.price || 0).toFixed(2)} د.أ × {item.qty || 1}
-                      </p>
-                    ))}
-                    <p className="text-sm font-semibold text-secondary-200">
-                      الإجمالي: {formatOrderTotal(order).toFixed(2)} د.أ
-                    </p>
+          orders.map((order) => {
+            const statusLabel = statusLabelMap[order.status] || order.status;
+            const totalLabel = t("adminOrdersPage.cards.total", {
+              total: formatOrderTotal(order).toFixed(2),
+            });
+
+            return (
+              <div
+                key={order._id}
+                className={`glass-card flex flex-col gap-4 p-6 ${
+                  isRTL ? "text-right" : "text-left"
+                } md:flex-row md:items-center md:justify-between`}
+              >
+                <div className="flex-1 space-y-3">
+                  <div
+                    className={`flex items-center gap-3 text-sm text-white/60 ${
+                      isRTL ? "flex-row-reverse" : ""
+                    }`}
+                  >
+                    <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-white">
+                      {getOrderTypeLabel(order.type)}
+                    </span>
+                    <span>
+                      {t("adminOrdersPage.cards.status")}: {statusLabel}
+                    </span>
+                    <span>
+                      {t("adminOrdersPage.cards.date")}: {formatDate(order.createdAt)}
+                    </span>
                   </div>
-                )}
-              </div>
-              <div className="flex flex-col items-start gap-3 text-sm md:items-end">
-                <select
-                  value={order.status}
-                  onChange={(event) => updateStatus(order._id, event.target.value)}
-                  className="px-4 py-2 text-sm"
+                  <h3 className="text-lg font-semibold text-white">{order.customerName}</h3>
+                  <p className="text-sm text-white/70">
+                    {t("adminOrdersPage.cards.phone")}: {order.phone}
+                  </p>
+                  {order.type === "delivery" && order.address && (
+                    <p className="text-sm text-white/70">
+                      {t("adminOrdersPage.cards.address")}: {order.address}
+                    </p>
+                  )}
+                  {order.type === "reservation" && order.pickupDate && (
+                    <p className="text-sm text-white/70">
+                      {t("adminOrdersPage.cards.pickupDate")}: {formatDate(order.pickupDate)}
+                    </p>
+                  )}
+                  {order.notes && (
+                    <p className="text-sm text-white/60">
+                      {t("adminOrdersPage.cards.notes")}: {order.notes}
+                    </p>
+                  )}
+                  {order.items && order.items.length > 0 && (
+                    <div className="mt-3 space-y-2 text-xs text-white/75">
+                      <p className="font-semibold">{t("adminOrdersPage.cards.items")}</p>
+                      {order.items.map((item, index) => {
+                        const name = item.name || t("adminOrdersPage.cards.unknownProduct");
+                        const size = item.size || t("product.defaultSize");
+                        const color = item.color || t("product.defaultColor");
+                        const price = (item.price || 0).toFixed(2);
+                        const qty = item.qty || 1;
+                        return (
+                          <p key={`${order._id}-item-${index}`}>
+                            {t("adminOrdersPage.cards.itemSummary", {
+                              name,
+                              size,
+                              color,
+                              price,
+                              qty,
+                            })}
+                          </p>
+                        );
+                      })}
+                      <p className="text-sm font-semibold text-secondary-200">{totalLabel}</p>
+                    </div>
+                  )}
+                </div>
+                <div
+                  className={`flex flex-col gap-3 text-sm ${
+                    isRTL ? "items-start" : "items-end"
+                  }`}
                 >
-                  {statuses.map((status) => (
-                    <option key={status.value} value={status.value}>
-                      {status.label}
-                    </option>
-                  ))}
-                </select>
-                <a
-                  href={whatsappLink(order.phone, order.type)}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="btn-secondary px-4 py-2 text-xs"
-                >
-                  تواصل عبر واتساب
-                </a>
+                  <select
+                    value={order.status}
+                    onChange={(event) => updateStatus(order._id, event.target.value)}
+                    className={`rounded-full border border-white/20 bg-white/10 px-4 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-secondary-300 ${
+                      isRTL ? "text-right" : "text-left"
+                    }`}
+                  >
+                    {statusOptions.map((status) => (
+                      <option key={status.value} value={status.value} className="text-black">
+                        {t(status.labelKey)}
+                      </option>
+                    ))}
+                  </select>
+                  <a
+                    href={whatsappLink(order.phone, order.type)}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="btn-secondary px-4 py-2 text-xs"
+                  >
+                    {t("adminOrdersPage.cards.contactWhatsapp")}
+                  </a>
+                </div>
               </div>
-            </div>
-          ))
+            );
+          })
         )}
         {!loading && orders.length === 0 && (
-          <div className="glass-card p-10 text-center text-white/60">لا توجد طلبات حالياً.</div>
+          <div className="glass-card p-10 text-center text-white/60">
+            {t("adminOrdersPage.empty")}
+          </div>
         )}
       </div>
     </div>

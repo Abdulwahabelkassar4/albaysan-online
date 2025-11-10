@@ -7,34 +7,56 @@ import { useCart } from "../context/CartContext.jsx";
 const Reservation = () => {
   const { register, handleSubmit, reset, formState } = useForm();
   const { showToast } = useToast();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { cartItems, totalPrice, clearCart } = useCart();
+  const isRTL = i18n.language === "ar";
 
-  const orderDetails =
-    cartItems.length > 0
-      ? `${cartItems
-          .map(
-            (item) =>
-              `• ${item.name} (المقاس ${item.size || "حر"}، اللون ${item.color || "غير محدد"}) × ${item.qty}`
-          )
-          .join("\n")}\n\nالإجمالي الكلي: ${totalPrice.toFixed(2)} د.أ`
-      : "السلة فارغة حاليًا";
+  const formatOrderDetails = () => {
+    if (!cartItems.length) {
+      return t("orders.cartEmpty");
+    }
+    const lines = cartItems.map((item) =>
+      t("orders.itemLine", {
+        name: item.name,
+        size: item.size || t("product.defaultSize"),
+        color: item.color || t("product.defaultColor"),
+        qty: item.qty,
+      })
+    );
+    return `${lines.join("\n")}\n\n${t("orders.total", {
+      amount: totalPrice.toFixed(2),
+    })}`;
+  };
+
+  const orderDetails = formatOrderDetails();
 
   const onSubmit = async (values) => {
     if (cartItems.length === 0) {
-      showToast("الرجاء إضافة منتجات إلى السلة قبل الحجز", "error");
+      showToast(t("reservationPage.toast.cartEmpty"), "error");
       return;
     }
 
     try {
       const { customerName, phone, pickupDate } = values;
+      const locale = isRTL ? "ar-JO" : "en-US";
 
-      const orderText =
-        `🕊️ حجز جديد من ${customerName}\n\n` +
-        `${orderDetails}\n\n` +
-        `📞 رقم الهاتف: ${phone}\n` +
-        (pickupDate ? `📅 تاريخ الاستلام: ${new Date(pickupDate).toLocaleDateString("ar-JO")}\n` : "") +
-        "⌚ تم الإرسال من موقع البيلسان أونلاين";
+      const messageLines = [
+        t("orders.newReservationTitle", { customer: customerName }),
+        orderDetails,
+        t("orders.whatsappPhone", { phone }),
+      ];
+
+      if (pickupDate) {
+        messageLines.push(
+          t("orders.whatsappPickup", {
+            date: new Date(pickupDate).toLocaleDateString(locale),
+          })
+        );
+      }
+
+      messageLines.push(t("orders.whatsappFooter"));
+
+      const orderText = messageLines.join("\n\n");
 
       const whatsappNumber = "0798522935";
       const whatsappURL = `https://wa.me/962${whatsappNumber.slice(1)}?text=${encodeURIComponent(orderText)}`;
@@ -51,10 +73,10 @@ const Reservation = () => {
       window.open(whatsappURL, "_blank");
       clearCart();
       reset();
-      showToast("تم إرسال الحجز عبر واتساب ✅", "success");
+      showToast(t("reservationPage.toast.success"), "success");
     } catch (error) {
       console.error(error);
-      showToast("تعذر إرسال الحجز، يرجى المحاولة لاحقًا", "error");
+      showToast(t("reservationPage.toast.error"), "error");
     }
   };
 
@@ -66,31 +88,36 @@ const Reservation = () => {
       />
       <div className="relative mx-auto max-w-4xl px-6">
         <section className="glass-card space-y-6 p-10">
-          <div>
+          <div className={isRTL ? "text-right" : "text-left"}>
             <h1 className="text-3xl font-bold text-white">{t("nav.reservation")}</h1>
-            <p className="mt-2 text-sm text-white/70">
-              يمكن حجز القطعة لمدة يومين مع اختيار وقت الاستلام الأنسب نهارًا أو ليلًا.
-            </p>
+            <p className="mt-2 text-sm text-white/70">{t("reservationPage.intro")}</p>
           </div>
-          <form className="grid gap-5 text-right" onSubmit={handleSubmit(onSubmit)}>
+          <form
+            className={`grid gap-5 ${isRTL ? "text-right" : "text-left"}`}
+            onSubmit={handleSubmit(onSubmit)}
+          >
             <div>
               <label className="mb-2 block text-sm text-white/70">{t("forms.name")}</label>
               <input
                 {...register("customerName", { required: true })}
-                className="w-full rounded-2xl border border-white/20 bg-white/10 px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-secondary-300"
+                className={`w-full rounded-2xl border border-white/20 bg-white/10 px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-secondary-300 ${
+                  isRTL ? "text-right" : "text-left"
+                }`}
               />
               {formState.errors.customerName && (
-                <span className="mt-1 block text-xs text-rose-300">هذا الحقل مطلوب</span>
+                <span className="mt-1 block text-xs text-rose-300">{t("forms.required")}</span>
               )}
             </div>
             <div>
               <label className="mb-2 block text-sm text-white/70">{t("forms.phone")}</label>
               <input
                 {...register("phone", { required: true })}
-                className="w-full rounded-2xl border border-white/20 bg-white/10 px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-secondary-300"
+                className={`w-full rounded-2xl border border-white/20 bg-white/10 px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-secondary-300 ${
+                  isRTL ? "text-right" : "text-left"
+                }`}
               />
               {formState.errors.phone && (
-                <span className="mt-1 block text-xs text-rose-300">هذا الحقل مطلوب</span>
+                <span className="mt-1 block text-xs text-rose-300">{t("forms.required")}</span>
               )}
             </div>
             <div>
@@ -98,21 +125,25 @@ const Reservation = () => {
               <input
                 type="date"
                 {...register("pickupDate", { required: true })}
-                className="w-full rounded-2xl border border-white/20 bg-white/10 px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-secondary-300"
+                className={`w-full rounded-2xl border border-white/20 bg-white/10 px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-secondary-300 ${
+                  isRTL ? "text-right" : "text-left"
+                }`}
               />
               {formState.errors.pickupDate && (
-                <span className="mt-1 block text-xs text-rose-300">هذا الحقل مطلوب</span>
+                <span className="mt-1 block text-xs text-rose-300">{t("forms.required")}</span>
               )}
             </div>
             <div>
-              <label className="mb-2 block text-sm text-white/70">تفاصيل الطلب</label>
+              <label className="mb-2 block text-sm text-white/70">{t("forms.details")}</label>
               <textarea
                 name="details"
                 value={orderDetails}
                 readOnly
-                dir="rtl"
+                dir={isRTL ? "rtl" : "ltr"}
                 rows={5}
-                className="w-full resize-none rounded-2xl border border-purple-400/20 bg-purple-950/40 px-4 py-3 text-sm text-white"
+                className={`w-full resize-none rounded-2xl border border-purple-400/20 bg-purple-950/40 px-4 py-3 text-sm text-white ${
+                  isRTL ? "text-right" : "text-left"
+                }`}
               />
             </div>
             <button
@@ -120,7 +151,7 @@ const Reservation = () => {
               className="w-full rounded-2xl bg-gradient-to-r from-purple-600 via-secondary-500 to-pink-500 py-3 text-base font-semibold text-white shadow-lg shadow-purple-900/30 transition-transform hover:scale-[1.02]"
               disabled={formState.isSubmitting}
             >
-              {formState.isSubmitting ? "جارٍ الإرسال..." : "إرسال الحجز"}
+              {formState.isSubmitting ? t("forms.submitting") : t("forms.submitReservation")}
             </button>
           </form>
         </section>

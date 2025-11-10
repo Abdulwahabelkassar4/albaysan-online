@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import axiosClient from "../api/axiosClient.js";
 import { useCart } from "../context/CartContext.jsx";
 
@@ -12,14 +13,18 @@ const ProductDetails = () => {
   const [selectedColor, setSelectedColor] = useState("");
   const [loading, setLoading] = useState(true);
   const { addItem, openCart } = useCart();
+  const { t, i18n } = useTranslation();
+  const isRTL = i18n.language === "ar";
+  const defaultSize = t("product.defaultSize");
+  const defaultColor = t("product.defaultColor");
 
   useEffect(() => {
     const fetchProduct = async () => {
       try {
         const { data } = await axiosClient.get(`/api/products/${id}`);
         setProduct(data);
-        setSelectedSize(data.sizes?.[0] || "حر");
-        setSelectedColor(data.colors?.[0] || "افتراضي");
+        setSelectedSize(data.sizes?.[0] || defaultSize);
+        setSelectedColor(data.colors?.[0] || defaultColor);
         setMainImage(data.images?.[0]?.url || "");
         setActiveImageIndex(0);
       } catch (error) {
@@ -30,7 +35,7 @@ const ProductDetails = () => {
     };
 
     fetchProduct();
-  }, [id]);
+  }, [id, defaultSize, defaultColor]);
 
   useEffect(() => {
     if (!product) return;
@@ -40,6 +45,16 @@ const ProductDetails = () => {
       setActiveImageIndex(colorIndex);
     }
   }, [selectedColor, product]);
+
+  useEffect(() => {
+    if (!product) return;
+    if (!product.sizes?.length) {
+      setSelectedSize(defaultSize);
+    }
+    if (!product.colors?.length) {
+      setSelectedColor(defaultColor);
+    }
+  }, [product, defaultSize, defaultColor]);
 
   const handleImageSelect = (index) => {
     if (!product?.images?.[index]) return;
@@ -66,11 +81,11 @@ const ProductDetails = () => {
   };
 
   if (loading) {
-    return <div className="mx-auto max-w-6xl px-6 py-16">جاري التحميل...</div>;
+    return <div className="mx-auto max-w-6xl px-6 py-16">{t("product.loading")}</div>;
   }
 
   if (!product) {
-    return <div className="mx-auto max-w-6xl px-6 py-16">المنتج غير متاح.</div>;
+    return <div className="mx-auto max-w-6xl px-6 py-16">{t("product.notFound")}</div>;
   }
 
   return (
@@ -82,7 +97,7 @@ const ProductDetails = () => {
               <img src={mainImage} alt={product.name} className="h-full w-full object-cover" />
             ) : (
               <div className="flex h-full items-center justify-center bg-white/5 text-white/40">
-                لا توجد صورة
+                {t("product.noImage")}
               </div>
             )}
           </div>
@@ -100,16 +115,22 @@ const ProductDetails = () => {
             ))}
           </div>
         </div>
-        <div className="glass-card space-y-6 p-8">
+        <div
+          className={`glass-card space-y-6 p-8 ${isRTL ? "text-right" : "text-left"}`}
+        >
           <div className="space-y-2">
             <h1 className="text-3xl font-bold text-white">{product.name}</h1>
-            <p className="text-secondary-200 text-2xl font-black">{product.price} د.أ</p>
-            <p className="text-sm text-white/70">{product.description || "تفاصيل المنتج ستتوفر قريباً."}</p>
+            <p className="text-2xl font-black text-secondary-200">
+              {product.price} {t("product.priceSuffix")}
+            </p>
+            <p className="text-sm text-white/70">
+              {product.description || t("product.descriptionFallback")}
+            </p>
           </div>
 
           {product.sizes?.length > 0 && (
             <div className="space-y-2">
-              <label className="text-sm text-white/70">اختاري المقاس</label>
+              <label className="text-sm text-white/70">{t("product.selectSize")}</label>
               <select
                 value={selectedSize}
                 onChange={(event) => setSelectedSize(event.target.value)}
@@ -126,7 +147,7 @@ const ProductDetails = () => {
 
           {product.colors?.length > 0 && (
             <div className="space-y-2">
-              <label className="text-sm text-white/70">اختاري اللون</label>
+              <label className="text-sm text-white/70">{t("product.selectColor")}</label>
               <div className="flex flex-wrap gap-2">
                 {product.colors.map((color, index) => (
                   <button
@@ -152,15 +173,24 @@ const ProductDetails = () => {
           )}
 
           <div className="space-y-2 text-sm text-white/70">
-            {product.category && <p>الفئة: <span className="text-white">{product.category}</span></p>}
-            {product.collection && <p>المجموعة: <span className="text-white">{product.collection}</span></p>}
+            {product.category && (
+              <p>
+                {t("product.categoryLabel")}: <span className="text-white">{product.category}</span>
+              </p>
+            )}
+            {product.collection && (
+              <p>
+                {t("product.collectionLabel")}:{" "}
+                <span className="text-white">{product.collection}</span>
+              </p>
+            )}
           </div>
 
           <button
             onClick={handleAddToCart}
             className="w-full rounded-full bg-gradient-to-r from-primary-500 via-secondary-500 to-primary-400 px-6 py-3 text-base font-semibold text-white shadow-lg shadow-primary-900/30 transition-transform hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-secondary-200"
           >
-            أضف إلى السلة
+            {t("product.addToCart")}
           </button>
           <a
             href="https://wa.me/962798522935"
@@ -168,7 +198,7 @@ const ProductDetails = () => {
             target="_blank"
             rel="noreferrer"
           >
-            تواصلي عبر واتساب للطلب
+            {t("product.contactWhatsapp")}
           </a>
         </div>
       </div>

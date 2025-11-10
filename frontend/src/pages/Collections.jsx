@@ -1,28 +1,31 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import axiosClient from "../api/axiosClient.js";
 import ProductCard from "../components/ProductCard.jsx";
 
-const collectionsList = [
-  "الكوليكشن الصيفي",
-  "الكوليكشن الخريفي",
-  "الكوليكشن الشتوي",
-  "الكوليكشن الربيعي",
+const collectionOptions = [
+  { value: "الكوليكشن الصيفي", key: "summer" },
+  { value: "الكوليكشن الخريفي", key: "autumn" },
+  { value: "الكوليكشن الشتوي", key: "winter" },
+  { value: "الكوليكشن الربيعي", key: "spring" },
 ];
 
 const Collections = () => {
   const [collections, setCollections] = useState({});
   const [loading, setLoading] = useState(true);
+  const { t, i18n } = useTranslation();
+  const isRTL = i18n.language === "ar";
 
   useEffect(() => {
     const fetchCollections = async () => {
       setLoading(true);
       try {
         const responses = await Promise.all(
-          collectionsList.map(async (collectionName) => {
+          collectionOptions.map(async (collection) => {
             const { data } = await axiosClient.get("/api/products", {
-              params: { collection: collectionName, limit: 12 },
+              params: { collection: collection.value, limit: 12 },
             });
-            return [collectionName, data.data || []];
+            return [collection.value, data.data || []];
           })
         );
 
@@ -40,21 +43,23 @@ const Collections = () => {
   return (
     <div className="mx-auto max-w-6xl px-6 py-16">
       <section className="glass-card p-6">
-        <h1 className="text-3xl font-bold text-white">المجموعات</h1>
-        <p className="mt-2 text-sm text-white/70">
-          تصفحي مجموعاتنا الموسمية لتجدي الإطلالة المناسبة لكل فصل.
-        </p>
+        <h1 className="text-3xl font-bold text-white">{t("collectionsPage.title")}</h1>
+        <p className="mt-2 text-sm text-white/70">{t("collectionsPage.intro")}</p>
       </section>
 
-      {collectionsList.map((collectionName) => {
-        const items = collections[collectionName] || [];
-        const isLoading = loading && !collections[collectionName];
+      {collectionOptions.map((collection) => {
+        const items = collections[collection.value] || [];
+        const isLoading = loading && !collections[collection.value];
 
         if (isLoading) {
           return (
-            <section key={collectionName} className="mt-12">
-              <div className="flex items-center justify-between text-white">
-                <h2 className="text-2xl font-semibold">{collectionName}</h2>
+            <section key={collection.value} className="mt-12">
+              <div
+                className={`flex items-center justify-between text-white ${
+                  isRTL ? "text-right" : "text-left"
+                }`}
+              >
+                <h2 className="text-2xl font-semibold">{t(`shop.collections.${collection.key}`)}</h2>
               </div>
               <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
                 {Array.from({ length: 3 }).map((_, idx) => (
@@ -70,16 +75,20 @@ const Collections = () => {
         }
 
         return (
-          <section key={collectionName} className="mt-12">
-            <div className="flex items-center justify-between text-white">
-              <h2 className="text-2xl font-semibold">{collectionName}</h2>
+          <section key={collection.value} className="mt-12">
+            <div
+              className={`flex items-center justify-between text-white ${
+                isRTL ? "text-right" : "text-left"
+              }`}
+            >
+              <h2 className="text-2xl font-semibold">{t(`shop.collections.${collection.key}`)}</h2>
             </div>
             <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {items.length > 0 ? (
                 items.map((product) => <ProductCard key={product._id} product={product} />)
               ) : (
                 <div className="glass-card col-span-full p-10 text-center text-white/60">
-                  لا توجد منتجات في هذه المجموعة حالياً.
+                  {t("collectionsPage.empty")}
                 </div>
               )}
             </div>

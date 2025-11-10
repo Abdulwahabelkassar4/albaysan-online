@@ -40,7 +40,7 @@ const Navbar = () => {
           />
           <div className="flex flex-col">
             <span className="text-lg font-bold tracking-wide">{t("brandName")}</span>
-            <span className="text-xs text-white/70">المتجر مخصص للنساء فقط</span>
+            <span className="text-xs text-white/70">{t("navbar.femaleOnlyTag")}</span>
           </div>
         </Link>
         <button
@@ -66,19 +66,6 @@ const Navbar = () => {
               {t(`nav.${link.key}`)}
             </NavLink>
           ))}
-          <NavLink
-            to="/admin/login"
-            className={({ isActive }) =>
-              `rounded-full px-4 py-2 text-sm font-semibold transition ${
-                isActive || location.pathname.startsWith("/admin")
-                  ? "bg-secondary-500 text-white"
-                  : "bg-white/10 text-white"
-              }`
-            }
-            onClick={() => setIsOpen(false)}
-          >
-            {t("nav.admin")}
-          </NavLink>
           <button
             onClick={handleToggleLanguage}
             className="rounded-full border border-white/20 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/10"
