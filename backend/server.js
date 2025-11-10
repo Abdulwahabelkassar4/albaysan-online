@@ -15,10 +15,9 @@ validateEnv();
 const app = express();
 
 import cors from "cors";
-const allowedOrigins = [
-  "https://albaysan-onlinefrontend.onrender.com",
-  "http://localhost:5173",
-];
+const allowedOrigins = process.env.CORS_ORIGIN
+  ? process.env.CORS_ORIGIN.split(",")
+  : [];
 
 app.use(helmet());
 app.use(
@@ -27,6 +26,7 @@ app.use(
       if (!origin || allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {
+        console.log("❌ Blocked by CORS:", origin);
         callback(new Error("Not allowed by CORS"));
       }
     },
