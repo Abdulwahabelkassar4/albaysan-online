@@ -20,6 +20,7 @@ const allowedOrigins = [
   "http://localhost:5173",
   "https://albaysan-onlinefrontend.onrender.com",
   "https://albisanshop.netlify.app",
+  "https://albilsan.online",
 ];
 
 app.use(
