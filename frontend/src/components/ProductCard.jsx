@@ -1,8 +1,16 @@
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
+const getCoverImage = (product) => {
+  if (Array.isArray(product?.images) && product.images.length > 0) {
+    const firstImage = product.images[0];
+    return typeof firstImage === "string" ? firstImage : firstImage?.url;
+  }
+  return product?.image || "";
+};
+
 const ProductCard = ({ product }) => {
-  const cover = product.images?.[0]?.url;
+  const cover = getCoverImage(product);
   const { t, i18n } = useTranslation();
   const isRTL = i18n.language === "ar";
 

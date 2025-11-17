@@ -242,6 +242,8 @@ const resources = {
           sizes: "المقاسات (افصليها بفاصلة)",
           colors: "الألوان (افصليها بفاصلة)",
           images: "الصور",
+          selectedImagesCount: "تم اختيار {{count}} صورة",
+          uploadImagesButton: "رفع الصور المحددة",
           categoryPlaceholder: "اختر الفئة",
           collectionPlaceholder: "اختر المجموعة",
           submitCreate: "إضافة المنتج",
@@ -637,6 +639,8 @@ const resources = {
           sizes: "Sizes (comma separated)",
           colors: "Colors (comma separated)",
           images: "Images",
+          selectedImagesCount: "{{count}} file(s) selected",
+          uploadImagesButton: "Upload Selected Images",
           categoryPlaceholder: "Select category",
           collectionPlaceholder: "Select collection",
           submitCreate: "Add product",
@@ -756,4 +760,3 @@ i18n.use(initReactI18next).init({
 });
 
 export default i18n;
-

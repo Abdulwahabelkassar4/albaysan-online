@@ -1,29 +1,20 @@
 import mongoose from "mongoose";
 
-const imageSchema = new mongoose.Schema(
-  {
-    url: { type: String, required: true },
-    publicId: { type: String, required: true },
-  },
-  { _id: false }
-);
-
 const productSchema = new mongoose.Schema(
   {
     name: { type: String, required: true },
-    description: { type: String },
     price: { type: Number, required: true },
-    category: { type: String, index: true },
-    collection: { type: String },
-    sizes: [{ type: String }],
-    colors: [{ type: String }],
-    images: [imageSchema],
+    description: { type: String, default: "" },
+    category: { type: String, default: "" },
+    productCollection: { type: String, default: "" },
+    sizes: { type: [String], default: [] },
+    colors: { type: [String], default: [] },
+    images: { type: [String], default: [] },
     inStock: { type: Boolean, default: true },
   },
-  { timestamps: { createdAt: "createdAt", updatedAt: "updatedAt" } }
+  { timestamps: true }
 );
 
-productSchema.index({ name: "text", description: "text", category: 1, collection: 1 });
+productSchema.index({ name: "text", description: "text", category: 1, productCollection: 1 });
 
 export const Product = mongoose.model("Product", productSchema);
-

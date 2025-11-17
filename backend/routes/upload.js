@@ -1,64 +1,46 @@
 import express from "express";
-import axios from "axios";
+import ImageKit from "imagekit";
 import multer from "multer";
-import FormData from "form-data";
-import fs from "fs";
-import path from "path";
+
+console.log("⚡ Upload route loaded");
 
 const router = express.Router();
 
-const uploadDir = path.join(process.cwd(), "uploads");
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
-}
+const upload = multer();
 
-const upload = multer({ dest: uploadDir }); // temp storage
+const imagekit = new ImageKit({
+  publicKey: process.env.IMAGEKIT_PUBLIC_KEY,
+  privateKey: process.env.IMAGEKIT_PRIVATE_KEY,
+  urlEndpoint: process.env.IMAGEKIT_URL_ENDPOINT,
+});
 
-router.post("/upload", upload.single("file"), async (req, res) => {
-  const filePath = req.file?.path;
+router.post("/upload", upload.array("images"), async (req, res) => {
+  console.log("📥 Incoming files:", req.files);
+  console.log("📥 Incoming body:", req.body);
 
-  if (!filePath) {
-    return res.status(400).json({ message: "لم يتم العثور على ملف للرفع" });
+  if (!req.files?.length) {
+    return res.status(400).json({ message: "No files uploaded" });
   }
 
   try {
-    if (
-      !process.env.IMAGEKIT_PRIVATE_KEY ||
-      !process.env.IMAGEKIT_PUBLIC_KEY ||
-      !process.env.IMAGEKIT_URL_ENDPOINT
-    ) {
-      return res.status(500).json({ message: "بيانات ImageKit غير مكتملة" });
-    }
+    const uploads = req.files.map(async (file) => {
+      console.log("🔧 Uploading:", file.originalname);
 
-    const form = new FormData();
-    form.append("file", fs.createReadStream(filePath));
-    form.append("fileName", req.file.originalname);
+      const uploadResult = await imagekit.upload({
+        file: file.buffer,
+        fileName: file.originalname,
+      });
 
-    const response = await axios.post(
-      "https://upload.imagekit.io/api/v1/files/upload",
-      form,
-      {
-        auth: {
-          username: process.env.IMAGEKIT_PRIVATE_KEY,
-          password: "",
-        },
-        headers: form.getHeaders(),
-      }
-    );
+      console.log("✅ Uploaded to ImageKit:", uploadResult.url);
 
-    res.json({
-      url: response.data.url,
-      publicId: response.data.fileId,
+      return uploadResult.url;
     });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Image upload failed" });
-  } finally {
-    fs.unlink(filePath, (unlinkError) => {
-      if (unlinkError) {
-        console.error("Failed to clean up uploaded file:", unlinkError);
-      }
-    });
+
+    const urls = await Promise.all(uploads);
+    return res.json({ urls });
+  } catch (err) {
+    console.error("❌ Image upload failed:", err);
+    return res.status(500).json({ message: "Upload failed", error: err.message });
   }
 });
 

@@ -23,7 +23,7 @@ const Collections = () => {
         const responses = await Promise.all(
           collectionOptions.map(async (collection) => {
             const { data } = await axiosClient.get("/api/products", {
-              params: { collection: collection.value, limit: 12 },
+              params: { productCollection: collection.value, limit: 12 },
             });
             return [collection.value, data.data || []];
           })

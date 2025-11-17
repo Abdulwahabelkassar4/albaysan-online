@@ -4,11 +4,22 @@ import { useTranslation } from "react-i18next";
 import axiosClient from "../api/axiosClient.js";
 import { useCart } from "../context/CartContext.jsx";
 
+const normalizeImages = (images, fallbackImage) => {
+  const normalized = Array.isArray(images)
+    ? images.map((image) => (typeof image === "string" ? image : image?.url)).filter(Boolean)
+    : [];
+
+  if (!normalized.length && fallbackImage) {
+    normalized.push(fallbackImage);
+  }
+
+  return normalized;
+};
+
 const ProductDetails = () => {
   const { id } = useParams();
   const [product, setProduct] = useState(null);
-  const [activeImageIndex, setActiveImageIndex] = useState(0);
-  const [mainImage, setMainImage] = useState("");
+  const [selectedImage, setSelectedImage] = useState("");
   const [selectedSize, setSelectedSize] = useState("");
   const [selectedColor, setSelectedColor] = useState("");
   const [loading, setLoading] = useState(true);
@@ -17,16 +28,18 @@ const ProductDetails = () => {
   const isRTL = i18n.language === "ar";
   const defaultSize = t("product.defaultSize");
   const defaultColor = t("product.defaultColor");
+  const galleryImages = normalizeImages(product?.images, product?.image);
+  const primaryImage = selectedImage || product?.images?.[0] || galleryImages[0] || product?.image || "";
 
   useEffect(() => {
     const fetchProduct = async () => {
       try {
         const { data } = await axiosClient.get(`/api/products/${id}`);
-        setProduct(data);
+        const normalizedImages = normalizeImages(data.images, data.image);
+        setProduct({ ...data, images: normalizedImages });
         setSelectedSize(data.sizes?.[0] || defaultSize);
         setSelectedColor(data.colors?.[0] || defaultColor);
-        setMainImage(data.images?.[0]?.url || "");
-        setActiveImageIndex(0);
+        setSelectedImage(normalizedImages[0] || data.image || "");
       } catch (error) {
         console.error("Product not found", error);
       } finally {
@@ -39,15 +52,6 @@ const ProductDetails = () => {
 
   useEffect(() => {
     if (!product) return;
-    const colorIndex = product.colors?.indexOf(selectedColor);
-    if (colorIndex !== undefined && colorIndex >= 0 && product.images?.[colorIndex]) {
-      setMainImage(product.images[colorIndex].url);
-      setActiveImageIndex(colorIndex);
-    }
-  }, [selectedColor, product]);
-
-  useEffect(() => {
-    if (!product) return;
     if (!product.sizes?.length) {
       setSelectedSize(defaultSize);
     }
@@ -55,16 +59,6 @@ const ProductDetails = () => {
       setSelectedColor(defaultColor);
     }
   }, [product, defaultSize, defaultColor]);
-
-  const handleImageSelect = (index) => {
-    if (!product?.images?.[index]) return;
-    setActiveImageIndex(index);
-    setMainImage(product.images[index].url);
-    const colorAtIndex = product.colors?.[index];
-    if (colorAtIndex) {
-      setSelectedColor(colorAtIndex);
-    }
-  };
 
   const handleAddToCart = () => {
     if (!product) return;
@@ -74,7 +68,7 @@ const ProductDetails = () => {
       price: product.price,
       size: selectedSize,
       color: selectedColor,
-      image: mainImage || product.images?.[0]?.url || "",
+      image: primaryImage,
       qty: 1,
     });
     openCart();
@@ -92,28 +86,30 @@ const ProductDetails = () => {
     <div className="mx-auto max-w-6xl px-6 py-16">
       <div className="grid gap-10 lg:grid-cols-2">
         <div className="space-y-4">
-          <div className="glass-card aspect-[3/4] overflow-hidden">
-            {mainImage ? (
-              <img src={mainImage} alt={product.name} className="h-full w-full object-cover" />
+          <div className="glass-card overflow-hidden rounded-xl">
+            {primaryImage ? (
+              <img src={primaryImage} alt={product.name} className="w-full h-96 object-cover rounded-xl" />
             ) : (
-              <div className="flex h-full items-center justify-center bg-white/5 text-white/40">
+              <div className="flex h-96 items-center justify-center bg-white/5 text-white/40">
                 {t("product.noImage")}
               </div>
             )}
           </div>
-          <div className="flex gap-3">
-            {product.images?.map((image, index) => (
-              <button
-                key={image.publicId || image.url || index}
-                onClick={() => handleImageSelect(index)}
-                className={`h-20 w-20 overflow-hidden rounded-2xl border-2 transition ${
-                  index === activeImageIndex ? "border-secondary-300" : "border-transparent opacity-70"
-                }`}
-              >
-                <img src={image.url} alt={product.name} className="h-full w-full object-cover" />
-              </button>
-            ))}
-          </div>
+          {galleryImages.length > 0 && (
+            <div className="flex space-x-3 mt-4">
+              {galleryImages.map((imageUrl, index) => (
+                <img
+                  key={`${imageUrl}-${index}`}
+                  src={imageUrl}
+                  onClick={() => setSelectedImage(imageUrl)}
+                  alt={product.name}
+                  className={`w-20 h-20 object-cover rounded-md border hover:border-black cursor-pointer ${
+                    selectedImage === imageUrl ? "border-white" : "border-transparent"
+                  }`}
+                />
+              ))}
+            </div>
+          )}
         </div>
         <div
           className={`glass-card space-y-6 p-8 ${isRTL ? "text-right" : "text-left"}`}
@@ -152,13 +148,7 @@ const ProductDetails = () => {
                 {product.colors.map((color, index) => (
                   <button
                     key={color}
-                    onClick={() => {
-                      setSelectedColor(color);
-                      if (product.images?.[index]) {
-                        setMainImage(product.images[index].url);
-                        setActiveImageIndex(index);
-                      }
-                    }}
+                    onClick={() => setSelectedColor(color)}
                     className={`rounded-full px-4 py-2 text-xs font-semibold transition hover:scale-105 ${
                       selectedColor === color
                         ? "bg-gradient-to-r from-primary-500 via-secondary-500 to-primary-400 text-white"
@@ -178,10 +168,10 @@ const ProductDetails = () => {
                 {t("product.categoryLabel")}: <span className="text-white">{product.category}</span>
               </p>
             )}
-            {product.collection && (
+            {product.productCollection && (
               <p>
                 {t("product.collectionLabel")}:{" "}
-                <span className="text-white">{product.collection}</span>
+                <span className="text-white">{product.productCollection}</span>
               </p>
             )}
           </div>

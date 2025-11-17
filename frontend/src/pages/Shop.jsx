@@ -30,7 +30,7 @@ const Shop = () => {
   const filters = useMemo(
     () => ({
       category: searchParams.get("category") || "",
-      collection: searchParams.get("collection") || "",
+      productCollection: searchParams.get("productCollection") || "",
       search: searchParams.get("search") || "",
       page: Number(searchParams.get("page") || 1),
     }),
@@ -44,7 +44,7 @@ const Shop = () => {
         const { data } = await axiosClient.get("/api/products", {
           params: {
             category: filters.category || undefined,
-            collection: filters.collection || undefined,
+            productCollection: filters.productCollection || undefined,
             search: filters.search || undefined,
             page: filters.page,
             limit: 12,
@@ -120,9 +120,9 @@ const Shop = () => {
         </div>
         <div className="mt-4 flex flex-wrap gap-3">
           <button
-            onClick={() => updateFilter("collection", "")}
+            onClick={() => updateFilter("productCollection", "")}
             className={`rounded-full px-4 py-2 text-xs font-semibold transition ${
-              filters.collection ? "bg-white/10 text-white/70" : "bg-secondary-500 text-white"
+              filters.productCollection ? "bg-white/10 text-white/70" : "bg-secondary-500 text-white"
             }`}
           >
             {t("shop.allCollections")}
@@ -130,9 +130,9 @@ const Shop = () => {
           {collectionOptions.map((collection) => (
             <button
               key={collection.value}
-              onClick={() => updateFilter("collection", collection.value)}
+              onClick={() => updateFilter("productCollection", collection.value)}
               className={`rounded-full px-4 py-2 text-xs font-semibold transition ${
-                filters.collection === collection.value
+                filters.productCollection === collection.value
                   ? "bg-secondary-500 text-white"
                   : "bg-white/10 text-white/70"
               }`}
