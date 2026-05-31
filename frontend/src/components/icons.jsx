@@ -172,3 +172,31 @@ export const InstagramIcon = ({ className = baseClassName }) => (
     <circle cx="16.8" cy="7.2" r="0.8" />
   </svg>
 );
+
+export const SunIcon = ({ className = baseClassName }) => (
+  <svg viewBox="0 0 24 24" className={className} aria-hidden="true" {...iconProps}>
+    <circle cx="12" cy="12" r="4" />
+    <path d="M12 2v2.2M12 19.8V22M2 12h2.2M19.8 12H22M4.9 4.9l1.6 1.6M17.5 17.5l1.6 1.6M19.1 4.9l-1.6 1.6M6.5 17.5l-1.6 1.6" />
+  </svg>
+);
+
+export const LeafIcon = ({ className = baseClassName }) => (
+  <svg viewBox="0 0 24 24" className={className} aria-hidden="true" {...iconProps}>
+    <path d="M20 4c-8.5 0-14 5.5-14 14 8.5 0 14-5.5 14-14Z" />
+    <path d="M7 17c2.2-2.8 5.2-5 9-6.5" />
+  </svg>
+);
+
+export const SnowIcon = ({ className = baseClassName }) => (
+  <svg viewBox="0 0 24 24" className={className} aria-hidden="true" {...iconProps}>
+    <path d="M12 3v18M5.5 6.5l13 11M18.5 6.5l-13 11" />
+    <path d="M9 3.8 12 3l3 0.8M9 20.2 12 21l3-0.8M4.4 8.6 3.8 11l0.8 3M19.6 8.6l0.6 2.4-0.8 3" />
+  </svg>
+);
+
+export const BlossomIcon = ({ className = baseClassName }) => (
+  <svg viewBox="0 0 24 24" className={className} aria-hidden="true" {...iconProps}>
+    <circle cx="12" cy="12" r="1.8" />
+    <path d="M12 5c1.7 0 3 1.3 3 3 0 1.2-.8 2.3-2 2.8M19 12c0 1.7-1.3 3-3 3-1.2 0-2.3-.8-2.8-2M12 19c-1.7 0-3-1.3-3-3 0-1.2.8-2.3 2-2.8M5 12c0-1.7 1.3-3 3-3 1.2 0 2.3.8 2.8 2" />
+  </svg>
+);

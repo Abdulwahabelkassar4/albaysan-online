@@ -69,21 +69,21 @@ const AdminDashboard = ({ onLogout }) => {
       </div>
       <section className="mt-10 grid gap-6 md:grid-cols-3">
         <div className={`info-panel ${isRTL ? "text-right" : "text-left"} animate-reveal`}>
-          <div className={`flex items-center gap-2 text-sm text-white/70 ${isRTL ? "flex-row-reverse" : ""}`}>
+          <div className="flex items-center gap-2 text-sm text-white/70">
             <BoxIcon className="h-4 w-4 text-secondary-200" />
             <span>{t("admin.stats.products")}</span>
           </div>
           <p className="mt-3 text-4xl font-black text-secondary-200">{stats.products}</p>
         </div>
         <div className={`info-panel ${isRTL ? "text-right" : "text-left"} animate-reveal`} style={{ animationDelay: "0.08s" }}>
-          <div className={`flex items-center gap-2 text-sm text-white/70 ${isRTL ? "flex-row-reverse" : ""}`}>
+          <div className="flex items-center gap-2 text-sm text-white/70">
             <ClipboardIcon className="h-4 w-4 text-primary-200" />
             <span>{t("admin.stats.pendingOrders")}</span>
           </div>
           <p className="mt-3 text-4xl font-black text-primary-200">{stats.pendingOrders}</p>
         </div>
         <div className={`info-panel ${isRTL ? "text-right" : "text-left"} animate-reveal`} style={{ animationDelay: "0.16s" }}>
-          <div className={`flex items-center gap-2 text-sm text-white/70 ${isRTL ? "flex-row-reverse" : ""}`}>
+          <div className="flex items-center gap-2 text-sm text-white/70">
             <ChartIcon className="h-4 w-4 text-white" />
             <span>{t("admin.stats.pendingReservations")}</span>
           </div>
@@ -107,7 +107,7 @@ const AdminDashboard = ({ onLogout }) => {
                 className={`animate-admin-fade action-panel w-full max-w-xs text-white ${isRTL ? "text-right" : "text-left"}`}
                 style={{ animationDelay: `${0.2 + index * 0.15}s` }}
               >
-                <div className={`flex items-center justify-between gap-3 ${isRTL ? "flex-row-reverse" : ""}`}>
+                <div className="flex items-center justify-between gap-3">
                   <span className="inline-flex rounded-full bg-white/10 p-3 text-secondary-200" aria-hidden="true">
                     <Icon className="h-6 w-6" />
                   </span>

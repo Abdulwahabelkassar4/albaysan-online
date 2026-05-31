@@ -114,7 +114,7 @@ const Shop = () => {
             />
           </div>
         </div>
-        <div className={`mt-6 flex items-center gap-2 text-xs font-semibold text-white/70 ${isRTL ? "flex-row-reverse" : ""}`}>
+        <div className="mt-6 flex items-center gap-2 text-xs font-semibold text-white/70">
           <FilterIcon className="h-4 w-4 text-secondary-200" />
           <span>{t("shop.categoryFilterLabel")}</span>
         </div>
@@ -141,7 +141,7 @@ const Shop = () => {
             </button>
           ))}
         </div>
-        <div className={`mt-6 flex items-center gap-2 text-xs font-semibold text-white/70 ${isRTL ? "flex-row-reverse" : ""}`}>
+        <div className="mt-6 flex items-center gap-2 text-xs font-semibold text-white/70">
           <FilterIcon className="h-4 w-4 text-secondary-200" />
           <span>{t("shop.collectionFilterLabel")}</span>
         </div>

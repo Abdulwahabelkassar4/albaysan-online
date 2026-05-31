@@ -13,15 +13,15 @@ const Contact = () => {
           <h1 className="text-3xl font-bold">{t("nav.contact")}</h1>
           <p className="text-sm text-white/70">{t("mission")}</p>
           <div className="space-y-3 text-sm text-white/70">
-            <p className={`flex items-start gap-2 ${isRTL ? "flex-row-reverse text-right" : "text-left"}`}>
+            <p className={isRTL ? "flex items-start gap-2 text-right" : "flex items-start gap-2 text-left"}>
               <MapPinIcon className="mt-0.5 h-4 w-4 shrink-0 text-secondary-200" />
               <span>{t("contact.address")}</span>
             </p>
-            <p className={`flex items-center gap-2 ${isRTL ? "flex-row-reverse text-right" : "text-left"}`}>
+            <p className={isRTL ? "flex items-center gap-2 text-right" : "flex items-center gap-2 text-left"}>
               <ClockIcon className="h-4 w-4 shrink-0 text-secondary-200" />
               <span>{t("contact.hours")}</span>
             </p>
-            <p className={`flex items-center gap-2 ${isRTL ? "flex-row-reverse text-right" : "text-left"}`}>
+            <p className={isRTL ? "flex items-center gap-2 text-right" : "flex items-center gap-2 text-left"}>
               <PhoneIcon className="h-4 w-4 shrink-0 text-secondary-200" />
               <span>
                 {t("footer.whatsapp")}: {t("contact.phone")}

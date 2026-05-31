@@ -50,7 +50,7 @@ const Home = () => {
               className="animate-reveal rounded-2xl border border-white/10 bg-white/[0.04] p-4 backdrop-blur-sm transition duration-200 hover:-translate-y-0.5 hover:border-secondary-300/40 hover:bg-white/[0.08]"
               style={{ animationDelay: `${0.05 + index * 0.08}s` }}
             >
-              <div className={`flex items-center gap-3 ${isRTL ? "flex-row-reverse text-right" : "text-left"}`}>
+              <div className={`flex items-center gap-3 ${isRTL ? "text-right" : "text-left"}`}>
                 <span className="rounded-full bg-secondary-500/20 p-2 text-secondary-200">
                   <Icon className="h-4 w-4" />
                 </span>
