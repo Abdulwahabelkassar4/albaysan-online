@@ -10,6 +10,28 @@ const createToken = (id) =>
   jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: "7d" });
 
 const escapeRegex = (value = "") => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+const isSetupEnabled = () => process.env.ENABLE_ADMIN_SETUP === "true";
+const readSetupToken = (req) => req.headers["x-setup-token"] || req.body.setupToken;
+
+const ensureSetupAccess = (req, res) => {
+  if (!isSetupEnabled()) {
+    res.status(403).json({ message: "Admin setup is disabled" });
+    return false;
+  }
+
+  if (!process.env.ADMIN_SETUP_TOKEN) {
+    res.status(500).json({ message: "Server missing ADMIN_SETUP_TOKEN" });
+    return false;
+  }
+
+  const providedSetupToken = readSetupToken(req);
+  if (providedSetupToken !== process.env.ADMIN_SETUP_TOKEN) {
+    res.status(403).json({ message: "Invalid setup token" });
+    return false;
+  }
+
+  return true;
+};
 
 router.post("/login", async (req, res, next) => {
   try {
@@ -45,17 +67,8 @@ router.get("/me", protect, admin, (req, res) => {
 
 router.post("/setup", async (req, res, next) => {
   try {
-    if (process.env.ENABLE_ADMIN_SETUP !== "true") {
-      return res.status(403).json({ message: "Admin setup is disabled" });
-    }
-
-    if (!process.env.ADMIN_SETUP_TOKEN) {
-      return res.status(500).json({ message: "Server missing ADMIN_SETUP_TOKEN" });
-    }
-
-    const providedSetupToken = req.headers["x-setup-token"] || req.body.setupToken;
-    if (providedSetupToken !== process.env.ADMIN_SETUP_TOKEN) {
-      return res.status(403).json({ message: "Invalid setup token" });
+    if (!ensureSetupAccess(req, res)) {
+      return;
     }
 
     const existingAdmin = await Admin.countDocuments();
@@ -82,6 +95,40 @@ router.post("/setup", async (req, res, next) => {
     });
   } catch (error) {
     next(error);
+  }
+});
+
+// Temporary recovery endpoint: keep ENABLE_ADMIN_SETUP=true while using it, then disable.
+router.post("/reset-password", async (req, res, next) => {
+  try {
+    if (!ensureSetupAccess(req, res)) {
+      return;
+    }
+
+    const { username, password } = req.body;
+    const normalizedUsername = String(username || "").trim();
+    if (!normalizedUsername || !password) {
+      return res.status(400).json({ message: "Username and password are required" });
+    }
+
+    const usernamePattern = new RegExp(`^${escapeRegex(normalizedUsername)}$`, "i");
+    const existingAdmin = await Admin.findOne({ username: usernamePattern });
+    if (!existingAdmin) {
+      return res.status(404).json({ message: "Admin user not found" });
+    }
+
+    existingAdmin.password = await bcrypt.hash(password, 12);
+    if (!existingAdmin.username || existingAdmin.username !== normalizedUsername) {
+      existingAdmin.username = normalizedUsername;
+    }
+    await existingAdmin.save();
+
+    return res.json({
+      message: "Admin password updated successfully",
+      admin: { id: existingAdmin._id, username: existingAdmin.username },
+    });
+  } catch (error) {
+    return next(error);
   }
 });
 
