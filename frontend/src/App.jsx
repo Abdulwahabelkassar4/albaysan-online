@@ -51,9 +51,7 @@ const App = () => {
   const whatsappLink = useMemo(
     () =>
       buildWhatsAppLink({
-        message: t("whatsapp.prefill", {
-          defaultValue: "Hello, I would like to shop from Albaysan Online",
-        }),
+        message: t("whatsapp.prefill"),
       }),
     [t, i18n.language]
   );

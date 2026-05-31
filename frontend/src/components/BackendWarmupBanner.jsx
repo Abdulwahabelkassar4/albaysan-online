@@ -8,16 +8,14 @@ const BackendWarmupBanner = () => {
   if (isReady) return null;
 
   const primaryText =
-    phase === "offline"
-      ? t("status.connectionIssue", { defaultValue: "We’re reconnecting the boutique services." })
-      : t("status.preparingCollection", { defaultValue: "Preparing the latest collection…" });
+    phase === "offline" ? t("status.connectionIssue") : t("status.preparingCollection");
 
   const secondaryText =
     phase === "offline"
-      ? t("status.retryHint", { defaultValue: "Please try again in a moment." })
+      ? t("status.retryHint")
       : attempts >= 3
-        ? t("status.almostReady", { defaultValue: "Almost ready — loading products." })
-        : t("status.connecting", { defaultValue: "Connecting you to the boutique…" });
+        ? t("status.almostReady")
+        : t("status.connecting");
 
   return (
     <div className="mx-auto mt-4 w-full max-w-6xl px-6">
@@ -30,7 +28,7 @@ const BackendWarmupBanner = () => {
               onClick={warmUpNow}
               className="rounded-full border border-white/20 px-3 py-1 text-xs font-semibold text-white transition hover:bg-white/10"
             >
-              {t("status.retry", { defaultValue: "Retry" })}
+              {t("status.retry")}
             </button>
           )}
         </div>

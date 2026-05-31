@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { useCart } from "../context/CartContext.jsx";
-import { CartIcon, CloseIcon, MinusIcon, PlusIcon } from "./icons.jsx";
+import { CalendarIcon, CartIcon, CloseIcon, MinusIcon, PlusIcon, TruckIcon } from "./icons.jsx";
 
 const CartModal = () => {
   const { items, isOpen, closeCart, removeItem, updateQty, totalPrice } = useCart();
@@ -127,16 +127,18 @@ const CartModal = () => {
               <button
                 onClick={() => goToFlow("/delivery")}
                 disabled={items.length === 0}
-                className="rounded-full bg-gradient-to-r from-primary-500 via-secondary-500 to-primary-400 px-6 py-3 text-sm font-semibold text-white transition hover:scale-[1.01] disabled:cursor-not-allowed disabled:opacity-50"
+                className="inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-primary-500 via-secondary-500 to-primary-400 px-6 py-3 text-sm font-semibold text-white transition hover:scale-[1.01] disabled:cursor-not-allowed disabled:opacity-50"
               >
-                {t("cart.goToDelivery", { defaultValue: "Continue to delivery" })}
+                <TruckIcon className="h-4 w-4" />
+                {t("cart.goToDelivery")}
               </button>
               <button
                 onClick={() => goToFlow("/reservation")}
                 disabled={items.length === 0}
-                className="rounded-full border border-white/30 px-6 py-3 text-sm font-semibold text-white/90 transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50"
+                className="inline-flex items-center justify-center gap-2 rounded-full border border-white/30 px-6 py-3 text-sm font-semibold text-white/90 transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                {t("cart.goToReservation", { defaultValue: "Continue to reservation" })}
+                <CalendarIcon className="h-4 w-4" />
+                {t("cart.goToReservation")}
               </button>
             </div>
           </div>

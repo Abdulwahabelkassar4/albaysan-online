@@ -1,4 +1,5 @@
-﻿import { useTranslation } from "react-i18next";
+import { useTranslation } from "react-i18next";
+import { ShieldIcon, SparkleIcon, TruckIcon } from "../components/icons.jsx";
 
 const About = () => {
   const { t, i18n } = useTranslation();
@@ -20,18 +21,30 @@ const About = () => {
           <p className="text-sm text-white/70">{t("aboutPage.intro")}</p>
           <div className="grid gap-6 md:grid-cols-2">
             <div className="rounded-3xl border border-white/10 bg-white/5 p-6">
-              <h2 className="text-xl font-semibold text-white">{t("aboutPage.whyTitle")}</h2>
+              <h2 className={`flex items-center gap-2 text-xl font-semibold text-white ${isRTL ? "flex-row-reverse" : ""}`}>
+                <ShieldIcon className="h-5 w-5 text-secondary-200" />
+                {t("aboutPage.whyTitle")}
+              </h2>
               <ul className="mt-4 space-y-2 text-sm text-white/70">
                 {whyPoints.map((point) => (
-                  <li key={point}>{point}</li>
+                  <li key={point} className={`flex items-start gap-2 ${isRTL ? "flex-row-reverse" : ""}`}>
+                    <SparkleIcon className="mt-0.5 h-4 w-4 shrink-0 text-secondary-200" />
+                    <span>{point}</span>
+                  </li>
                 ))}
               </ul>
             </div>
             <div className="rounded-3xl border border-white/10 bg-white/5 p-6">
-              <h2 className="text-xl font-semibold text-white">{t("aboutPage.servicesTitle")}</h2>
+              <h2 className={`flex items-center gap-2 text-xl font-semibold text-white ${isRTL ? "flex-row-reverse" : ""}`}>
+                <TruckIcon className="h-5 w-5 text-secondary-200" />
+                {t("aboutPage.servicesTitle")}
+              </h2>
               <ul className="mt-4 space-y-2 text-sm text-white/70">
                 {servicesPoints.map((point) => (
-                  <li key={point}>{point}</li>
+                  <li key={point} className={`flex items-start gap-2 ${isRTL ? "flex-row-reverse" : ""}`}>
+                    <SparkleIcon className="mt-0.5 h-4 w-4 shrink-0 text-secondary-200" />
+                    <span>{point}</span>
+                  </li>
                 ))}
               </ul>
             </div>

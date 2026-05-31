@@ -15,10 +15,10 @@ const Home = () => {
   const featureCards = t("home.features", { returnObjects: true });
   const milestones = t("home.milestones", { returnObjects: true });
   const trustItems = [
-    { key: "delivery", icon: TruckIcon, fallback: "Fast delivery across Jordan and Palestine" },
-    { key: "womenOnly", icon: ShieldIcon, fallback: "Women-only boutique privacy" },
-    { key: "reservation", icon: CalendarIcon, fallback: "Flexible two-day reservation" },
-    { key: "support", icon: WhatsAppIcon, fallback: "WhatsApp confirmation and support" },
+    { key: "delivery", icon: TruckIcon },
+    { key: "womenOnly", icon: ShieldIcon },
+    { key: "reservation", icon: CalendarIcon },
+    { key: "support", icon: WhatsAppIcon },
   ];
 
   useEffect(() => {
@@ -44,15 +44,13 @@ const Home = () => {
       <Hero />
       <section className="mx-auto max-w-6xl px-6 pt-10">
         <div className="grid gap-3 md:grid-cols-4">
-          {trustItems.map(({ key, icon: Icon, fallback }) => (
+          {trustItems.map(({ key, icon: Icon }) => (
             <div key={key} className="rounded-2xl border border-white/10 bg-white/[0.04] p-4 backdrop-blur-sm">
               <div className={`flex items-center gap-3 ${isRTL ? "flex-row-reverse text-right" : "text-left"}`}>
                 <span className="rounded-full bg-secondary-500/20 p-2 text-secondary-200">
                   <Icon className="h-4 w-4" />
                 </span>
-                <p className="text-xs font-semibold text-white/90">
-                  {t(`home.trust.${key}`, { defaultValue: fallback })}
-                </p>
+                <p className="text-xs font-semibold text-white/90">{t(`home.trust.${key}`)}</p>
               </div>
             </div>
           ))}

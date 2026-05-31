@@ -74,3 +74,57 @@ export const WhatsAppIcon = ({ className = baseClassName }) => (
     <path d="M9.4 8.5c.3-.6.6-.6.9-.6h.4c.1 0 .3 0 .4.3.1.2.5 1.3.5 1.4.1.1.1.3 0 .4l-.3.5c-.1.1-.2.2-.1.4.1.2.5.8 1.2 1.3.8.6 1.5.8 1.7.9.2.1.3.1.4-.1l.5-.6c.1-.1.2-.2.4-.1.2.1 1.4.7 1.6.8.2.1.3.2.3.3s-.1.8-.4 1.1c-.3.3-.7.6-1.2.6s-1.5-.2-2.9-.9c-1.7-.8-2.7-2.5-2.8-2.7-.1-.2-.7-1-.7-1.9 0-.9.5-1.4.7-1.7Z" />
   </svg>
 );
+
+export const SearchIcon = ({ className = baseClassName }) => (
+  <svg viewBox="0 0 24 24" className={className} aria-hidden="true" {...iconProps}>
+    <circle cx="11" cy="11" r="7" />
+    <path d="m20 20-3.6-3.6" />
+  </svg>
+);
+
+export const FilterIcon = ({ className = baseClassName }) => (
+  <svg viewBox="0 0 24 24" className={className} aria-hidden="true" {...iconProps}>
+    <path d="M4 6h16M7 12h10M10 18h4" />
+  </svg>
+);
+
+export const MapPinIcon = ({ className = baseClassName }) => (
+  <svg viewBox="0 0 24 24" className={className} aria-hidden="true" {...iconProps}>
+    <path d="M12 21s6-5.4 6-10a6 6 0 1 0-12 0c0 4.6 6 10 6 10Z" />
+    <circle cx="12" cy="11" r="2.2" />
+  </svg>
+);
+
+export const ClockIcon = ({ className = baseClassName }) => (
+  <svg viewBox="0 0 24 24" className={className} aria-hidden="true" {...iconProps}>
+    <circle cx="12" cy="12" r="9" />
+    <path d="M12 7v6l4 2" />
+  </svg>
+);
+
+export const PhoneIcon = ({ className = baseClassName }) => (
+  <svg viewBox="0 0 24 24" className={className} aria-hidden="true" {...iconProps}>
+    <path d="M7 4h3l1 4-2 2a14 14 0 0 0 5 5l2-2 4 1v3a2 2 0 0 1-2.2 2A16 16 0 0 1 5 6.2 2 2 0 0 1 7 4Z" />
+  </svg>
+);
+
+export const BoxIcon = ({ className = baseClassName }) => (
+  <svg viewBox="0 0 24 24" className={className} aria-hidden="true" {...iconProps}>
+    <path d="m12 3 8 4.5v9L12 21l-8-4.5v-9L12 3Z" />
+    <path d="m4 7.5 8 4.5 8-4.5M12 12v9" />
+  </svg>
+);
+
+export const ClipboardIcon = ({ className = baseClassName }) => (
+  <svg viewBox="0 0 24 24" className={className} aria-hidden="true" {...iconProps}>
+    <rect x="6" y="5" width="12" height="16" rx="2" />
+    <path d="M9 5.5h6M10 3h4v3h-4z" />
+  </svg>
+);
+
+export const ChartIcon = ({ className = baseClassName }) => (
+  <svg viewBox="0 0 24 24" className={className} aria-hidden="true" {...iconProps}>
+    <path d="M4 20h16" />
+    <path d="M7 16V9M12 16V5M17 16v-4" />
+  </svg>
+);

@@ -189,9 +189,7 @@ const ProductDetails = () => {
           </button>
           <a
             href={buildWhatsAppLink({
-              message: t("whatsapp.prefill", {
-                defaultValue: "Hello, I would like to shop from Albaysan Online",
-              }),
+              message: t("whatsapp.prefill"),
             })}
             className="btn-primary w-full"
             target="_blank"

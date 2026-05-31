@@ -3,7 +3,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import axiosClient from "../api/axiosClient.js";
 import ProductCard from "../components/ProductCard.jsx";
-import { CloseIcon, SparkleIcon } from "../components/icons.jsx";
+import { CloseIcon, FilterIcon, SearchIcon, SparkleIcon } from "../components/icons.jsx";
 import { requestWithRetry } from "../utils/requestWithRetry.js";
 
 const categoryOptions = [
@@ -99,17 +99,26 @@ const Shop = () => {
             </h1>
             <p className="mt-2 text-sm text-white/70">{t("shop.intro")}</p>
           </div>
-          <input
-            type="search"
-            placeholder={t("shop.searchPlaceholder")}
-            value={filters.search}
-            onChange={(event) => updateFilter("search", event.target.value)}
-            className={`w-full rounded-full border border-white/20 bg-white/10 px-5 py-3 text-sm text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-primary-300 md:w-72 ${
-              isRTL ? "text-right" : "text-left"
-            }`}
-          />
+          <div
+            className={`relative w-full md:w-72 ${isRTL ? "text-right" : "text-left"}`}
+          >
+            <SearchIcon className={`pointer-events-none absolute top-1/2 h-4 w-4 -translate-y-1/2 text-white/45 ${isRTL ? "right-4" : "left-4"}`} />
+            <input
+              type="search"
+              placeholder={t("shop.searchPlaceholder")}
+              value={filters.search}
+              onChange={(event) => updateFilter("search", event.target.value)}
+              className={`w-full rounded-full border border-white/20 bg-white/10 py-3 text-sm text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-primary-300 ${
+                isRTL ? "pr-11 pl-5 text-right" : "pl-11 pr-5 text-left"
+              }`}
+            />
+          </div>
         </div>
-        <div className="mt-6 flex flex-wrap gap-3">
+        <div className={`mt-6 flex items-center gap-2 text-xs font-semibold text-white/70 ${isRTL ? "flex-row-reverse" : ""}`}>
+          <FilterIcon className="h-4 w-4 text-secondary-200" />
+          <span>{t("shop.categoryFilterLabel")}</span>
+        </div>
+        <div className="mt-3 flex flex-wrap gap-3">
           <button
             onClick={() => updateFilter("category", "")}
             className={`rounded-full px-4 py-2 text-xs font-semibold transition ${
@@ -132,7 +141,11 @@ const Shop = () => {
             </button>
           ))}
         </div>
-        <div className="mt-4 flex flex-wrap gap-3">
+        <div className={`mt-6 flex items-center gap-2 text-xs font-semibold text-white/70 ${isRTL ? "flex-row-reverse" : ""}`}>
+          <FilterIcon className="h-4 w-4 text-secondary-200" />
+          <span>{t("shop.collectionFilterLabel")}</span>
+        </div>
+        <div className="mt-3 flex flex-wrap gap-3">
           <button
             onClick={() => updateFilter("productCollection", "")}
             className={`rounded-full px-4 py-2 text-xs font-semibold transition ${
@@ -172,7 +185,7 @@ const Shop = () => {
                 className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-xs font-semibold text-white hover:bg-white/20"
               >
                 <CloseIcon className="h-4 w-4" />
-                {t("shop.resetFilters", { defaultValue: "Reset filters" })}
+                {t("shop.resetFilters")}
               </button>
               <Link
                 to="/collections"

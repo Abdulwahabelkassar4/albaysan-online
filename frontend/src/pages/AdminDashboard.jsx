@@ -2,12 +2,13 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import axiosClient from "../api/axiosClient.js";
+import { BoxIcon, ChartIcon, ClipboardIcon } from "../components/icons.jsx";
 import { useToast } from "../context/ToastContext.jsx";
 
 const controlLinks = [
-  { to: "/admin/products", icon: "🛍️", labelKey: "admin.links.products" },
-  { to: "/admin/orders", icon: "📦", labelKey: "admin.links.orders" },
-  { to: "/admin/dashboard#analytics", icon: "📊", labelKey: "admin.links.analytics" },
+  { to: "/admin/products", icon: BoxIcon, labelKey: "admin.links.products" },
+  { to: "/admin/orders", icon: ClipboardIcon, labelKey: "admin.links.orders" },
+  { to: "/admin/dashboard#analytics", icon: ChartIcon, labelKey: "admin.links.analytics" },
 ];
 
 const AdminDashboard = ({ onLogout }) => {
@@ -67,16 +68,25 @@ const AdminDashboard = ({ onLogout }) => {
         </button>
       </div>
       <section className="mt-10 grid gap-6 md:grid-cols-3">
-        <div className="glass-card p-6">
-          <p className="text-sm text-white/70">{t("admin.stats.products")}</p>
+        <div className={`glass-card p-6 ${isRTL ? "text-right" : "text-left"}`}>
+          <div className={`flex items-center gap-2 text-sm text-white/70 ${isRTL ? "flex-row-reverse" : ""}`}>
+            <BoxIcon className="h-4 w-4 text-secondary-200" />
+            <span>{t("admin.stats.products")}</span>
+          </div>
           <p className="mt-3 text-4xl font-black text-secondary-200">{stats.products}</p>
         </div>
-        <div className="glass-card p-6">
-          <p className="text-sm text-white/70">{t("admin.stats.pendingOrders")}</p>
+        <div className={`glass-card p-6 ${isRTL ? "text-right" : "text-left"}`}>
+          <div className={`flex items-center gap-2 text-sm text-white/70 ${isRTL ? "flex-row-reverse" : ""}`}>
+            <ClipboardIcon className="h-4 w-4 text-primary-200" />
+            <span>{t("admin.stats.pendingOrders")}</span>
+          </div>
           <p className="mt-3 text-4xl font-black text-primary-200">{stats.pendingOrders}</p>
         </div>
-        <div className="glass-card p-6">
-          <p className="text-sm text-white/70">{t("admin.stats.pendingReservations")}</p>
+        <div className={`glass-card p-6 ${isRTL ? "text-right" : "text-left"}`}>
+          <div className={`flex items-center gap-2 text-sm text-white/70 ${isRTL ? "flex-row-reverse" : ""}`}>
+            <ChartIcon className="h-4 w-4 text-white" />
+            <span>{t("admin.stats.pendingReservations")}</span>
+          </div>
           <p className="mt-3 text-4xl font-black text-white">{stats.pendingReservations}</p>
         </div>
       </section>
@@ -88,19 +98,22 @@ const AdminDashboard = ({ onLogout }) => {
           {t("admin.linksTitle")}
         </h2>
         <div className="mt-6 grid grid-cols-1 justify-items-center gap-6 md:grid-cols-3">
-          {controlLinks.map((item, index) => (
-            <Link
-              key={item.labelKey}
-              to={item.to}
-              className="animate-admin-fade w-full max-w-xs rounded-3xl border border-white/10 bg-white/5 px-6 py-5 text-center text-white shadow-lg shadow-primary-900/20 transition hover:border-secondary-300 hover:bg-white/10"
-              style={{ animationDelay: `${0.2 + index * 0.15}s` }}
-            >
-              <span className="text-3xl" aria-hidden="true">
-                {item.icon}
-              </span>
-              <span className="mt-3 block text-lg font-semibold">{t(item.labelKey)}</span>
-            </Link>
-          ))}
+          {controlLinks.map((item, index) => {
+            const Icon = item.icon;
+            return (
+              <Link
+                key={item.labelKey}
+                to={item.to}
+                className="animate-admin-fade w-full max-w-xs rounded-3xl border border-white/10 bg-white/5 px-6 py-5 text-center text-white shadow-lg shadow-primary-900/20 transition hover:border-secondary-300 hover:bg-white/10"
+                style={{ animationDelay: `${0.2 + index * 0.15}s` }}
+              >
+                <span className="inline-flex rounded-full bg-white/10 p-3 text-secondary-200" aria-hidden="true">
+                  <Icon className="h-6 w-6" />
+                </span>
+                <span className="mt-3 block text-lg font-semibold">{t(item.labelKey)}</span>
+              </Link>
+            );
+          })}
         </div>
       </section>
     </div>

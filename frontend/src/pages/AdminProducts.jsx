@@ -15,11 +15,11 @@ const defaultValues = {
 };
 
 const categoryOptions = [
-  { value: "عباءات", labelKey: "adminProductsPage.categories.abayas", fallback: "Abayas" },
-  { value: "ادناءات", labelKey: "adminProductsPage.categories.idnaas", fallback: "Khima/Idnaas" },
-  { value: "نقابات", labelKey: "adminProductsPage.categories.niqabs", fallback: "Niqabs" },
-  { value: "سبورات شرعية", labelKey: "adminProductsPage.categories.sports", fallback: "Modest sportswear" },
-  { value: "حقائب", labelKey: "adminProductsPage.categories.bags", fallback: "Bags" },
+  { value: "عباءات", labelKey: "adminProductsPage.categories.abayas" },
+  { value: "ادناءات", labelKey: "adminProductsPage.categories.idnaas" },
+  { value: "نقابات", labelKey: "adminProductsPage.categories.niqabs" },
+  { value: "سبورات شرعية", labelKey: "adminProductsPage.categories.sports" },
+  { value: "حقائب", labelKey: "adminProductsPage.categories.bags" },
 ];
 
 const collectionOptions = [
@@ -232,7 +232,7 @@ const AdminProducts = () => {
                   <option value="">{t("adminProductsPage.form.categoryPlaceholder")}</option>
                   {categoryOptions.map((option) => (
                     <option key={option.value} value={option.value} className="text-black">
-                      {t(option.labelKey, { defaultValue: option.fallback })}
+                      {t(option.labelKey)}
                     </option>
                   ))}
                 </select>
@@ -396,3 +396,4 @@ const AdminProducts = () => {
 };
 
 export default AdminProducts;
+

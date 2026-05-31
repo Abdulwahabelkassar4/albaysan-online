@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { ClockIcon, MapPinIcon, PhoneIcon } from "../components/icons.jsx";
 import { SOCIAL_LINKS } from "../config/contact.js";
 
 const Contact = () => {
@@ -12,10 +13,19 @@ const Contact = () => {
           <h1 className="text-3xl font-bold">{t("nav.contact")}</h1>
           <p className="text-sm text-white/70">{t("mission")}</p>
           <div className="space-y-3 text-sm text-white/70">
-            <p>📍 {t("contact.address")}</p>
-            <p>⏰ {t("contact.hours")}</p>
-            <p>
-              📱 {t("footer.whatsapp")}: {t("contact.phone")}
+            <p className={`flex items-start gap-2 ${isRTL ? "flex-row-reverse text-right" : "text-left"}`}>
+              <MapPinIcon className="mt-0.5 h-4 w-4 shrink-0 text-secondary-200" />
+              <span>{t("contact.address")}</span>
+            </p>
+            <p className={`flex items-center gap-2 ${isRTL ? "flex-row-reverse text-right" : "text-left"}`}>
+              <ClockIcon className="h-4 w-4 shrink-0 text-secondary-200" />
+              <span>{t("contact.hours")}</span>
+            </p>
+            <p className={`flex items-center gap-2 ${isRTL ? "flex-row-reverse text-right" : "text-left"}`}>
+              <PhoneIcon className="h-4 w-4 shrink-0 text-secondary-200" />
+              <span>
+                {t("footer.whatsapp")}: {t("contact.phone")}
+              </span>
             </p>
           </div>
           <div className="flex gap-4">
@@ -54,4 +64,3 @@ const Contact = () => {
 };
 
 export default Contact;
-

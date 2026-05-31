@@ -49,7 +49,7 @@ const ProductCard = ({ product }) => {
       <div className="absolute top-3 left-3 rounded-full bg-black/40 px-3 py-1 text-xs text-white/85 backdrop-blur-sm">
         <span className="inline-flex items-center gap-1">
           <SparkleIcon className="h-3.5 w-3.5" />
-          {t("productCard.featured", { defaultValue: "Featured" })}
+          {t("productCard.featured")}
         </span>
       </div>
       <div className={`space-y-2 p-5 text-white ${isRTL ? "text-right" : "text-left"}`}>
@@ -71,7 +71,7 @@ const ProductCard = ({ product }) => {
           className="mt-1 inline-flex w-full items-center justify-center gap-2 rounded-full bg-white/10 px-4 py-2 text-xs font-semibold text-white transition hover:bg-white/20"
         >
           <CartIcon className="h-4 w-4" />
-          {t("productCard.quickAdd", { defaultValue: "Quick add" })}
+          {t("productCard.quickAdd")}
         </button>
       </div>
     </article>

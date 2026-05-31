@@ -22,6 +22,17 @@ const resources = {
         reservation: "حجز القطع",
         admin: "لوحة التحكم",
       },
+      status: {
+        preparingCollection: "Preparing the latest collection�",
+        connecting: "Connecting you to the boutique�",
+        almostReady: "Almost ready, loading products.",
+        connectionIssue: "We are reconnecting boutique services.",
+        retryHint: "Please try again in a moment.",
+        retry: "Retry",
+      },
+      whatsapp: {
+        prefill: "Hello, I would like to shop from Albaysan Online",
+      },
       heroCTA: "تسوقي الآن",
       heroSecondaryCTA: "احجزي موعداً",
       hero: {
@@ -59,6 +70,12 @@ const resources = {
         ],
         latestTitle: "أحدث التصاميم",
         latestEmpty: "لم يتم إضافة منتجات بعد، يرجى العودة لاحقاً.",
+        trust: {
+          delivery: "Fast delivery across Jordan and Palestine",
+          womenOnly: "Women-only boutique privacy",
+          reservation: "Flexible two-day reservation",
+          support: "WhatsApp confirmation and support",
+        },
         milestones: [
           { value: "2019", label: "الانطلاق أونلاين" },
           { value: "2024", label: "افتتاح المعرض على أرض الواقع" },
@@ -69,12 +86,15 @@ const resources = {
         title: "المتجر",
         intro: "اختاري من تصاميم البيلسان المميزة، مع خيار الحجز والاستلام خلال يومين.",
         searchPlaceholder: "ابحثي عن تصميم...",
+        categoryFilterLabel: "Filter by category",
+        collectionFilterLabel: "Filter by collection",
         allCategories: "جميع الفئات",
         allCollections: "جميع المجموعات",
+        resetFilters: "Reset filters",
         empty: "لا توجد منتجات مطابقة للبحث حالياً.",
         categories: {
           abayas: "عباءات",
-          idnaas: "ادناءات",
+          idnaas: "Khima/Idnaas",
           sports: "سبورات شرعية",
           niqabs: "نقابات",
           bags: "حقائب",
@@ -127,6 +147,8 @@ const resources = {
       },
       productCard: {
         details: "التفاصيل",
+        featured: "Featured",
+        quickAdd: "Quick add",
       },
       cart: {
         title: "السلة",
@@ -142,6 +164,8 @@ const resources = {
         closeShort: "إغلاق",
         decrease: "إنقاص الكمية",
         increase: "زيادة الكمية",
+        goToDelivery: "Continue to delivery",
+        goToReservation: "Continue to reservation",
       },
       cartButton: {
         label: "السلة",
@@ -278,6 +302,7 @@ const resources = {
         backToDashboard: "العودة إلى لوحة التحكم",
         categories: {
           abayas: "عبايات",
+          idnaas: "Khima/Idnaas",
           niqabs: "نقابات",
           sports: "سبورات شرعية",
           bags: "حقائب",
@@ -422,6 +447,17 @@ const resources = {
         reservation: "Reservation",
         admin: "Admin",
       },
+      status: {
+        preparingCollection: "Preparing the latest collection�",
+        connecting: "Connecting you to the boutique�",
+        almostReady: "Almost ready, loading products.",
+        connectionIssue: "We are reconnecting boutique services.",
+        retryHint: "Please try again in a moment.",
+        retry: "Retry",
+      },
+      whatsapp: {
+        prefill: "Hello, I would like to shop from Albaysan Online",
+      },
       heroCTA: "Shop Now",
       heroSecondaryCTA: "Book a Visit",
       hero: {
@@ -459,6 +495,12 @@ const resources = {
         ],
         latestTitle: "Latest Arrivals",
         latestEmpty: "No products added yet. Please check back soon.",
+        trust: {
+          delivery: "Fast delivery across Jordan and Palestine",
+          womenOnly: "Women-only boutique privacy",
+          reservation: "Flexible two-day reservation",
+          support: "WhatsApp confirmation and support",
+        },
         milestones: [
           { value: "2019", label: "Online launch" },
           { value: "2024", label: "Physical boutique opened" },
@@ -470,8 +512,11 @@ const resources = {
         intro:
           "Browse Albaysan’s signature designs with the option to reserve and collect within two days.",
         searchPlaceholder: "Search for a design...",
+        categoryFilterLabel: "Filter by category",
+        collectionFilterLabel: "Filter by collection",
         allCategories: "All Categories",
         allCollections: "All Collections",
+        resetFilters: "Reset filters",
         empty: "No products match your filters right now.",
         categories: {
           abayas: "Abayas",
@@ -528,6 +573,8 @@ const resources = {
       },
       productCard: {
         details: "Details",
+        featured: "Featured",
+        quickAdd: "Quick add",
       },
       cart: {
         title: "Cart",
@@ -543,6 +590,8 @@ const resources = {
         closeShort: "Close",
         decrease: "Decrease quantity",
         increase: "Increase quantity",
+        goToDelivery: "Continue to delivery",
+        goToReservation: "Continue to reservation",
       },
       cartButton: {
         label: "Cart",
@@ -675,6 +724,7 @@ const resources = {
         backToDashboard: "Back to dashboard",
         categories: {
           abayas: "Abayas",
+          idnaas: "Khima/Idnaas",
           niqabs: "Niqabs",
           sports: "Modest sportswear",
           bags: "Bags",
@@ -760,3 +810,7 @@ i18n.use(initReactI18next).init({
 });
 
 export default i18n;
+
+
+
+
