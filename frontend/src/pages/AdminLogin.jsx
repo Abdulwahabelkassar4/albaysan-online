@@ -13,7 +13,11 @@ const AdminLogin = ({ onLogin }) => {
 
   const onSubmit = async (values) => {
     try {
-      const data = await loginAdmin(values);
+      const payload = {
+        username: String(values.username || "").trim(),
+        password: values.password,
+      };
+      const data = await loginAdmin(payload);
       localStorage.setItem("albaylsan_token", data.token);
       showToast(t("admin.loginSuccess"), "success");
       onLogin?.();

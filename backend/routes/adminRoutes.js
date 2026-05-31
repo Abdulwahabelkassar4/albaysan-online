@@ -9,10 +9,19 @@ const router = express.Router();
 const createToken = (id) =>
   jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: "7d" });
 
+const escapeRegex = (value = "") => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
 router.post("/login", async (req, res, next) => {
   try {
     const { username, password } = req.body;
-    const admin = await Admin.findOne({ username });
+    const normalizedUsername = String(username || "").trim();
+
+    if (!normalizedUsername || !password) {
+      return res.status(400).json({ message: "Username and password are required" });
+    }
+
+    const usernamePattern = new RegExp(`^${escapeRegex(normalizedUsername)}$`, "i");
+    const admin = await Admin.findOne({ username: usernamePattern });
 
     if (!admin) {
       return res.status(401).json({ message: "Invalid credentials" });
@@ -55,14 +64,15 @@ router.post("/setup", async (req, res, next) => {
     }
 
     const { username, password } = req.body;
-    if (!username || !password) {
+    const normalizedUsername = String(username || "").trim();
+    if (!normalizedUsername || !password) {
       return res
         .status(400)
         .json({ message: "Username and password are required" });
     }
 
     const hashedPassword = await bcrypt.hash(password, 12);
-    const admin = await Admin.create({ username, password: hashedPassword });
+    const admin = await Admin.create({ username: normalizedUsername, password: hashedPassword });
     const token = createToken(admin._id);
 
     res.status(201).json({
