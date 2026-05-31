@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { SOCIAL_LINKS } from "../config/contact.js";
 
 const Contact = () => {
   const { t, i18n } = useTranslation();
@@ -19,7 +20,7 @@ const Contact = () => {
           </div>
           <div className="flex gap-4">
             <a
-              href="https://www.facebook.com/share/1JJ8FLx3Xs/?mibextid=wwXIfr"
+              href={SOCIAL_LINKS.facebook}
               target="_blank"
               rel="noreferrer"
               className="btn-primary px-5 py-2 text-xs"
@@ -27,7 +28,7 @@ const Contact = () => {
               {t("footerLinks.facebook")}
             </a>
             <a
-              href="https://www.instagram.com/albaylsan_online?igsh=cDdpenhia212dW5l"
+              href={SOCIAL_LINKS.instagram}
               target="_blank"
               rel="noreferrer"
               className="btn-secondary px-5 py-2 text-xs"

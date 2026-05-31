@@ -1,0 +1,76 @@
+const iconProps = {
+  fill: "none",
+  stroke: "currentColor",
+  strokeWidth: 1.8,
+  strokeLinecap: "round",
+  strokeLinejoin: "round",
+};
+
+const baseClassName = "h-5 w-5";
+
+export const MenuIcon = ({ className = baseClassName }) => (
+  <svg viewBox="0 0 24 24" className={className} aria-hidden="true" {...iconProps}>
+    <path d="M4 7h16M4 12h16M4 17h16" />
+  </svg>
+);
+
+export const CloseIcon = ({ className = baseClassName }) => (
+  <svg viewBox="0 0 24 24" className={className} aria-hidden="true" {...iconProps}>
+    <path d="m6 6 12 12M18 6 6 18" />
+  </svg>
+);
+
+export const CartIcon = ({ className = baseClassName }) => (
+  <svg viewBox="0 0 24 24" className={className} aria-hidden="true" {...iconProps}>
+    <path d="M3 4h2l2.2 10.2a2 2 0 0 0 2 1.6h7.7a2 2 0 0 0 1.9-1.4L22 7H7" />
+    <circle cx="10" cy="20" r="1.3" />
+    <circle cx="18" cy="20" r="1.3" />
+  </svg>
+);
+
+export const PlusIcon = ({ className = baseClassName }) => (
+  <svg viewBox="0 0 24 24" className={className} aria-hidden="true" {...iconProps}>
+    <path d="M12 5v14M5 12h14" />
+  </svg>
+);
+
+export const MinusIcon = ({ className = baseClassName }) => (
+  <svg viewBox="0 0 24 24" className={className} aria-hidden="true" {...iconProps}>
+    <path d="M5 12h14" />
+  </svg>
+);
+
+export const TruckIcon = ({ className = baseClassName }) => (
+  <svg viewBox="0 0 24 24" className={className} aria-hidden="true" {...iconProps}>
+    <path d="M3 7h11v8H3zM14 10h3l3 3v2h-6z" />
+    <circle cx="7" cy="18" r="1.6" />
+    <circle cx="18" cy="18" r="1.6" />
+  </svg>
+);
+
+export const ShieldIcon = ({ className = baseClassName }) => (
+  <svg viewBox="0 0 24 24" className={className} aria-hidden="true" {...iconProps}>
+    <path d="M12 3 5 6v6c0 4.4 2.9 7.8 7 9 4.1-1.2 7-4.6 7-9V6l-7-3Z" />
+    <path d="m9.5 12 1.8 1.8L14.8 10" />
+  </svg>
+);
+
+export const CalendarIcon = ({ className = baseClassName }) => (
+  <svg viewBox="0 0 24 24" className={className} aria-hidden="true" {...iconProps}>
+    <rect x="3" y="5" width="18" height="16" rx="2" />
+    <path d="M16 3v4M8 3v4M3 10h18" />
+  </svg>
+);
+
+export const SparkleIcon = ({ className = baseClassName }) => (
+  <svg viewBox="0 0 24 24" className={className} aria-hidden="true" {...iconProps}>
+    <path d="m12 3 1.9 4.8L19 9.7l-4 2.6L16.3 17 12 14.4 7.7 17 9 12.3l-4-2.6 5.1-1.9z" />
+  </svg>
+);
+
+export const WhatsAppIcon = ({ className = baseClassName }) => (
+  <svg viewBox="0 0 24 24" className={className} aria-hidden="true" {...iconProps}>
+    <path d="M20 11.8a8 8 0 0 1-11.8 7l-3.2.9.9-3.1A8 8 0 1 1 20 11.8Z" />
+    <path d="M9.4 8.5c.3-.6.6-.6.9-.6h.4c.1 0 .3 0 .4.3.1.2.5 1.3.5 1.4.1.1.1.3 0 .4l-.3.5c-.1.1-.2.2-.1.4.1.2.5.8 1.2 1.3.8.6 1.5.8 1.7.9.2.1.3.1.4-.1l.5-.6c.1-.1.2-.2.4-.1.2.1 1.4.7 1.6.8.2.1.3.2.3.3s-.1.8-.4 1.1c-.3.3-.7.6-1.2.6s-1.5-.2-2.9-.9c-1.7-.8-2.7-2.5-2.8-2.7-.1-.2-.7-1-.7-1.9 0-.9.5-1.4.7-1.7Z" />
+  </svg>
+);

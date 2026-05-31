@@ -77,6 +77,13 @@ body {
   animation: slowGlow 6s ease-in-out infinite;
 }
 
+.hero-flower-blend {
+  mix-blend-mode: screen;
+  filter: drop-shadow(0 10px 24px rgba(168, 122, 255, 0.28));
+  -webkit-mask-image: radial-gradient(circle at center, black 62%, transparent 100%);
+  mask-image: radial-gradient(circle at center, black 62%, transparent 100%);
+}
+
 @keyframes floralFade {
   0% {
     opacity: 0;

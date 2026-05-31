@@ -752,7 +752,7 @@ const resources = {
 
 i18n.use(initReactI18next).init({
   resources,
-  lng: "ar",
+  lng: localStorage.getItem("albaylsan_lang") || "ar",
   fallbackLng: "ar",
   interpolation: {
     escapeValue: false,

@@ -1,0 +1,86 @@
+- generic [ref=e4]:
+  - banner [ref=e5]:
+    - generic [ref=e6]:
+      - link "البيلسان أونلاين البيلسان أونلاين المتجر مخصص للنساء فقط" [ref=e7] [cursor=pointer]:
+        - /url: /
+        - img "البيلسان أونلاين" [ref=e8]
+        - generic [ref=e9]:
+          - generic [ref=e10]: البيلسان أونلاين
+          - generic [ref=e11]: المتجر مخصص للنساء فقط
+      - button "Toggle navigation" [active] [ref=e154] [cursor=pointer]: ☰
+      - navigation [ref=e12]:
+        - link "الرئيسية" [ref=e13] [cursor=pointer]:
+          - /url: /
+        - link "المتجر" [ref=e14] [cursor=pointer]:
+          - /url: /shop
+        - link "المجموعات" [ref=e15] [cursor=pointer]:
+          - /url: /collections
+        - link "عن البيلسان" [ref=e16] [cursor=pointer]:
+          - /url: /about
+        - link "تواصل معنا" [ref=e17] [cursor=pointer]:
+          - /url: /contact
+        - link "خدمة التوصيل" [ref=e18] [cursor=pointer]:
+          - /url: /delivery
+        - link "حجز القطع" [ref=e19] [cursor=pointer]:
+          - /url: /reservation
+        - button "English" [ref=e20] [cursor=pointer]
+  - main [ref=e21]:
+    - generic [ref=e120]:
+      - generic [ref=e121]:
+        - heading "خطوات الطلب" [level=2] [ref=e122]
+        - generic [ref=e123]:
+          - generic [ref=e124]:
+            - generic [ref=e125]: "1"
+            - paragraph [ref=e126]: أضف المنتجات إلى السلة بعد اختيار المقاس واللون.
+          - generic [ref=e127]:
+            - generic [ref=e128]: "2"
+            - paragraph [ref=e129]: املأ نموذج التوصيل بمعلوماتك وعنوانك بالتفصيل.
+          - generic [ref=e130]:
+            - generic [ref=e131]: "3"
+            - paragraph [ref=e132]: بعد الإرسال سيتم تحويلك تلقائيًا إلى واتساب لتأكيد الطلب.
+      - generic [ref=e133]:
+        - generic [ref=e134]:
+          - heading "خدمة التوصيل" [level=1] [ref=e135]
+          - paragraph [ref=e136]: توصيل لكل محافظات الأردن وفلسطين وبعض محافظات سوريا
+        - generic [ref=e137]:
+          - generic [ref=e138]:
+            - generic [ref=e139]: الاسم الكامل
+            - textbox [ref=e140]
+            - generic [ref=e151]: هذا الحقل مطلوب
+          - generic [ref=e141]:
+            - generic [ref=e142]: رقم الهاتف
+            - textbox [ref=e143]
+            - generic [ref=e152]: هذا الحقل مطلوب
+          - generic [ref=e144]:
+            - generic [ref=e145]: العنوان
+            - textbox [ref=e146]
+            - generic [ref=e153]: هذا الحقل مطلوب
+          - generic [ref=e147]:
+            - generic [ref=e148]: تفاصيل الطلب
+            - textbox [ref=e149]: السلة فارغة حاليًا
+          - button "إرسال الطلب" [ref=e150] [cursor=pointer]
+  - contentinfo [ref=e71]:
+    - generic [ref=e72]:
+      - generic [ref=e73]:
+        - heading "البيلسان أونلاين" [level=3] [ref=e74]
+        - paragraph [ref=e75]: أن نكون سبباً في احتشام نساء المسلمين ونشر اللباس الشرعي وتحسين صورته
+      - generic [ref=e76]:
+        - heading "الموقع وساعات العمل" [level=4] [ref=e77]
+        - paragraph [ref=e78]: الأردن – إربد – شارع الجامعة – مقابل كازية المناصير – المحل مخصص للنساء فقط
+        - paragraph [ref=e79]: ⏰ 10 صباحاً – 8 مساءً — توصيل لكل محافظات الأردن وفلسطين وبعض محافظات سوريا
+      - generic [ref=e80]:
+        - heading "تواصل معنا" [level=4] [ref=e81]
+        - paragraph [ref=e82]: "واتساب: 0798522935"
+        - generic [ref=e83]:
+          - link "Facebook" [ref=e84] [cursor=pointer]:
+            - /url: https://www.facebook.com/share/1JJ8FLx3Xs/?mibextid=wwXIfr
+          - link "Instagram" [ref=e85] [cursor=pointer]:
+            - /url: https://www.instagram.com/albaylsan_online?igsh=cDdpenhia212dW5l
+    - generic [ref=e86]: © 2026 البيلسان أونلاين — جميع الحقوق محفوظة
+  - button "فتح السلة" [ref=e87] [cursor=pointer]:
+    - generic [ref=e88]: 🛒
+    - generic [ref=e89]: السلة
+    - generic [ref=e90]: "0"
+  - link "تواصلي عبر واتساب للطلب" [ref=e91] [cursor=pointer]:
+    - /url: https://wa.me/962798522935?text=%D9%85%D8%B1%D8%AD%D8%A8%D8%A7.%20%D8%A3%D8%B1%D8%BA%D8%A8%20%D8%A8%D8%A7%D9%84%D8%AA%D8%B3%D9%88%D9%82%20%D9%85%D9%86%20%D9%85%D8%AA%D8%AC%D8%B1%20%D8%A7%D9%84%D8%A8%D9%8A%D9%84%D8%B3%D8%A7%D9%86
+    - text: واتساب

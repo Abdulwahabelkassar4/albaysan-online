@@ -1,0 +1,89 @@
+- generic [ref=e4]:
+  - banner [ref=e5]:
+    - generic [ref=e6]:
+      - link "البيلسان أونلاين البيلسان أونلاين المتجر مخصص للنساء فقط" [ref=e7] [cursor=pointer]:
+        - /url: /
+        - img "البيلسان أونلاين" [ref=e8]
+        - generic [ref=e9]:
+          - generic [ref=e10]: البيلسان أونلاين
+          - generic [ref=e11]: المتجر مخصص للنساء فقط
+      - navigation [ref=e12]:
+        - link "الرئيسية" [ref=e13] [cursor=pointer]:
+          - /url: /
+        - link "المتجر" [ref=e14] [cursor=pointer]:
+          - /url: /shop
+        - link "المجموعات" [ref=e15] [cursor=pointer]:
+          - /url: /collections
+        - link "عن البيلسان" [ref=e16] [cursor=pointer]:
+          - /url: /about
+        - link "تواصل معنا" [ref=e17] [cursor=pointer]:
+          - /url: /contact
+        - link "خدمة التوصيل" [ref=e18] [cursor=pointer]:
+          - /url: /delivery
+        - link "حجز القطع" [ref=e19] [cursor=pointer]:
+          - /url: /reservation
+        - button "English" [ref=e20] [cursor=pointer]
+  - main [ref=e21]:
+    - generic [ref=e24]:
+      - generic [ref=e25]:
+        - generic [ref=e26]: منذ 2019 — خياطة راقية بتفاصيل عربية معاصرة
+        - heading "البيلسان أونلاين" [level=1] [ref=e27]
+        - paragraph [ref=e28]: بدأنا عام 2019 أونلاين، وفي 2024 فتحنا متجرنا على أرض الواقع. تصاميمنا شرعية ومميزة من مشاغلنا الخاصة.
+        - paragraph [ref=e29]: نحن نؤمن بأن كل إطلالة تستحق أن تكون استثنائية، لذلك نصمم مجموعات موسمية محدودة بعناية ونقدم تجربة حجز وتوصيل مرنة لتلائم أسلوب حياتك.
+        - generic [ref=e30]:
+          - link "تسوقي الآن" [ref=e31] [cursor=pointer]:
+            - /url: /shop
+          - link "احجزي موعداً" [ref=e32] [cursor=pointer]:
+            - /url: /reservation
+      - generic [ref=e33]:
+        - img "البيلسان أونلاين" [ref=e36]
+        - paragraph [ref=e37]: نصنع كل قطعة بشغف للتفاصيل، من اختيار الأقمشة المخملية إلى اللمسات اليدوية الدقيقة، لنضمن لك حضورًا يعبر عن أناقتك الهادئة وثقتك.
+        - generic [ref=e38]: 10 صباحًا - 8 مساءً — توصيل لكل محافظات الأردن وفلسطين وبعض محافظات سوريا
+    - generic [ref=e40]:
+      - generic [ref=e41]:
+        - heading "تصاميم حصرية" [level=3] [ref=e42]
+        - paragraph [ref=e43]: منتجات لا تُباع في الأسواق الأخرى مع لمسات شرعية أنيقة.
+      - generic [ref=e44]:
+        - heading "ورشاتنا الخاصة" [level=3] [ref=e45]
+        - paragraph [ref=e46]: نعمل من خلال مشاغلنا وفريقنا الداخلي لضمان الجودة والاحتشام.
+      - generic [ref=e47]:
+        - heading "موديلاتنا الخاصة" [level=3] [ref=e48]
+        - paragraph [ref=e49]: عارضاتنا ملتزمات باللباس الشرعي ويعرضن التصاميم كما صُممت.
+    - generic [ref=e52]:
+      - heading "أحدث التصاميم" [level=2] [ref=e53]
+      - paragraph [ref=e54]: توصيل لكل محافظات الأردن وفلسطين وبعض محافظات سوريا
+    - generic [ref=e61]:
+      - generic [ref=e62]:
+        - paragraph [ref=e63]: "2019"
+        - paragraph [ref=e64]: الانطلاق أونلاين
+      - generic [ref=e65]:
+        - paragraph [ref=e66]: "2024"
+        - paragraph [ref=e67]: افتتاح المعرض على أرض الواقع
+      - generic [ref=e68]:
+        - paragraph [ref=e69]: "+1000"
+        - paragraph [ref=e70]: عميلة راضية وخدمة حجز مرنة
+  - contentinfo [ref=e71]:
+    - generic [ref=e72]:
+      - generic [ref=e73]:
+        - heading "البيلسان أونلاين" [level=3] [ref=e74]
+        - paragraph [ref=e75]: أن نكون سبباً في احتشام نساء المسلمين ونشر اللباس الشرعي وتحسين صورته
+      - generic [ref=e76]:
+        - heading "الموقع وساعات العمل" [level=4] [ref=e77]
+        - paragraph [ref=e78]: الأردن – إربد – شارع الجامعة – مقابل كازية المناصير – المحل مخصص للنساء فقط
+        - paragraph [ref=e79]: ⏰ 10 صباحاً – 8 مساءً — توصيل لكل محافظات الأردن وفلسطين وبعض محافظات سوريا
+      - generic [ref=e80]:
+        - heading "تواصل معنا" [level=4] [ref=e81]
+        - paragraph [ref=e82]: "واتساب: 0798522935"
+        - generic [ref=e83]:
+          - link "Facebook" [ref=e84] [cursor=pointer]:
+            - /url: https://www.facebook.com/share/1JJ8FLx3Xs/?mibextid=wwXIfr
+          - link "Instagram" [ref=e85] [cursor=pointer]:
+            - /url: https://www.instagram.com/albaylsan_online?igsh=cDdpenhia212dW5l
+    - generic [ref=e86]: © 2026 البيلسان أونلاين — جميع الحقوق محفوظة
+  - button "فتح السلة" [ref=e87] [cursor=pointer]:
+    - generic [ref=e88]: 🛒
+    - generic [ref=e89]: السلة
+    - generic [ref=e90]: "0"
+  - link "تواصلي عبر واتساب للطلب" [ref=e91] [cursor=pointer]:
+    - /url: https://wa.me/962798522935?text=%D9%85%D8%B1%D8%AD%D8%A8%D8%A7.%20%D8%A3%D8%B1%D8%BA%D8%A8%20%D8%A8%D8%A7%D9%84%D8%AA%D8%B3%D9%88%D9%82%20%D9%85%D9%86%20%D9%85%D8%AA%D8%AC%D8%B1%20%D8%A7%D9%84%D8%A8%D9%8A%D9%84%D8%B3%D8%A7%D9%86
+    - text: واتساب

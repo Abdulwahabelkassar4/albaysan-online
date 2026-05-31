@@ -35,20 +35,21 @@ const Hero = () => {
             </Link>
           </div>
         </div>
-        <div className="glass-card flex h-72 w-full max-w-sm flex-col items-center justify-center gap-4 p-6 text-white md:w-auto">
-          <div className="relative flex h-32 w-32 items-center justify-center">
-            <div className="h-full w-full rounded-full bg-gradient-to-br from-primary-500/40 to-secondary-500/40 ring-4 ring-white/10" />
+        <div className="relative flex h-72 w-full max-w-sm flex-col items-center justify-center gap-4 overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.03] p-6 text-white shadow-[0_20px_60px_rgba(124,73,224,0.18)] backdrop-blur-md md:w-auto">
+          <div className="absolute inset-0 bg-gradient-to-br from-primary-500/10 via-transparent to-secondary-500/10" />
+          <div className="relative flex h-40 w-40 items-center justify-center">
+            <div className="absolute inset-5 rounded-full bg-primary-300/20 blur-2xl" aria-hidden="true" />
             <img
               src="/assets/hero-flower.png"
               alt={t("brandName")}
-              className="absolute h-28 w-28 object-contain mix-blend-lighten animate-slowGlow"
+              className="hero-flower-blend relative h-36 w-36 object-contain animate-slowGlow"
               draggable={false}
             />
           </div>
-          <p className="text-sm leading-relaxed text-white/80">
+          <p className="relative text-sm leading-relaxed text-white/80">
             {t("hero.cardText")}
           </p>
-          <span className="text-xs text-white/50">
+          <span className="relative text-xs text-white/50">
             {t("hero.note")}
           </span>
         </div>

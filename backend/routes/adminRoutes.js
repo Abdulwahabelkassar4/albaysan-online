@@ -36,6 +36,19 @@ router.get("/me", protect, admin, (req, res) => {
 
 router.post("/setup", async (req, res, next) => {
   try {
+    if (process.env.ENABLE_ADMIN_SETUP !== "true") {
+      return res.status(403).json({ message: "Admin setup is disabled" });
+    }
+
+    if (!process.env.ADMIN_SETUP_TOKEN) {
+      return res.status(500).json({ message: "Server missing ADMIN_SETUP_TOKEN" });
+    }
+
+    const providedSetupToken = req.headers["x-setup-token"] || req.body.setupToken;
+    if (providedSetupToken !== process.env.ADMIN_SETUP_TOKEN) {
+      return res.status(403).json({ message: "Invalid setup token" });
+    }
+
     const existingAdmin = await Admin.countDocuments();
     if (existingAdmin > 0) {
       return res.status(403).json({ message: "Admin already configured" });

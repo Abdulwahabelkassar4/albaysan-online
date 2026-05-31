@@ -1,12 +1,26 @@
 import express from "express";
 import ImageKit from "imagekit";
 import multer from "multer";
-
-console.log("⚡ Upload route loaded");
+import { authMiddleware } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
-const upload = multer();
+const ALLOWED_TYPES = new Set(["image/jpeg", "image/png", "image/webp", "image/avif"]);
+
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 4 * 1024 * 1024,
+    files: 6,
+  },
+  fileFilter: (req, file, cb) => {
+    if (!ALLOWED_TYPES.has(file.mimetype)) {
+      cb(new Error("Only JPEG, PNG, WEBP, and AVIF files are allowed"));
+      return;
+    }
+    cb(null, true);
+  },
+});
 
 const imagekit = new ImageKit({
   publicKey: process.env.IMAGEKIT_PUBLIC_KEY,
@@ -14,33 +28,24 @@ const imagekit = new ImageKit({
   urlEndpoint: process.env.IMAGEKIT_URL_ENDPOINT,
 });
 
-router.post("/upload", upload.array("images"), async (req, res) => {
-  console.log("📥 Incoming files:", req.files);
-  console.log("📥 Incoming body:", req.body);
-
+router.post("/upload", authMiddleware, upload.array("images", 6), async (req, res) => {
   if (!req.files?.length) {
     return res.status(400).json({ message: "No files uploaded" });
   }
 
   try {
-    const uploads = req.files.map(async (file) => {
-      console.log("🔧 Uploading:", file.originalname);
-
+    const uploads = req.files.map(async (file, index) => {
       const uploadResult = await imagekit.upload({
         file: file.buffer,
-        fileName: file.originalname,
+        fileName: `${Date.now()}-${index}-${file.originalname}`,
       });
-
-      console.log("✅ Uploaded to ImageKit:", uploadResult.url);
-
       return uploadResult.url;
     });
 
     const urls = await Promise.all(uploads);
     return res.json({ urls });
-  } catch (err) {
-    console.error("❌ Image upload failed:", err);
-    return res.status(500).json({ message: "Upload failed", error: err.message });
+  } catch (error) {
+    return res.status(500).json({ message: "Upload failed" });
   }
 });
 

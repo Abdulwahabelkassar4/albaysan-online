@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import axiosClient from "../api/axiosClient.js";
 import ProductCard from "../components/ProductCard.jsx";
+import { requestWithRetry } from "../utils/requestWithRetry.js";
 
 const collectionOptions = [
   { value: "الكوليكشن الصيفي", key: "summer" },
@@ -22,13 +23,17 @@ const Collections = () => {
       try {
         const responses = await Promise.all(
           collectionOptions.map(async (collection) => {
-            const { data } = await axiosClient.get("/api/products", {
-              params: { productCollection: collection.value, limit: 12 },
-            });
+            const { data } = await requestWithRetry(
+              () =>
+                axiosClient.get("/api/products", {
+                  timeout: 12000,
+                  params: { productCollection: collection.value, limit: 12 },
+                }),
+              { timeoutMs: 65000 }
+            );
             return [collection.value, data.data || []];
           })
         );
-
         setCollections(Object.fromEntries(responses));
       } catch (error) {
         console.error("Unable to load collections", error);
@@ -51,29 +56,6 @@ const Collections = () => {
         const items = collections[collection.value] || [];
         const isLoading = loading && !collections[collection.value];
 
-        if (isLoading) {
-          return (
-            <section key={collection.value} className="mt-12">
-              <div
-                className={`flex items-center justify-between text-white ${
-                  isRTL ? "text-right" : "text-left"
-                }`}
-              >
-                <h2 className="text-2xl font-semibold">{t(`shop.collections.${collection.key}`)}</h2>
-              </div>
-              <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                {Array.from({ length: 3 }).map((_, idx) => (
-                  <div key={idx} className="glass-card h-80 animate-pulse bg-white/5" />
-                ))}
-              </div>
-            </section>
-          );
-        }
-
-        if (!loading && items.length === 0) {
-          return null;
-        }
-
         return (
           <section key={collection.value} className="mt-12">
             <div
@@ -83,15 +65,24 @@ const Collections = () => {
             >
               <h2 className="text-2xl font-semibold">{t(`shop.collections.${collection.key}`)}</h2>
             </div>
-            <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {items.length > 0 ? (
-                items.map((product) => <ProductCard key={product._id} product={product} />)
-              ) : (
-                <div className="glass-card col-span-full p-10 text-center text-white/60">
-                  {t("collectionsPage.empty")}
-                </div>
-              )}
-            </div>
+
+            {isLoading ? (
+              <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                {Array.from({ length: 3 }).map((_, idx) => (
+                  <div key={idx} className="glass-card h-80 animate-pulse bg-white/5" />
+                ))}
+              </div>
+            ) : (
+              <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                {items.length > 0 ? (
+                  items.map((product) => <ProductCard key={product._id} product={product} />)
+                ) : (
+                  <div className="glass-card col-span-full p-10 text-center text-white/60">
+                    {t("collectionsPage.empty")}
+                  </div>
+                )}
+              </div>
+            )}
           </section>
         );
       })}

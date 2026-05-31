@@ -3,6 +3,8 @@ import { useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import axiosClient from "../api/axiosClient.js";
 import { useCart } from "../context/CartContext.jsx";
+import { buildWhatsAppLink } from "../config/contact.js";
+import { requestWithRetry } from "../utils/requestWithRetry.js";
 
 const normalizeImages = (images, fallbackImage) => {
   const normalized = Array.isArray(images)
@@ -34,7 +36,10 @@ const ProductDetails = () => {
   useEffect(() => {
     const fetchProduct = async () => {
       try {
-        const { data } = await axiosClient.get(`/api/products/${id}`);
+        const { data } = await requestWithRetry(
+          () => axiosClient.get(`/api/products/${id}`, { timeout: 12000 }),
+          { timeoutMs: 65000 }
+        );
         const normalizedImages = normalizeImages(data.images, data.image);
         setProduct({ ...data, images: normalizedImages });
         setSelectedSize(data.sizes?.[0] || defaultSize);
@@ -183,7 +188,11 @@ const ProductDetails = () => {
             {t("product.addToCart")}
           </button>
           <a
-            href="https://wa.me/962798522935"
+            href={buildWhatsAppLink({
+              message: t("whatsapp.prefill", {
+                defaultValue: "Hello, I would like to shop from Albaysan Online",
+              }),
+            })}
             className="btn-primary w-full"
             target="_blank"
             rel="noreferrer"

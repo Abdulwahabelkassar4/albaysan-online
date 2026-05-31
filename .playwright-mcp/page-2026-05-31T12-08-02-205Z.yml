@@ -1,0 +1,51 @@
+- generic [ref=e4]:
+  - banner [ref=e5]:
+    - generic [ref=e6]:
+      - link "Albaysan Online Albaysan Online Women-only boutique" [ref=e155] [cursor=pointer]:
+        - /url: /
+        - img "Albaysan Online" [ref=e156]
+        - generic [ref=e9]:
+          - generic [ref=e10]: Albaysan Online
+          - generic [ref=e11]: Women-only boutique
+      - button "Toggle navigation" [ref=e154] [cursor=pointer]: ☰
+  - main [ref=e21]:
+    - generic [ref=e188]:
+      - generic [ref=e189]:
+        - heading "Contact" [level=1] [ref=e190]
+        - paragraph [ref=e191]: To support Muslim women in dressing modestly, spread authentic attire, and elevate its image.
+        - generic [ref=e192]:
+          - paragraph [ref=e193]: 📍 Jordan – Irbid – University Street – Opposite Manaseer Gas Station – Women-only boutique
+          - paragraph [ref=e194]: ⏰ 10 AM – 8 PM
+          - paragraph [ref=e195]: "📱 WhatsApp: +962 798 522 935"
+        - generic [ref=e196]:
+          - link "Facebook" [ref=e197] [cursor=pointer]:
+            - /url: https://www.facebook.com/share/1JJ8FLx3Xs/?mibextid=wwXIfr
+          - link "Instagram" [ref=e198] [cursor=pointer]:
+            - /url: https://www.instagram.com/albaylsan_online?igsh=cDdpenhia212dW5l
+      - iframe [ref=e200]:
+        
+  - contentinfo [ref=e71]:
+    - generic [ref=e72]:
+      - generic [ref=e73]:
+        - heading "Albaysan Online" [level=3] [ref=e168]
+        - paragraph [ref=e75]: To support Muslim women in dressing modestly, spread authentic attire, and elevate its image.
+      - generic [ref=e76]:
+        - heading "Location & hours" [level=4] [ref=e169]
+        - paragraph [ref=e78]: Jordan – Irbid – University Street – Opposite Manaseer Gas Station – Women-only boutique
+        - paragraph [ref=e79]: ⏰ 10 AM – 8 PM — Delivery available across Jordan, Palestine, and select cities in Syria.
+      - generic [ref=e80]:
+        - heading "Stay in touch" [level=4] [ref=e170]
+        - paragraph [ref=e82]: "WhatsApp: 0798522935"
+        - generic [ref=e83]:
+          - link "Facebook" [ref=e84] [cursor=pointer]:
+            - /url: https://www.facebook.com/share/1JJ8FLx3Xs/?mibextid=wwXIfr
+          - link "Instagram" [ref=e85] [cursor=pointer]:
+            - /url: https://www.instagram.com/albaylsan_online?igsh=cDdpenhia212dW5l
+    - generic [ref=e86]: © 2026 Albaysan Online — All rights reserved
+  - button "Open cart" [ref=e171] [cursor=pointer]:
+    - generic [ref=e88]: 🛒
+    - generic [ref=e89]: Cart
+    - generic [ref=e90]: "0"
+  - link "Message on WhatsApp to order" [ref=e172] [cursor=pointer]:
+    - /url: https://wa.me/962798522935?text=%D9%85%D8%B1%D8%AD%D8%A8%D8%A7.%20%D8%A3%D8%B1%D8%BA%D8%A8%20%D8%A8%D8%A7%D9%84%D8%AA%D8%B3%D9%88%D9%82%20%D9%85%D9%86%20%D9%85%D8%AA%D8%AC%D8%B1%20%D8%A7%D9%84%D8%A8%D9%8A%D9%84%D8%B3%D8%A7%D9%86
+    - text: WhatsApp

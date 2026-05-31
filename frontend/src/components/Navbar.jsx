@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { NavLink, Link, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import logoImg from "../assets/logo.jpg";
+import { CloseIcon, MenuIcon } from "./icons.jsx";
 
 const navLinks = [
   { to: "/", key: "home" },
@@ -21,7 +22,12 @@ const Navbar = () => {
   const handleToggleLanguage = () => {
     const next = i18n.language === "ar" ? "en" : "ar";
     i18n.changeLanguage(next);
+    localStorage.setItem("albaylsan_lang", next);
   };
+
+  useEffect(() => {
+    setIsOpen(false);
+  }, [location.pathname]);
 
   const linkClass = ({ isActive }) =>
     `rounded-full px-4 py-2 text-sm font-semibold transition hover:bg-white/10 ${
@@ -47,10 +53,13 @@ const Navbar = () => {
           className="inline-flex items-center rounded-full border border-white/20 px-3 py-2 text-sm text-white md:hidden"
           onClick={() => setIsOpen((prev) => !prev)}
           aria-label="Toggle navigation"
+          aria-expanded={isOpen}
+          aria-controls="main-navigation"
         >
-          ☰
+          {isOpen ? <CloseIcon /> : <MenuIcon />}
         </button>
         <nav
+          id="main-navigation"
           className={`${
             isOpen ? "flex" : "hidden"
           } absolute left-0 right-0 top-full flex-col items-center gap-3 border-b border-white/10 bg-neutral-900/95 px-6 py-4 md:static md:flex md:flex-row md:border-none md:bg-transparent md:py-0`}
@@ -79,4 +88,3 @@ const Navbar = () => {
 };
 
 export default Navbar;
-

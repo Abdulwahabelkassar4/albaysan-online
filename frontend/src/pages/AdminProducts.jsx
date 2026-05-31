@@ -15,10 +15,11 @@ const defaultValues = {
 };
 
 const categoryOptions = [
-  { value: "عبايات", labelKey: "adminProductsPage.categories.abayas" },
-  { value: "نقابات", labelKey: "adminProductsPage.categories.niqabs" },
-  { value: "سبورات شرعية", labelKey: "adminProductsPage.categories.sports" },
-  { value: "حقائب", labelKey: "adminProductsPage.categories.bags" },
+  { value: "عباءات", labelKey: "adminProductsPage.categories.abayas", fallback: "Abayas" },
+  { value: "ادناءات", labelKey: "adminProductsPage.categories.idnaas", fallback: "Khima/Idnaas" },
+  { value: "نقابات", labelKey: "adminProductsPage.categories.niqabs", fallback: "Niqabs" },
+  { value: "سبورات شرعية", labelKey: "adminProductsPage.categories.sports", fallback: "Modest sportswear" },
+  { value: "حقائب", labelKey: "adminProductsPage.categories.bags", fallback: "Bags" },
 ];
 
 const collectionOptions = [
@@ -73,28 +74,26 @@ const AdminProducts = () => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  const buildPayload = () => {
-    return {
-      name: formData.name.trim(),
-      description: formData.description.trim(),
-      price: Number(formData.price) || 0,
-      category: formData.category.trim(),
-      productCollection: formData.productCollection.trim(),
-      sizes: formData.sizes
-        ? formData.sizes
-            .split(",")
-            .map((value) => value.trim())
-            .filter(Boolean)
-        : [],
-      colors: formData.colors
-        ? formData.colors
-            .split(",")
-            .map((value) => value.trim())
-            .filter(Boolean)
-        : [],
-      images: uploadedImages,
-    };
-  };
+  const buildPayload = () => ({
+    name: formData.name.trim(),
+    description: formData.description.trim(),
+    price: Number(formData.price) || 0,
+    category: formData.category.trim(),
+    productCollection: formData.productCollection.trim(),
+    sizes: formData.sizes
+      ? formData.sizes
+          .split(",")
+          .map((value) => value.trim())
+          .filter(Boolean)
+      : [],
+    colors: formData.colors
+      ? formData.colors
+          .split(",")
+          .map((value) => value.trim())
+          .filter(Boolean)
+      : [],
+    images: uploadedImages,
+  });
 
   const resetForm = () => {
     setEditingProduct(null);
@@ -103,44 +102,33 @@ const AdminProducts = () => {
     setFormData({ ...defaultValues });
   };
 
-  const handleCreate = async () => {
+  const saveProduct = async () => {
     const payload = buildPayload();
     try {
-      await axiosClient.post("/api/products", payload);
-      showToast(t("adminProductsPage.toast.createSuccess"), "success");
+      if (editingProduct?._id) {
+        await axiosClient.put(`/api/products/${editingProduct._id}`, payload);
+        showToast(t("adminProductsPage.toast.updateSuccess"), "success");
+      } else {
+        await axiosClient.post("/api/products", payload);
+        showToast(t("adminProductsPage.toast.createSuccess"), "success");
+      }
       resetForm();
       loadProducts();
     } catch (error) {
-      showToast(t("adminProductsPage.toast.createError"), "error");
+      showToast(
+        editingProduct ? t("adminProductsPage.toast.updateError") : t("adminProductsPage.toast.createError"),
+        "error"
+      );
     }
   };
 
-  const handleUpdate = async () => {
-    if (!editingProduct?._id) return;
-    const payload = buildPayload();
-    try {
-      await axiosClient.put(`/api/products/${editingProduct._id}`, payload);
-      console.log("Product updated", editingProduct._id);
-      showToast(t("adminProductsPage.toast.updateSuccess"), "success");
-      resetForm();
-      loadProducts();
-    } catch (error) {
-      console.error("Update failed", error);
-      showToast(t("adminProductsPage.toast.updateError"), "error");
-    }
-  };
-
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
     if (!formData.category || !formData.productCollection) {
-      alert(t("adminProductsPage.validation.categoryCollection"));
+      showToast(t("adminProductsPage.validation.categoryCollection"), "error");
       return;
     }
-    if (editingProduct) {
-      handleUpdate();
-    } else {
-      handleCreate();
-    }
+    await saveProduct();
   };
 
   const handleEdit = (product) => {
@@ -171,16 +159,13 @@ const AdminProducts = () => {
 
   const handleUploadImages = async () => {
     if (!selectedFiles.length) return;
-
     const uploadData = new FormData();
     selectedFiles.forEach((file) => uploadData.append("images", file));
-
     setUploading(true);
     try {
       const { data } = await axiosClient.post("/api/upload", uploadData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
-
       if (Array.isArray(data.urls)) {
         setUploadedImages((prev) => [...prev, ...data.urls]);
         showToast(t("adminProductsPage.toast.uploadSuccess"), "success");
@@ -188,7 +173,6 @@ const AdminProducts = () => {
         throw new Error("Invalid upload response");
       }
     } catch (error) {
-      console.error("Upload failed", error);
       showToast(t("adminProductsPage.toast.uploadError"), "error");
     } finally {
       setUploading(false);
@@ -207,9 +191,7 @@ const AdminProducts = () => {
           to="/admin/dashboard"
           className="inline-flex items-center gap-2 rounded-full border border-white/30 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/10"
         >
-          {isRTL
-            ? `${t("adminProductsPage.backToDashboard")} →`
-            : `← ${t("adminProductsPage.backToDashboard")}`}
+          {isRTL ? `${t("adminProductsPage.backToDashboard")} →` : `← ${t("adminProductsPage.backToDashboard")}`}
         </Link>
       </div>
       <div className="glass-card grid gap-8 p-10 lg:grid-cols-[1.2fr,1fr]">
@@ -217,28 +199,19 @@ const AdminProducts = () => {
           <h2 className="text-2xl font-bold text-white">
             {editingProduct ? t("adminProductsPage.editTitle") : t("adminProductsPage.createTitle")}
           </h2>
-          <form
-            className={`mt-6 grid gap-5 ${isRTL ? "text-right" : "text-left"}`}
-            onSubmit={handleSubmit}
-          >
+          <form className={`mt-6 grid gap-5 ${isRTL ? "text-right" : "text-left"}`} onSubmit={handleSubmit}>
             <div>
-              <label className="mb-2 block text-sm text-white/70">
-                {t("adminProductsPage.form.name")}
-              </label>
+              <label className="mb-2 block text-sm text-white/70">{t("adminProductsPage.form.name")}</label>
               <input
                 value={formData.name}
                 onChange={handleChange("name")}
                 required
-                className={`w-full rounded-2xl border border-white/20 bg-white/10 px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary-300 ${
-                  isRTL ? "text-right" : "text-left"
-                }`}
+                className="w-full rounded-2xl border border-white/20 bg-white/10 px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary-300"
               />
             </div>
             <div className="grid gap-4 md:grid-cols-2">
               <div>
-                <label className="mb-2 block text-sm text-white/70">
-                  {t("adminProductsPage.form.price")}
-                </label>
+                <label className="mb-2 block text-sm text-white/70">{t("adminProductsPage.form.price")}</label>
                 <input
                   type="number"
                   min="0"
@@ -246,41 +219,31 @@ const AdminProducts = () => {
                   value={formData.price}
                   onChange={handleChange("price")}
                   required
-                  className={`w-full rounded-2xl border border-white/20 bg-white/10 px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary-300 ${
-                    isRTL ? "text-right" : "text-left"
-                  }`}
+                  className="w-full rounded-2xl border border-white/20 bg-white/10 px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary-300"
                 />
               </div>
               <div>
-                <label className="mb-2 block text-sm text-white/70">
-                  {t("adminProductsPage.form.category")}
-                </label>
+                <label className="mb-2 block text-sm text-white/70">{t("adminProductsPage.form.category")}</label>
                 <select
                   value={formData.category}
                   onChange={handleChange("category")}
-                  className={`w-full rounded-2xl border border-white/20 bg-white/10 px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary-300 ${
-                    isRTL ? "text-right" : "text-left"
-                  }`}
+                  className="w-full rounded-2xl border border-white/20 bg-white/10 px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary-300"
                 >
                   <option value="">{t("adminProductsPage.form.categoryPlaceholder")}</option>
                   {categoryOptions.map((option) => (
                     <option key={option.value} value={option.value} className="text-black">
-                      {t(option.labelKey)}
+                      {t(option.labelKey, { defaultValue: option.fallback })}
                     </option>
                   ))}
                 </select>
               </div>
             </div>
             <div>
-              <label className="mb-2 block text-sm text-white/70">
-                {t("adminProductsPage.form.collection")}
-              </label>
+              <label className="mb-2 block text-sm text-white/70">{t("adminProductsPage.form.collection")}</label>
               <select
                 value={formData.productCollection}
                 onChange={handleChange("productCollection")}
-                className={`w-full rounded-2xl border border-white/20 bg-white/10 px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary-300 ${
-                  isRTL ? "text-right" : "text-left"
-                }`}
+                className="w-full rounded-2xl border border-white/20 bg-white/10 px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary-300"
               >
                 <option value="">{t("adminProductsPage.form.collectionPlaceholder")}</option>
                 {collectionOptions.map((option) => (
@@ -291,48 +254,34 @@ const AdminProducts = () => {
               </select>
             </div>
             <div>
-              <label className="mb-2 block text-sm text-white/70">
-                {t("adminProductsPage.form.description")}
-              </label>
+              <label className="mb-2 block text-sm text-white/70">{t("adminProductsPage.form.description")}</label>
               <textarea
                 rows="3"
                 value={formData.description}
                 onChange={handleChange("description")}
-                className={`w-full rounded-2xl border border-white/20 bg-white/10 px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary-300 ${
-                  isRTL ? "text-right" : "text-left"
-                }`}
+                className="w-full rounded-2xl border border-white/20 bg-white/10 px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary-300"
               />
             </div>
             <div className="grid gap-4 md:grid-cols-2">
               <div>
-                <label className="mb-2 block text-sm text-white/70">
-                  {t("adminProductsPage.form.sizes")}
-                </label>
+                <label className="mb-2 block text-sm text-white/70">{t("adminProductsPage.form.sizes")}</label>
                 <input
                   value={formData.sizes}
                   onChange={handleChange("sizes")}
-                  className={`w-full rounded-2xl border border-white/20 bg-white/10 px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary-300 ${
-                    isRTL ? "text-right" : "text-left"
-                  }`}
+                  className="w-full rounded-2xl border border-white/20 bg-white/10 px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary-300"
                 />
               </div>
               <div>
-                <label className="mb-2 block text-sm text-white/70">
-                  {t("adminProductsPage.form.colors")}
-                </label>
+                <label className="mb-2 block text-sm text-white/70">{t("adminProductsPage.form.colors")}</label>
                 <input
                   value={formData.colors}
                   onChange={handleChange("colors")}
-                  className={`w-full rounded-2xl border border-white/20 bg-white/10 px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary-300 ${
-                    isRTL ? "text-right" : "text-left"
-                  }`}
+                  className="w-full rounded-2xl border border-white/20 bg-white/10 px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary-300"
                 />
               </div>
             </div>
             <div>
-              <label className="mb-2 block text-sm text-white/70">
-                {t("adminProductsPage.form.images")}
-              </label>
+              <label className="mb-2 block text-sm text-white/70">{t("adminProductsPage.form.images")}</label>
               <input
                 type="file"
                 multiple
@@ -341,9 +290,7 @@ const AdminProducts = () => {
                 disabled={uploading}
                 className="w-full rounded-2xl border border-dashed border-white/20 bg-transparent px-4 py-3 text-sm text-white file:mr-4 file:rounded-full file:border-0 file:bg-primary-500 file:px-4 file:py-2 file:text-white"
               />
-              <div
-                className={`mt-3 flex flex-wrap items-center gap-3 ${isRTL ? "justify-end" : "justify-start"}`}
-              >
+              <div className={`mt-3 flex flex-wrap items-center gap-3 ${isRTL ? "justify-end" : "justify-start"}`}>
                 {selectedFiles.length > 0 && (
                   <p className="text-sm text-white/70">
                     {t("adminProductsPage.form.selectedImagesCount", { count: selectedFiles.length })}
@@ -375,9 +322,7 @@ const AdminProducts = () => {
             </div>
             <div className={`flex gap-3 ${isRTL ? "justify-start" : "justify-end"}`}>
               <button type="submit" className="btn-primary">
-                {editingProduct
-                  ? t("adminProductsPage.form.submitUpdate")
-                  : t("adminProductsPage.form.submitCreate")}
+                {editingProduct ? t("adminProductsPage.form.submitUpdate") : t("adminProductsPage.form.submitCreate")}
               </button>
               {editingProduct && (
                 <button
@@ -391,10 +336,9 @@ const AdminProducts = () => {
             </div>
           </form>
         </section>
+
         <section className={`space-y-4 overflow-y-auto ${isRTL ? "text-right" : "text-left"}`}>
-          <h3 className="text-lg font-semibold text-white">
-            {t("adminProductsPage.sections.currentProducts")}
-          </h3>
+          <h3 className="text-lg font-semibold text-white">{t("adminProductsPage.sections.currentProducts")}</h3>
           {loading ? (
             <div className="glass-card h-32 animate-pulse bg-white/5" />
           ) : (
@@ -404,9 +348,7 @@ const AdminProducts = () => {
                 return (
                   <div
                     key={product._id}
-                    className={`glass-card flex items-center justify-between p-4 ${
-                      isRTL ? "flex-row-reverse" : ""
-                    }`}
+                    className={`glass-card flex items-center justify-between p-4 ${isRTL ? "flex-row-reverse" : ""}`}
                   >
                     <div className={`flex items-center gap-4 ${isRTL ? "flex-row-reverse" : ""}`}>
                       <div className="h-14 w-14 overflow-hidden rounded-2xl">
@@ -443,9 +385,7 @@ const AdminProducts = () => {
                 );
               })}
               {products.length === 0 && (
-                <div className="glass-card p-6 text-center text-white/60">
-                  {t("adminProductsPage.list.empty")}
-                </div>
+                <div className="glass-card p-6 text-center text-white/60">{t("adminProductsPage.list.empty")}</div>
               )}
             </div>
           )}

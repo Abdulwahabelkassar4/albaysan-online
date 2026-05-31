@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import axiosClient from "../api/axiosClient.js";
 import { useToast } from "../context/ToastContext.jsx";
+import { normalizeJordanPhoneForWhatsApp } from "../config/contact.js";
 
 const statusOptions = [
   { value: "pending", labelKey: "adminOrdersPage.statuses.pending" },
@@ -77,7 +78,7 @@ const AdminOrders = () => {
   };
 
   const whatsappLink = (phone, type) => {
-    const base = phone.startsWith("0") ? `962${phone.slice(1)}` : phone;
+    const base = normalizeJordanPhoneForWhatsApp(phone);
     const message = getWhatsappMessage(type);
     return `https://wa.me/${base}?text=${encodeURIComponent(message)}`;
   };
@@ -253,4 +254,3 @@ const AdminOrders = () => {
 };
 
 export default AdminOrders;
-

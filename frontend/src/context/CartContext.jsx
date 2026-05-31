@@ -15,6 +15,12 @@ const buildLineId = (item) => {
   return `${item.id}_${sizeKey}_${colorKey}`;
 };
 
+const sanitizeQty = (qty) => {
+  const parsed = Number(qty);
+  if (!Number.isFinite(parsed)) return 1;
+  return Math.max(1, Math.floor(parsed));
+};
+
 const reducer = (state, action) => {
   switch (action.type) {
     case "HYDRATE":
@@ -39,7 +45,7 @@ const reducer = (state, action) => {
     }
     case "UPDATE_QTY": {
       const { lineId, qty } = action.payload;
-      const sanitizedQty = Math.max(1, qty);
+      const sanitizedQty = sanitizeQty(qty);
       return {
         ...state,
         items: state.items.map((item) =>
@@ -93,7 +99,8 @@ export const CartProvider = ({ children }) => {
       totalPrice,
       addItem: (item) => dispatch({ type: "ADD_ITEM", payload: item }),
       removeItem: (lineId) => dispatch({ type: "REMOVE_ITEM", payload: lineId }),
-      updateQty: (lineId, qty) => dispatch({ type: "UPDATE_QTY", payload: { lineId, qty } }),
+      updateQty: (lineId, qty) =>
+        dispatch({ type: "UPDATE_QTY", payload: { lineId, qty: sanitizeQty(qty) } }),
       clearCart: () => dispatch({ type: "CLEAR_CART" }),
       openCart: () => dispatch({ type: "OPEN_CART" }),
       closeCart: () => dispatch({ type: "CLOSE_CART" }),

@@ -1,8 +1,11 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import axiosClient from "../api/axiosClient.js";
 import Hero from "../components/Hero.jsx";
 import ProductCard from "../components/ProductCard.jsx";
+import { CalendarIcon, ShieldIcon, TruckIcon, WhatsAppIcon } from "../components/icons.jsx";
+import { requestWithRetry } from "../utils/requestWithRetry.js";
 
 const Home = () => {
   const { t, i18n } = useTranslation();
@@ -11,11 +14,20 @@ const Home = () => {
   const [loading, setLoading] = useState(true);
   const featureCards = t("home.features", { returnObjects: true });
   const milestones = t("home.milestones", { returnObjects: true });
+  const trustItems = [
+    { key: "delivery", icon: TruckIcon, fallback: "Fast delivery across Jordan and Palestine" },
+    { key: "womenOnly", icon: ShieldIcon, fallback: "Women-only boutique privacy" },
+    { key: "reservation", icon: CalendarIcon, fallback: "Flexible two-day reservation" },
+    { key: "support", icon: WhatsAppIcon, fallback: "WhatsApp confirmation and support" },
+  ];
 
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const { data } = await axiosClient.get("/api/products?limit=4");
+        const { data } = await requestWithRetry(
+          () => axiosClient.get("/api/products?limit=4", { timeout: 12000 }),
+          { timeoutMs: 65000 }
+        );
         setLatestProducts(data.data || []);
       } catch (error) {
         console.error("Failed to load products", error);
@@ -30,6 +42,22 @@ const Home = () => {
   return (
     <>
       <Hero />
+      <section className="mx-auto max-w-6xl px-6 pt-10">
+        <div className="grid gap-3 md:grid-cols-4">
+          {trustItems.map(({ key, icon: Icon, fallback }) => (
+            <div key={key} className="rounded-2xl border border-white/10 bg-white/[0.04] p-4 backdrop-blur-sm">
+              <div className={`flex items-center gap-3 ${isRTL ? "flex-row-reverse text-right" : "text-left"}`}>
+                <span className="rounded-full bg-secondary-500/20 p-2 text-secondary-200">
+                  <Icon className="h-4 w-4" />
+                </span>
+                <p className="text-xs font-semibold text-white/90">
+                  {t(`home.trust.${key}`, { defaultValue: fallback })}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
       <section className="mx-auto max-w-6xl px-6 py-16">
         <div className="glass-card grid gap-8 p-10 md:grid-cols-3">
           {featureCards.map((feature) => (
@@ -57,8 +85,11 @@ const Home = () => {
                 ))
               : latestProducts.map((product) => <ProductCard key={product._id} product={product} />)}
             {!loading && latestProducts.length === 0 && (
-              <div className="col-span-full text-center text-white/60">
-                {t("home.latestEmpty")}
+              <div className="col-span-full rounded-2xl border border-dashed border-white/15 bg-white/[0.03] p-8 text-center text-white/60">
+                <p>{t("home.latestEmpty")}</p>
+                <Link to="/shop" className="mt-4 inline-flex rounded-full bg-white/10 px-4 py-2 text-xs font-semibold text-white hover:bg-white/20">
+                  {t("shop.title")}
+                </Link>
               </div>
             )}
           </div>

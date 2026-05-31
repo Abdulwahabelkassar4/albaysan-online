@@ -3,6 +3,8 @@ import axiosClient from "../api/axiosClient.js";
 import { useToast } from "../context/ToastContext.jsx";
 import { useTranslation } from "react-i18next";
 import { useCart } from "../context/CartContext.jsx";
+import { CalendarIcon, ShieldIcon, TruckIcon } from "../components/icons.jsx";
+import { buildWhatsAppLink } from "../config/contact.js";
 
 const Delivery = () => {
   const { register, handleSubmit, reset, formState } = useForm();
@@ -30,6 +32,7 @@ const Delivery = () => {
 
   const orderDetails = formatOrderDetails();
   const steps = t("deliveryPage.steps", { returnObjects: true });
+  const stepIcons = [TruckIcon, ShieldIcon, CalendarIcon];
 
   const onSubmit = async (values) => {
     if (cartItems.length === 0) {
@@ -52,8 +55,7 @@ const Delivery = () => {
 
       const orderText = messageLines.join("\n\n");
 
-      const whatsappNumber = "0798522935";
-      const whatsappURL = `https://wa.me/962${whatsappNumber.slice(1)}?text=${encodeURIComponent(orderText)}`;
+      const whatsappURL = buildWhatsAppLink({ message: orderText });
 
       await axiosClient.post("/api/orders", {
         type: "delivery",
@@ -64,10 +66,10 @@ const Delivery = () => {
         notes: orderDetails,
       });
 
-      window.open(whatsappURL, "_blank");
       clearCart();
       reset();
       showToast(t("deliveryPage.toast.success"), "success");
+      window.location.assign(whatsappURL);
     } catch (error) {
       console.error(error);
       showToast(t("deliveryPage.toast.error"), "error");
@@ -93,6 +95,14 @@ const Delivery = () => {
                     key={`delivery-step-${index}`}
                     className={`flex items-start gap-3 ${isRTL ? "text-right" : "text-left"}`}
                   >
+                    {(() => {
+                      const StepIcon = stepIcons[index] || TruckIcon;
+                      return (
+                        <span className="mt-2 shrink-0 rounded-full bg-secondary-500/20 p-2 text-secondary-200">
+                          <StepIcon className="h-4 w-4" />
+                        </span>
+                      );
+                    })()}
                     <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-purple-500 to-purple-700 text-base font-bold text-white shadow-lg shadow-purple-900/30">
                       {index + 1}
                     </div>

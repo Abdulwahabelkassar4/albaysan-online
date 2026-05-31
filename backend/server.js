@@ -16,12 +16,14 @@ validateEnv();
 
 const app = express();
 
-const allowedOrigins = [
-  "http://localhost:5173",
-  "https://albaysan-onlinefrontend.onrender.com",
-  "https://albisanshop.netlify.app",
-  "https://albilsan.online",
-];
+const allowedOrigins = (process.env.CORS_ORIGIN || "")
+  .split(",")
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
+if (!allowedOrigins.includes("http://localhost:5173")) {
+  allowedOrigins.push("http://localhost:5173");
+}
 
 app.use(
   cors({
@@ -39,6 +41,14 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api", uploadRoute);
+
+app.get("/", (_req, res) => {
+  res.status(200).json({
+    status: "ok",
+    service: "albaysan-online-api",
+    health: "/api/health",
+  });
+});
 
 app.use(notFound);
 app.use(errorHandler);

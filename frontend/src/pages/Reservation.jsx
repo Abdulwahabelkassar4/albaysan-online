@@ -3,6 +3,8 @@ import axiosClient from "../api/axiosClient.js";
 import { useToast } from "../context/ToastContext.jsx";
 import { useTranslation } from "react-i18next";
 import { useCart } from "../context/CartContext.jsx";
+import { CalendarIcon } from "../components/icons.jsx";
+import { buildWhatsAppLink } from "../config/contact.js";
 
 const Reservation = () => {
   const { register, handleSubmit, reset, formState } = useForm();
@@ -58,8 +60,7 @@ const Reservation = () => {
 
       const orderText = messageLines.join("\n\n");
 
-      const whatsappNumber = "0798522935";
-      const whatsappURL = `https://wa.me/962${whatsappNumber.slice(1)}?text=${encodeURIComponent(orderText)}`;
+      const whatsappURL = buildWhatsAppLink({ message: orderText });
 
       await axiosClient.post("/api/orders", {
         type: "reservation",
@@ -70,10 +71,10 @@ const Reservation = () => {
         notes: orderDetails,
       });
 
-      window.open(whatsappURL, "_blank");
       clearCart();
       reset();
       showToast(t("reservationPage.toast.success"), "success");
+      window.location.assign(whatsappURL);
     } catch (error) {
       console.error(error);
       showToast(t("reservationPage.toast.error"), "error");
@@ -89,7 +90,10 @@ const Reservation = () => {
       <div className="relative mx-auto max-w-4xl px-6">
         <section className="glass-card space-y-6 p-10">
           <div className={isRTL ? "text-right" : "text-left"}>
-            <h1 className="text-3xl font-bold text-white">{t("nav.reservation")}</h1>
+            <h1 className="flex items-center gap-2 text-3xl font-bold text-white">
+              <CalendarIcon className="h-7 w-7 text-secondary-200" />
+              {t("nav.reservation")}
+            </h1>
             <p className="mt-2 text-sm text-white/70">{t("reservationPage.intro")}</p>
           </div>
           <form

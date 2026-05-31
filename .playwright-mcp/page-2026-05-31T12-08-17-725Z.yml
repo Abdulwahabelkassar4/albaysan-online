@@ -1,0 +1,46 @@
+- generic [ref=e4]:
+  - banner [ref=e5]:
+    - generic [ref=e6]:
+      - link "البيلسان أونلاين البيلسان أونلاين المتجر مخصص للنساء فقط" [ref=e7] [cursor=pointer]:
+        - /url: /
+        - img "البيلسان أونلاين" [ref=e8]
+        - generic [ref=e9]:
+          - generic [ref=e10]: البيلسان أونلاين
+          - generic [ref=e11]: المتجر مخصص للنساء فقط
+      - button "Toggle navigation" [ref=e12] [cursor=pointer]: ☰
+  - main [ref=e13]:
+    - generic [ref=e15]:
+      - heading "تسجيل دخول المشرف" [level=1] [ref=e16]
+      - generic [ref=e17]:
+        - generic [ref=e18]:
+          - generic [ref=e19]: اسم المستخدم
+          - textbox [ref=e20]
+        - generic [ref=e21]:
+          - generic [ref=e22]: كلمة المرور
+          - textbox [ref=e23]
+        - button "تسجيل الدخول" [ref=e24] [cursor=pointer]
+  - contentinfo [ref=e25]:
+    - generic [ref=e26]:
+      - generic [ref=e27]:
+        - heading "البيلسان أونلاين" [level=3] [ref=e28]
+        - paragraph [ref=e29]: أن نكون سبباً في احتشام نساء المسلمين ونشر اللباس الشرعي وتحسين صورته
+      - generic [ref=e30]:
+        - heading "الموقع وساعات العمل" [level=4] [ref=e31]
+        - paragraph [ref=e32]: الأردن – إربد – شارع الجامعة – مقابل كازية المناصير – المحل مخصص للنساء فقط
+        - paragraph [ref=e33]: ⏰ 10 صباحاً – 8 مساءً — توصيل لكل محافظات الأردن وفلسطين وبعض محافظات سوريا
+      - generic [ref=e34]:
+        - heading "تواصل معنا" [level=4] [ref=e35]
+        - paragraph [ref=e36]: "واتساب: 0798522935"
+        - generic [ref=e37]:
+          - link "Facebook" [ref=e38] [cursor=pointer]:
+            - /url: https://www.facebook.com/share/1JJ8FLx3Xs/?mibextid=wwXIfr
+          - link "Instagram" [ref=e39] [cursor=pointer]:
+            - /url: https://www.instagram.com/albaylsan_online?igsh=cDdpenhia212dW5l
+    - generic [ref=e40]: © 2026 البيلسان أونلاين — جميع الحقوق محفوظة
+  - button "فتح السلة" [ref=e41] [cursor=pointer]:
+    - generic [ref=e42]: 🛒
+    - generic [ref=e43]: السلة
+    - generic [ref=e44]: "0"
+  - link "تواصلي عبر واتساب للطلب" [ref=e45] [cursor=pointer]:
+    - /url: https://wa.me/962798522935?text=%D9%85%D8%B1%D8%AD%D8%A8%D8%A7.%20%D8%A3%D8%B1%D8%BA%D8%A8%20%D8%A8%D8%A7%D9%84%D8%AA%D8%B3%D9%88%D9%82%20%D9%85%D9%86%20%D9%85%D8%AA%D8%AC%D8%B1%20%D8%A7%D9%84%D8%A8%D9%8A%D9%84%D8%B3%D8%A7%D9%86
+    - text: واتساب
