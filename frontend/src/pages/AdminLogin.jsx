@@ -23,8 +23,15 @@ const AdminLogin = ({ onLogin }) => {
       onLogin?.();
       navigate("/admin/dashboard", { replace: true });
     } catch (error) {
-      const message =
-        error.response?.data?.message && typeof error.response.data.message === "string"
+      const isNetworkIssue =
+        !error.response ||
+        error.code === "ERR_NETWORK" ||
+        error.message === "Network Error" ||
+        error.response?.status >= 500;
+
+      const message = isNetworkIssue
+        ? `${t("status.connectionIssue")} ${t("status.retryHint")}`
+        : error.response?.data?.message && typeof error.response.data.message === "string"
           ? error.response.data.message
           : t("admin.loginError");
       showToast(message, "error");
