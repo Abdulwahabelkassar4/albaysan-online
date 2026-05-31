@@ -1,7 +1,17 @@
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { useCart } from "../context/CartContext.jsx";
-import { CalendarIcon, CartIcon, CloseIcon, MinusIcon, PlusIcon, TruckIcon } from "./icons.jsx";
+import {
+  CalendarIcon,
+  CartIcon,
+  CloseIcon,
+  MinusIcon,
+  PaletteIcon,
+  PlusIcon,
+  PriceTagIcon,
+  RulerIcon,
+  TruckIcon,
+} from "./icons.jsx";
 
 const CartModal = () => {
   const { items, isOpen, closeCart, removeItem, updateQty, totalPrice } = useCart();
@@ -17,9 +27,9 @@ const CartModal = () => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/65 backdrop-blur-sm" onClick={closeCart}>
+    <div className="animate-cart-overlay fixed inset-0 z-50 bg-black/65 backdrop-blur-sm" onClick={closeCart}>
       <aside
-        className={`absolute top-0 h-full w-full max-w-md border-white/10 bg-neutral-900/95 p-5 shadow-2xl transition-transform sm:w-[92vw] ${
+        className={`animate-cart-drawer absolute top-0 h-full w-full max-w-md border-white/10 bg-neutral-900/95 p-5 shadow-2xl transition-transform sm:w-[92vw] ${
           isRTL ? "left-0 border-r" : "right-0 border-l"
         }`}
         onClick={(event) => event.stopPropagation()}
@@ -49,7 +59,7 @@ const CartModal = () => {
               items.map((item) => (
                 <div
                   key={item.lineId}
-                  className={`rounded-2xl border border-white/10 bg-white/5 p-4 ${
+                  className={`rounded-2xl border border-white/10 bg-white/5 p-4 transition duration-200 hover:border-secondary-300/50 hover:bg-white/10 ${
                     isRTL ? "text-right" : "text-left"
                   }`}
                 >
@@ -68,16 +78,19 @@ const CartModal = () => {
                         <h3 className="text-sm font-semibold text-white">{item.name}</h3>
                         <button
                           onClick={() => removeItem(item.lineId)}
-                          className="text-xs text-secondary-200 transition hover:text-secondary-100"
+                          className="inline-flex items-center gap-1 rounded-full border border-transparent px-2 py-1 text-xs text-secondary-200 transition hover:border-secondary-300/50 hover:bg-secondary-500/10 hover:text-secondary-100"
                         >
+                          <CloseIcon className="h-3.5 w-3.5" />
                           {t("cart.remove")}
                         </button>
                       </div>
-                      <div className="flex flex-wrap items-center gap-2 text-xs text-white/70">
-                        <span>
+                      <div className="flex flex-wrap items-center gap-3 text-xs text-white/70">
+                        <span className="inline-flex items-center gap-1.5">
+                          <RulerIcon className="h-3.5 w-3.5 text-white/60" />
                           {t("cart.size")}: <span className="text-white">{item.size}</span>
                         </span>
-                        <span>
+                        <span className="inline-flex items-center gap-1.5">
+                          <PaletteIcon className="h-3.5 w-3.5 text-white/60" />
                           {t("cart.color")}: <span className="text-white">{item.color}</span>
                         </span>
                       </div>
@@ -95,7 +108,7 @@ const CartModal = () => {
                             min="1"
                             value={item.qty}
                             onChange={(event) => updateQty(item.lineId, event.target.value)}
-                            className="w-14 rounded-full border border-white/20 bg-transparent px-2 py-1 text-center text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary-300"
+                            className="w-14 rounded-full border border-white/20 bg-white/5 px-2 py-1 text-center text-sm text-white transition focus:border-primary-300 focus:outline-none focus:ring-2 focus:ring-primary-300"
                           />
                           <button
                             onClick={() => updateQty(item.lineId, item.qty + 1)}
@@ -105,7 +118,8 @@ const CartModal = () => {
                             <PlusIcon className="h-4 w-4" />
                           </button>
                         </div>
-                        <span className="text-sm font-semibold text-secondary-200">
+                        <span className="inline-flex items-center gap-1 text-sm font-semibold text-secondary-200">
+                          <PriceTagIcon className="h-4 w-4" />
                           {(item.price * item.qty).toFixed(2)} {t("product.priceSuffix")}
                         </span>
                       </div>
@@ -127,7 +141,7 @@ const CartModal = () => {
               <button
                 onClick={() => goToFlow("/delivery")}
                 disabled={items.length === 0}
-                className="inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-primary-500 via-secondary-500 to-primary-400 px-6 py-3 text-sm font-semibold text-white transition hover:scale-[1.01] disabled:cursor-not-allowed disabled:opacity-50"
+                className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-full bg-gradient-to-r from-primary-500 via-secondary-500 to-primary-400 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-primary-950/35 transition duration-200 hover:-translate-y-0.5 hover:scale-[1.01] focus:outline-none focus:ring-2 focus:ring-secondary-200 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <TruckIcon className="h-4 w-4" />
                 {t("cart.goToDelivery")}
@@ -135,7 +149,7 @@ const CartModal = () => {
               <button
                 onClick={() => goToFlow("/reservation")}
                 disabled={items.length === 0}
-                className="inline-flex items-center justify-center gap-2 rounded-full border border-white/30 px-6 py-3 text-sm font-semibold text-white/90 transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50"
+                className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-full border border-white/30 bg-white/[0.03] px-6 py-3 text-sm font-semibold text-white/90 shadow-lg shadow-black/20 transition duration-200 hover:-translate-y-0.5 hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white/30 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <CalendarIcon className="h-4 w-4" />
                 {t("cart.goToReservation")}

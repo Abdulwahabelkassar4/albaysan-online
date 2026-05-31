@@ -111,11 +111,104 @@ a {
 }
 
 .btn-primary {
-  @apply inline-flex items-center justify-center rounded-full bg-primary-500 px-6 py-3 text-base font-semibold text-white shadow-lg shadow-primary-900/30 transition hover:scale-105 hover:bg-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-300 focus:ring-offset-2 focus:ring-offset-primary-900;
+  @apply inline-flex cursor-pointer items-center justify-center gap-2 rounded-full bg-primary-500 px-6 py-3 text-base font-semibold text-white shadow-lg shadow-primary-900/30 transition duration-200 hover:-translate-y-0.5 hover:scale-[1.02] hover:bg-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-300 focus:ring-offset-2 focus:ring-offset-primary-900 active:translate-y-0 active:scale-[0.99];
 }
 
 .btn-secondary {
-  @apply inline-flex items-center justify-center rounded-full bg-secondary-500 px-6 py-3 text-base font-semibold text-white shadow-lg shadow-secondary-900/30 transition hover:scale-105 hover:bg-secondary-400 focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:ring-offset-2 focus:ring-offset-primary-900;
+  @apply inline-flex cursor-pointer items-center justify-center gap-2 rounded-full bg-secondary-500 px-6 py-3 text-base font-semibold text-white shadow-lg shadow-secondary-900/30 transition duration-200 hover:-translate-y-0.5 hover:scale-[1.02] hover:bg-secondary-400 focus:outline-none focus:ring-2 focus:ring-secondary-200 focus:ring-offset-2 focus:ring-offset-primary-900 active:translate-y-0 active:scale-[0.99];
+}
+
+.btn-ghost {
+  @apply inline-flex cursor-pointer items-center justify-center gap-2 rounded-full border border-white/25 bg-white/5 px-5 py-2.5 text-sm font-semibold text-white transition duration-200 hover:-translate-y-0.5 hover:bg-white/10 hover:text-white focus:outline-none focus:ring-2 focus:ring-white/30 focus:ring-offset-2 focus:ring-offset-primary-900 active:translate-y-0 active:scale-[0.99];
+}
+
+.info-panel {
+  @apply rounded-3xl border border-white/10 bg-white/[0.04] p-6;
+}
+
+.action-panel {
+  @apply relative rounded-3xl border border-secondary-300/35 p-6 shadow-xl transition duration-200 hover:-translate-y-1 hover:border-secondary-200;
+  background: linear-gradient(140deg, rgba(255, 255, 255, 0.11), rgba(255, 255, 255, 0.06), rgba(236, 72, 153, 0.13));
+  box-shadow: 0 16px 35px rgba(25, 12, 49, 0.35);
+}
+
+.action-panel:hover {
+  box-shadow: 0 20px 40px rgba(82, 28, 116, 0.35);
+}
+
+.action-panel::after {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(130deg, rgba(236, 72, 153, 0.3), rgba(167, 139, 250, 0.24), rgba(124, 58, 237, 0.18));
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  padding: 1px;
+}
+
+@keyframes cart-overlay-fade {
+  from {
+    opacity: 0;
+    backdrop-filter: blur(0px);
+  }
+  to {
+    opacity: 1;
+    backdrop-filter: blur(4px);
+  }
+}
+
+@keyframes cart-slide-in {
+  from {
+    opacity: 0;
+    transform: translateX(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes reveal-rise {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes gradient-drift {
+  0% {
+    transform: translate3d(-2%, -1%, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(2%, 2%, 0) scale(1.04);
+  }
+  100% {
+    transform: translate3d(-2%, -1%, 0) scale(1);
+  }
+}
+
+.animate-cart-overlay {
+  animation: cart-overlay-fade 0.22s ease-out both;
+}
+
+.animate-cart-drawer {
+  animation: cart-slide-in 0.28s ease-out both;
+}
+
+.animate-reveal {
+  animation: reveal-rise 0.7s ease-out both;
+}
+
+.animate-gradient-drift {
+  animation: gradient-drift 9s ease-in-out infinite;
 }
 
 select {

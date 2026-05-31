@@ -128,3 +128,47 @@ export const ChartIcon = ({ className = baseClassName }) => (
     <path d="M7 16V9M12 16V5M17 16v-4" />
   </svg>
 );
+
+export const ArrowForwardIcon = ({ className = baseClassName }) => (
+  <svg viewBox="0 0 24 24" className={className} aria-hidden="true" {...iconProps}>
+    <path d="M5 12h14" />
+    <path d="m13 6 6 6-6 6" />
+  </svg>
+);
+
+export const RulerIcon = ({ className = baseClassName }) => (
+  <svg viewBox="0 0 24 24" className={className} aria-hidden="true" {...iconProps}>
+    <path d="m4 16 8-8 8 8-8 8Z" />
+    <path d="m9 11 1.5 1.5M12 8l1.5 1.5M15 11l1.5 1.5" />
+  </svg>
+);
+
+export const PaletteIcon = ({ className = baseClassName }) => (
+  <svg viewBox="0 0 24 24" className={className} aria-hidden="true" {...iconProps}>
+    <path d="M12 4a8 8 0 1 0 0 16h1a2 2 0 0 0 0-4h-1a2 2 0 0 1 0-4h4a4 4 0 0 0 0-8z" />
+    <circle cx="7.5" cy="10" r="0.8" />
+    <circle cx="9.5" cy="7.5" r="0.8" />
+    <circle cx="12.5" cy="7" r="0.8" />
+  </svg>
+);
+
+export const PriceTagIcon = ({ className = baseClassName }) => (
+  <svg viewBox="0 0 24 24" className={className} aria-hidden="true" {...iconProps}>
+    <path d="m3 10 7-7h8l3 3v8l-7 7-11-11Z" />
+    <circle cx="14.5" cy="8.5" r="1" />
+  </svg>
+);
+
+export const FacebookIcon = ({ className = baseClassName }) => (
+  <svg viewBox="0 0 24 24" className={className} aria-hidden="true" {...iconProps}>
+    <path d="M14 8h3V4h-3a4 4 0 0 0-4 4v3H7v4h3v5h4v-5h3l1-4h-4V8a1 1 0 0 1 1-1Z" />
+  </svg>
+);
+
+export const InstagramIcon = ({ className = baseClassName }) => (
+  <svg viewBox="0 0 24 24" className={className} aria-hidden="true" {...iconProps}>
+    <rect x="4" y="4" width="16" height="16" rx="4" />
+    <circle cx="12" cy="12" r="3.5" />
+    <circle cx="16.8" cy="7.2" r="0.8" />
+  </svg>
+);

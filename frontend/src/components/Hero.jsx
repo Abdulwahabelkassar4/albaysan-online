@@ -11,7 +11,7 @@ const Hero = () => {
 
   return (
     <section className="relative overflow-hidden bg-neutral-900/60 py-20">
-      <div className="absolute inset-0 bg-gradient-to-br from-primary-500/20 via-transparent to-secondary-500/10" />
+      <div className="animate-gradient-drift absolute inset-0 bg-gradient-to-br from-primary-500/20 via-transparent to-secondary-500/10" />
       <div
         className="absolute inset-0 bg-[url('/assets/background-floral.png')] bg-no-repeat bg-right-bottom bg-contain opacity-0 pointer-events-none animate-floralFade"
         aria-hidden="true"
@@ -19,7 +19,7 @@ const Hero = () => {
       <div
         className={`relative mx-auto flex max-w-6xl flex-col items-center gap-10 px-6 text-center ${layoutDirectionClass}`}
       >
-        <div className="flex-1 space-y-6">
+        <div className="animate-reveal flex-1 space-y-6">
           <span className="inline-flex items-center gap-2 rounded-full border border-white/20 px-4 py-2 text-xs text-white/70">
             {t("hero.badge")}
           </span>
@@ -35,7 +35,7 @@ const Hero = () => {
             </Link>
           </div>
         </div>
-        <div className="relative flex h-72 w-full max-w-sm flex-col items-center justify-center gap-4 overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.03] p-6 text-white shadow-[0_20px_60px_rgba(124,73,224,0.18)] backdrop-blur-md md:w-auto">
+        <div className="animate-reveal relative flex h-72 w-full max-w-sm flex-col items-center justify-center gap-4 overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.03] p-6 text-white shadow-[0_20px_60px_rgba(124,73,224,0.18)] backdrop-blur-md md:w-auto" style={{ animationDelay: "0.12s" }}>
           <div className="absolute inset-0 bg-gradient-to-br from-primary-500/10 via-transparent to-secondary-500/10" />
           <div className="relative flex h-40 w-40 items-center justify-center">
             <div className="absolute inset-5 rounded-full bg-primary-300/20 blur-2xl" aria-hidden="true" />

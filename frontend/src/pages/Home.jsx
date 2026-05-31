@@ -44,8 +44,12 @@ const Home = () => {
       <Hero />
       <section className="mx-auto max-w-6xl px-6 pt-10">
         <div className="grid gap-3 md:grid-cols-4">
-          {trustItems.map(({ key, icon: Icon }) => (
-            <div key={key} className="rounded-2xl border border-white/10 bg-white/[0.04] p-4 backdrop-blur-sm">
+          {trustItems.map(({ key, icon: Icon }, index) => (
+            <div
+              key={key}
+              className="animate-reveal rounded-2xl border border-white/10 bg-white/[0.04] p-4 backdrop-blur-sm transition duration-200 hover:-translate-y-0.5 hover:border-secondary-300/40 hover:bg-white/[0.08]"
+              style={{ animationDelay: `${0.05 + index * 0.08}s` }}
+            >
               <div className={`flex items-center gap-3 ${isRTL ? "flex-row-reverse text-right" : "text-left"}`}>
                 <span className="rounded-full bg-secondary-500/20 p-2 text-secondary-200">
                   <Icon className="h-4 w-4" />
@@ -57,9 +61,13 @@ const Home = () => {
         </div>
       </section>
       <section className="mx-auto max-w-6xl px-6 py-16">
-        <div className="glass-card grid gap-8 p-10 md:grid-cols-3">
-          {featureCards.map((feature) => (
-            <div key={feature.title} className="rounded-3xl border border-white/5 bg-white/5 p-6">
+        <div className="glass-card animate-reveal grid gap-8 p-10 md:grid-cols-3">
+          {featureCards.map((feature, index) => (
+            <div
+              key={feature.title}
+              className="animate-reveal rounded-3xl border border-white/5 bg-white/5 p-6 transition duration-200 hover:-translate-y-1 hover:border-white/20 hover:bg-white/10"
+              style={{ animationDelay: `${0.12 + index * 0.1}s` }}
+            >
               <h3 className="text-xl font-semibold text-white">{feature.title}</h3>
               <p className="mt-3 text-sm text-white/70">{feature.description}</p>
             </div>
@@ -94,12 +102,12 @@ const Home = () => {
         </div>
       </section>
       <section className="mx-auto max-w-6xl px-6 py-16">
-        <div className="glass-card grid gap-8 p-10 md:grid-cols-3">
+        <div className="glass-card animate-reveal grid gap-8 p-10 md:grid-cols-3">
           {milestones.map((milestone, index) => {
             const accentClass =
               index === 0 ? "text-primary-200" : index === 1 ? "text-secondary-200" : "text-white";
             return (
-              <div key={milestone.value} className="text-center">
+              <div key={milestone.value} className="animate-reveal text-center" style={{ animationDelay: `${0.1 + index * 0.1}s` }}>
                 <p className={`text-4xl font-black ${accentClass}`}>{milestone.value}</p>
                 <p className="mt-2 text-sm text-white/70">{milestone.label}</p>
               </div>

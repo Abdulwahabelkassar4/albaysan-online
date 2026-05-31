@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { CalendarIcon, TruckIcon, WhatsAppIcon } from "./icons.jsx";
+import { CalendarIcon, FacebookIcon, InstagramIcon, TruckIcon, WhatsAppIcon } from "./icons.jsx";
 import { CONTACT_PHONE_LOCAL, SOCIAL_LINKS } from "../config/contact.js";
 
 const Footer = () => {
@@ -37,16 +37,18 @@ const Footer = () => {
               href={SOCIAL_LINKS.facebook}
               target="_blank"
               rel="noreferrer"
-              className="rounded-full border border-white/20 px-4 py-2 text-xs transition hover:bg-white/10"
+              className="btn-ghost px-4 py-2 text-xs"
             >
+              <FacebookIcon className="h-4 w-4 text-blue-300" />
               {t("footerLinks.facebook")}
             </a>
             <a
               href={SOCIAL_LINKS.instagram}
               target="_blank"
               rel="noreferrer"
-              className="rounded-full border border-white/20 px-4 py-2 text-xs transition hover:bg-white/10"
+              className="btn-ghost px-4 py-2 text-xs"
             >
+              <InstagramIcon className="h-4 w-4 text-pink-300" />
               {t("footerLinks.instagram")}
             </a>
           </div>

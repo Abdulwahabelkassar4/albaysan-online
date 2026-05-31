@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { ClockIcon, MapPinIcon, PhoneIcon } from "../components/icons.jsx";
+import { ClockIcon, FacebookIcon, InstagramIcon, MapPinIcon, PhoneIcon } from "../components/icons.jsx";
 import { SOCIAL_LINKS } from "../config/contact.js";
 
 const Contact = () => {
@@ -35,6 +35,7 @@ const Contact = () => {
               rel="noreferrer"
               className="btn-primary px-5 py-2 text-xs"
             >
+              <FacebookIcon className="h-4 w-4 text-blue-200" />
               {t("footerLinks.facebook")}
             </a>
             <a
@@ -43,6 +44,7 @@ const Contact = () => {
               rel="noreferrer"
               className="btn-secondary px-5 py-2 text-xs"
             >
+              <InstagramIcon className="h-4 w-4 text-pink-100" />
               {t("footerLinks.instagram")}
             </a>
           </div>
