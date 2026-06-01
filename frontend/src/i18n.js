@@ -6,7 +6,7 @@ const resources = {
     translation: {
       brandName: "البيلسان أونلاين",
       tagline:
-        "بدأنا عام 2019 أونلاين، وفي 2024 فتحنا متجرنا على أرض الواقع. تصاميمنا شرعية ومميزة من مشاغلنا الخاصة.",
+        "قطع شرعية مميزة تُصمَّم داخل مشاغلنا لامرأة تحب الأناقة الهادئة والتفاصيل الراقية.",
       mission: "أن نكون سبباً في احتشام نساء المسلمين ونشر اللباس الشرعي وتحسين صورته",
       deliveryNote: "توصيل لكل محافظات الأردن وفلسطين وبعض محافظات سوريا",
       navbar: {
@@ -36,12 +36,12 @@ const resources = {
       heroCTA: "تسوقي الآن",
       heroSecondaryCTA: "احجزي موعداً",
       hero: {
-        badge: "منذ 2019 — خياطة راقية بتفاصيل عربية معاصرة",
+        badge: "مصممة في مشغلنا لترافق يومك بثقة",
         description:
-          "نحن نؤمن بأن كل إطلالة تستحق أن تكون استثنائية، لذلك نصمم مجموعات موسمية محدودة بعناية ونقدم تجربة حجز وتوصيل مرنة لتلائم أسلوب حياتك.",
+          "اكتشفي تشكيلات محدودة بروح أنثوية عربية، بقصّات مدروسة وتفاصيل أنيقة تناسب يومك والمناسبات.",
         note: "10 صباحًا - 8 مساءً — توصيل لكل محافظات الأردن وفلسطين وبعض محافظات سوريا",
         cardText:
-          "نصنع كل قطعة بشغف للتفاصيل، من اختيار الأقمشة المخملية إلى اللمسات اليدوية الدقيقة، لنضمن لك حضورًا يعبر عن أناقتك الهادئة وثقتك.",
+          "كل قطعة تُنهى بعناية يدوية داخل مشاغلنا لتمنحك مظهراً متقناً وراحة تدوم وأناقة تشبهك.",
       },
       contact: {
         address: "الأردن – إربد – شارع الجامعة – مقابل كازية المناصير – المحل مخصص للنساء فقط",
@@ -114,7 +114,7 @@ const resources = {
       aboutPage: {
         title: "عن البيلسان أونلاين",
         intro:
-          "منذ انطلاقنا كعلامة رقمية في عام 2019 وضعنا هدفًا واضحًا: أن نكون الوجهة الموثوقة للمرأة التي تبحث عن لباس شرعي أنيق ومحتشم. وفي عام 2024 افتتحنا معرضنا الأرضي في إربد لنقدم تجربة تسوق أكثر قربًا وخصوصية بعيدًا عن صخب المعارض المختلطة.",
+          "منذ انطلاقنا كعلامة رقمية في عام 2026 وضعنا هدفًا واضحًا: أن نكون الوجهة الموثوقة للمرأة التي تبحث عن لباس شرعي أنيق ومحتشم. وفي عام 2024 افتتحنا معرضنا الأرضي في إربد لنقدم تجربة تسوق أكثر قربًا وخصوصية بعيدًا عن صخب المعارض المختلطة.",
         whyTitle: "لماذا البيلسان؟",
         whyPoints: [
           "• تصاميم حصرية لا تُباع في أي سوق آخر.",
@@ -375,7 +375,7 @@ const resources = {
     translation: {
       home_brandName: "Albaysan Online",
       home_tagline:
-        "We began our journey online in 2019, and in 2024 we proudly opened our physical boutique. Every design reflects modesty, elegance, and craftsmanship — created with care in our own workshops.",
+        "Designed in our atelier, made to move with your day.",
       home_primaryCTA: "Shop Now",
       home_secondaryCTA: "Book Your Visit",
       home_deliveryNote: "We offer delivery across Jordan, Palestine, and select cities in Syria.",
@@ -394,7 +394,7 @@ const resources = {
       spring_collection: "Spring Collection",
       about_title: "About Albaysan Online",
       about_intro:
-        "Since our digital launch in 2019, we have aimed to be the trusted destination for women seeking elegant and modest wear. In 2024, we expanded by opening our physical boutique in Irbid to offer a more personal shopping experience.",
+        "Since our digital launch in 2026, we have aimed to be the trusted destination for women seeking elegant and modest wear. In 2024, we expanded by opening our physical boutique in Irbid to offer a more personal shopping experience.",
       why_albaysan_title: "Why Albaysan?",
       why_albaysan_text:
         "Exclusive designs you won’t find elsewhere. Our in-house workshops ensure quality and compliance with modest standards. Every piece reflects a refined interior vision — graceful, dignified, and timeless.",
@@ -429,7 +429,7 @@ const resources = {
         "Your reservation has been received. We’ll confirm it shortly via WhatsApp.",
       brandName: "Albaysan Online",
       tagline:
-        "We launched online in 2019, and in 2024 we opened our physical boutique. Our designs are modest, unique, and crafted in our own workshops.",
+        "Signature modest pieces crafted in-house for women who love calm elegance and intentional detail.",
       mission:
         "To support Muslim women in dressing modestly, spread authentic attire, and elevate its image.",
       deliveryNote: "Delivery available across Jordan, Palestine, and select cities in Syria.",
@@ -460,12 +460,12 @@ const resources = {
       heroCTA: "Shop Now",
       heroSecondaryCTA: "Book a Visit",
       hero: {
-        badge: "Since 2019 — refined tailoring with contemporary Arabic details",
+        badge: "Designed in our atelier, made to move with your day",
         description:
-          "We believe every look deserves to feel exceptional. Discover limited seasonal collections and flexible delivery and reservation options crafted around your lifestyle.",
+          "Discover limited edits inspired by modern Arab femininity, with thoughtful cuts and effortless styling.",
         note: "10:00 AM – 8:00 PM — Delivery across Jordan, Palestine, and select Syrian cities",
         cardText:
-          "Each piece is sewn with meticulous care — from premium fabrics to delicate finishes — to celebrate your quiet elegance and confidence.",
+          "Every piece is finished by hand in our workshop so it feels polished, comfortable, and distinctly yours.",
       },
       contact: {
         address: "Jordan – Irbid – University Street – Opposite Manaseer Gas Station – Women-only boutique",
@@ -539,7 +539,7 @@ const resources = {
       aboutPage: {
         title: "About Albaysan Online",
         intro:
-          "Since launching as a digital brand in 2019, our goal has been clear: become the trusted destination for women seeking elegant modest fashion. In 2024 we opened our Irbid boutique to offer a more personal, women-only shopping experience.",
+          "Since launching as a digital brand in 2026, our goal has been clear: become the trusted destination for women seeking elegant modest fashion. In 2024 we opened our Irbid boutique to offer a more personal, women-only shopping experience.",
         whyTitle: "Why Albaysan?",
         whyPoints: [
           "• Exclusive designs unavailable anywhere else.",
