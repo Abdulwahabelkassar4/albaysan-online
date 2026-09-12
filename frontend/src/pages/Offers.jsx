@@ -5,6 +5,7 @@ import { Link } from "react-router-dom";
 import { useCart } from "../context/CartContext.jsx";
 import { useToast } from "../context/ToastContext.jsx";
 import { FireIcon, ShoppingBagIcon } from "../components/icons.jsx";
+import OfferCountdown from "../components/OfferCountdown.jsx";
 
 const Offers = () => {
   const { t, i18n } = useTranslation();
@@ -14,26 +15,31 @@ const Offers = () => {
 
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [offerSetting, setOfferSetting] = useState(null);
 
   useEffect(() => {
-    const fetchOffers = async () => {
+    const fetchData = async () => {
       setLoading(true);
       try {
-        const { data } = await axiosClient.get("/api/products", {
-          params: { limit: 50 },
-        });
-        // Filter products that have an originalPrice (discounted) or discountTag
-        const items = (data.data || []).filter(
+        const [{ data: productsRes }, { data: settingsRes }] = await Promise.all([
+          axiosClient.get("/api/products", { params: { limit: 50 } }),
+          axiosClient.get("/api/offer-settings").catch(() => ({ data: null })),
+        ]);
+
+        const items = (productsRes.data || []).filter(
           (p) => (p.originalPrice && p.originalPrice > p.price) || p.discountTag
         );
         setProducts(items);
+        if (settingsRes) {
+          setOfferSetting(settingsRes);
+        }
       } catch (error) {
         console.error(error);
       } finally {
         setLoading(false);
       }
     };
-    fetchOffers();
+    fetchData();
   }, []);
 
   const handleQuickAdd = (product, e) => {
@@ -49,19 +55,17 @@ const Offers = () => {
       <div className="pointer-events-none absolute left-1/2 top-10 -z-10 h-96 w-96 -translate-x-1/2 rounded-full bg-gradient-to-tr from-pink-600/30 to-purple-600/30 blur-3xl" />
 
       <div className="mx-auto max-w-6xl px-6">
-        {/* Header Hero Section */}
-        <div className={`mb-12 text-center ${isRTL ? "text-right md:text-center" : "text-left md:text-center"}`}>
-          <div className="inline-flex items-center gap-2 rounded-full border border-pink-400/40 bg-gradient-to-r from-pink-500/20 to-purple-500/20 px-4 py-1.5 text-xs font-semibold text-pink-300 shadow-inner">
-            <FireIcon className="h-4 w-4 animate-bounce text-amber-400" />
-            <span>تخفيضات البيلسان الحصرية</span>
-          </div>
-          <h1 className="mt-4 text-3xl font-extrabold text-white md:text-5xl">
-            {t("offersPage.title")}
-          </h1>
-          <p className="mx-auto mt-3 max-w-2xl text-base text-white/70">
-            {t("offersPage.subtitle")}
-          </p>
-        </div>
+        {/* Dynamic Countdown Banner */}
+        {offerSetting && offerSetting.isEnabled && (
+          <OfferCountdown
+            targetDate={offerSetting.endDate}
+            title={offerSetting.title || t("offersPage.title")}
+            subtitle={offerSetting.subtitle || t("offersPage.subtitle")}
+            badgeText={offerSetting.badgeText}
+            promoCode={offerSetting.promoCode}
+            isEnabled={offerSetting.isEnabled}
+          />
+        )}
 
         {/* Offers Grid */}
         {loading ? (

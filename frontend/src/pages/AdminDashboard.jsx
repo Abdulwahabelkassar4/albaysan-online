@@ -2,13 +2,14 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import axiosClient from "../api/axiosClient.js";
-import { ArrowForwardIcon, BoxIcon, ChartIcon, ClipboardIcon, SparkleIcon } from "../components/icons.jsx";
+import { ArrowForwardIcon, BoxIcon, ChartIcon, ClipboardIcon, ClockIcon, SparkleIcon } from "../components/icons.jsx";
 import { useToast } from "../context/ToastContext.jsx";
 
 const controlLinks = [
   { to: "/admin/products", icon: BoxIcon, labelKey: "admin.links.products" },
   { to: "/admin/categories", icon: ChartIcon, labelKey: "admin.links.categories" },
   { to: "/admin/orders", icon: ClipboardIcon, labelKey: "admin.links.orders" },
+  { to: "/admin/offers-config", icon: ClockIcon, labelKey: "عداد العروض والتخفيضات" },
 ];
 
 const AdminDashboard = ({ onLogout }) => {
