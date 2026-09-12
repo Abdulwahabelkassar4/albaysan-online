@@ -30,7 +30,20 @@ if (!allowedOrigins.includes("http://localhost:5173")) {
 
 app.use(
   cors({
-    origin: allowedOrigins,
+    origin: (origin, callback) => {
+      // Allow requests with no origin (like mobile apps, curl requests)
+      if (!origin) return callback(null, true);
+
+      if (
+        allowedOrigins.includes(origin) ||
+        origin.endsWith(".vercel.app") ||
+        origin.includes("albilsan.online")
+      ) {
+        return callback(null, true);
+      }
+
+      callback(null, true); // Fallback to allow request
+    },
     credentials: true,
   })
 );
