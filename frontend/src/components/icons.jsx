@@ -235,6 +235,18 @@ export const TagIcon = ({ className = baseClassName }) => (
   </svg>
 );
 
+export const ChevronLeftIcon = ({ className = baseClassName }) => (
+  <svg viewBox="0 0 24 24" className={className} aria-hidden="true" {...iconProps}>
+    <path d="m15 18-6-6 6-6" />
+  </svg>
+);
+
+export const ChevronRightIcon = ({ className = baseClassName }) => (
+  <svg viewBox="0 0 24 24" className={className} aria-hidden="true" {...iconProps}>
+    <path d="m9 18 6-6-6-6" />
+  </svg>
+);
+
 export const LayersIcon = ({ className = baseClassName }) => (
   <svg viewBox="0 0 24 24" className={className} aria-hidden="true" {...iconProps}>
     <polygon points="12 2 2 7 12 12 22 7 12 2" />
@@ -242,3 +254,4 @@ export const LayersIcon = ({ className = baseClassName }) => (
     <polyline points="2 12 12 17 22 12" />
   </svg>
 );
+
