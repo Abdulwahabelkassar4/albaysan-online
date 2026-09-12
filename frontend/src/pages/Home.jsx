@@ -4,13 +4,14 @@ import { useTranslation } from "react-i18next";
 import axiosClient from "../api/axiosClient.js";
 import Hero from "../components/Hero.jsx";
 import ProductCard from "../components/ProductCard.jsx";
-import { CalendarIcon, ShieldIcon, TruckIcon, WhatsAppIcon } from "../components/icons.jsx";
+import { CalendarIcon, ShieldIcon, TruckIcon, WhatsAppIcon, FireIcon } from "../components/icons.jsx";
 import { requestWithRetry } from "../utils/requestWithRetry.js";
 
 const Home = () => {
   const { t, i18n } = useTranslation();
   const isRTL = i18n.language === "ar";
   const [latestProducts, setLatestProducts] = useState([]);
+  const [offerProducts, setOfferProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const featureCards = t("home.features", { returnObjects: true });
   const milestones = t("home.milestones", { returnObjects: true });
@@ -25,10 +26,16 @@ const Home = () => {
     const fetchProducts = async () => {
       try {
         const { data } = await requestWithRetry(
-          () => axiosClient.get("/api/products?limit=4", { timeout: 12000 }),
+          () => axiosClient.get("/api/products?limit=8", { timeout: 12000 }),
           { timeoutMs: 65000 }
         );
-        setLatestProducts(data.data || []);
+        const allItems = data.data || [];
+        setLatestProducts(allItems.slice(0, 4));
+        // Offers items (discounted or discountTag)
+        const offers = allItems.filter(
+          (p) => (p.originalPrice && p.originalPrice > p.price) || p.discountTag
+        );
+        setOfferProducts(offers.slice(0, 4));
       } catch (error) {
         console.error("Failed to load products", error);
       } finally {
@@ -60,6 +67,41 @@ const Home = () => {
           ))}
         </div>
       </section>
+
+      {/* Offers Showcase Section */}
+      {offerProducts.length > 0 && (
+        <section className="mx-auto max-w-6xl px-6 pt-16">
+          <div className="relative overflow-hidden rounded-3xl border border-pink-500/30 bg-gradient-to-r from-purple-950/80 via-purple-900/40 to-pink-950/80 p-8 backdrop-blur-md">
+            <div className="flex flex-col items-center justify-between gap-6 md:flex-row">
+              <div>
+                <div className="inline-flex items-center gap-2 rounded-full bg-pink-500/20 px-3 py-1 text-xs font-bold text-pink-300 border border-pink-500/30">
+                  <FireIcon className="h-4 w-4 text-amber-400 animate-bounce" />
+                  <span>عروض لفترة محدودة</span>
+                </div>
+                <h2 className="mt-2 text-3xl font-extrabold text-white">
+                  {t("home.offersSectionTitle")}
+                </h2>
+                <p className="mt-1 text-sm text-white/70">
+                  {t("home.offersSubtitle")}
+                </p>
+              </div>
+              <Link
+                to="/offers"
+                className="rounded-2xl bg-gradient-to-r from-pink-500 to-rose-500 px-6 py-3 text-sm font-bold text-white shadow-lg shadow-pink-900/40 transition hover:scale-105"
+              >
+                {t("home.viewAllOffers")} 🔥
+              </Link>
+            </div>
+
+            <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+              {offerProducts.map((product) => (
+                <ProductCard key={product._id} product={product} />
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
       <section className="mx-auto max-w-6xl px-6 py-16">
         <div className="glass-card animate-reveal grid gap-8 p-10 md:grid-cols-3">
           {featureCards.map((feature, index) => (
@@ -74,6 +116,7 @@ const Home = () => {
           ))}
         </div>
       </section>
+
       <section className="bg-neutral-900/70 py-16">
         <div className="mx-auto max-w-6xl px-6">
           <div
@@ -120,4 +163,3 @@ const Home = () => {
 };
 
 export default Home;
-

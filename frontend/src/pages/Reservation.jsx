@@ -1,4 +1,4 @@
-﻿import { useForm } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import axiosClient from "../api/axiosClient.js";
 import { useToast } from "../context/ToastContext.jsx";
 import { useTranslation } from "react-i18next";
@@ -39,7 +39,7 @@ const Reservation = () => {
     }
 
     try {
-      const { customerName, phone, pickupDate } = values;
+      const { customerName, phone, pickupDate, height, weight } = values;
       const locale = isRTL ? "ar-JO" : "en-US";
 
       const messageLines = [
@@ -56,6 +56,13 @@ const Reservation = () => {
         );
       }
 
+      if (height) {
+        messageLines.push(t("orders.whatsappHeight", { height }));
+      }
+      if (weight) {
+        messageLines.push(t("orders.whatsappWeight", { weight }));
+      }
+
       messageLines.push(t("orders.whatsappFooter"));
 
       const orderText = messageLines.join("\n\n");
@@ -67,6 +74,8 @@ const Reservation = () => {
         customerName,
         phone,
         pickupDate,
+        height,
+        weight,
         items: cartItems.map(({ lineId, ...item }) => ({ ...item })),
         notes: orderDetails,
       });
@@ -101,7 +110,9 @@ const Reservation = () => {
             onSubmit={handleSubmit(onSubmit)}
           >
             <div>
-              <label className="mb-2 block text-sm text-white/70">{t("forms.name")}</label>
+              <label className="mb-2 block text-sm font-medium text-white/80">
+                {t("forms.name")} <span className="text-rose-400">*</span>
+              </label>
               <input
                 {...register("customerName", { required: true })}
                 className={`w-full rounded-2xl border border-white/20 bg-white/10 px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-secondary-300 ${
@@ -113,7 +124,9 @@ const Reservation = () => {
               )}
             </div>
             <div>
-              <label className="mb-2 block text-sm text-white/70">{t("forms.phone")}</label>
+              <label className="mb-2 block text-sm font-medium text-white/80">
+                {t("forms.phone")} <span className="text-rose-400">*</span>
+              </label>
               <input
                 {...register("phone", { required: true })}
                 className={`w-full rounded-2xl border border-white/20 bg-white/10 px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-secondary-300 ${
@@ -125,7 +138,9 @@ const Reservation = () => {
               )}
             </div>
             <div>
-              <label className="mb-2 block text-sm text-white/70">{t("forms.pickupDate")}</label>
+              <label className="mb-2 block text-sm font-medium text-white/80">
+                {t("forms.pickupDate")} <span className="text-rose-400">*</span>
+              </label>
               <input
                 type="date"
                 {...register("pickupDate", { required: true })}
@@ -137,6 +152,46 @@ const Reservation = () => {
                 <span className="mt-1 block text-xs text-rose-300">{t("forms.required")}</span>
               )}
             </div>
+
+            {/* Height & Weight Fields */}
+            <div className="rounded-2xl border border-secondary-400/30 bg-purple-950/40 p-4 space-y-3">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div>
+                  <label className="mb-1.5 block text-sm font-semibold text-secondary-200">
+                    {t("forms.height")} <span className="text-rose-400">*</span>
+                  </label>
+                  <input
+                    {...register("height", { required: true })}
+                    placeholder={t("forms.heightPlaceholder")}
+                    className={`w-full rounded-xl border border-white/20 bg-white/10 px-4 py-2.5 text-sm text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-secondary-300 ${
+                      isRTL ? "text-right" : "text-left"
+                    }`}
+                  />
+                  {formState.errors.height && (
+                    <span className="mt-1 block text-xs text-rose-300">{t("forms.required")}</span>
+                  )}
+                </div>
+                <div>
+                  <label className="mb-1.5 block text-sm font-semibold text-secondary-200">
+                    {t("forms.weight")} <span className="text-rose-400">*</span>
+                  </label>
+                  <input
+                    {...register("weight", { required: true })}
+                    placeholder={t("forms.weightPlaceholder")}
+                    className={`w-full rounded-xl border border-white/20 bg-white/10 px-4 py-2.5 text-sm text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-secondary-300 ${
+                      isRTL ? "text-right" : "text-left"
+                    }`}
+                  />
+                  {formState.errors.weight && (
+                    <span className="mt-1 block text-xs text-rose-300">{t("forms.required")}</span>
+                  )}
+                </div>
+              </div>
+              <p className="text-xs font-medium text-pink-200/90 leading-relaxed">
+                💡 {t("forms.sizeNote")}
+              </p>
+            </div>
+
             <div>
               <label className="mb-2 block text-sm text-white/70">{t("forms.details")}</label>
               <textarea
@@ -144,7 +199,7 @@ const Reservation = () => {
                 value={orderDetails}
                 readOnly
                 dir={isRTL ? "rtl" : "ltr"}
-                rows={5}
+                rows={4}
                 className={`w-full resize-none rounded-2xl border border-purple-400/20 bg-purple-950/40 px-4 py-3 text-sm text-white ${
                   isRTL ? "text-right" : "text-left"
                 }`}
@@ -152,7 +207,7 @@ const Reservation = () => {
             </div>
             <button
               type="submit"
-              className="w-full rounded-2xl bg-gradient-to-r from-purple-600 via-secondary-500 to-pink-500 py-3 text-base font-semibold text-white shadow-lg shadow-purple-900/30 transition-transform hover:scale-[1.02]"
+              className="w-full rounded-2xl bg-gradient-to-r from-purple-600 via-secondary-500 to-pink-500 py-3.5 text-base font-semibold text-white shadow-lg shadow-purple-900/30 transition-transform hover:scale-[1.02]"
               disabled={formState.isSubmitting}
             >
               {formState.isSubmitting ? t("forms.submitting") : t("forms.submitReservation")}

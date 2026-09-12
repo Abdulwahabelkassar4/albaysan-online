@@ -8,25 +8,28 @@ const defaultValues = {
   name: "",
   description: "",
   price: "",
+  originalPrice: "",
+  discountTag: "",
   category: "",
   productCollection: "",
   sizes: "",
   colors: "",
+  inStock: true,
 };
 
-const categoryOptions = [
-  { value: "عباءات", labelKey: "adminProductsPage.categories.abayas" },
-  { value: "ادناءات", labelKey: "adminProductsPage.categories.idnaas" },
-  { value: "نقابات", labelKey: "adminProductsPage.categories.niqabs" },
-  { value: "سبورات شرعية", labelKey: "adminProductsPage.categories.sports" },
-  { value: "حقائب", labelKey: "adminProductsPage.categories.bags" },
+const fallbackCategories = [
+  "عباءات",
+  "ادناءات",
+  "نقابات",
+  "سبورات شرعية",
+  "حقائب",
 ];
 
-const collectionOptions = [
-  { value: "الكوليكشن الصيفي", labelKey: "adminProductsPage.collections.summer" },
-  { value: "الكوليكشن الخريفي", labelKey: "adminProductsPage.collections.autumn" },
-  { value: "الكوليكشن الشتوي", labelKey: "adminProductsPage.collections.winter" },
-  { value: "الكوليكشن الربيعي", labelKey: "adminProductsPage.collections.spring" },
+const fallbackCollections = [
+  "الكوليكشن الصيفي",
+  "الكوليكشن الخريفي",
+  "الكوليكشن الشتوي",
+  "الكوليكشن الربيعي",
 ];
 
 const normalizeImages = (images, fallbackImage) => {
@@ -45,6 +48,7 @@ const AdminProducts = () => {
   const { showToast } = useToast();
   const { t, i18n } = useTranslation();
   const isRTL = i18n.language === "ar";
+
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editingProduct, setEditingProduct] = useState(null);
@@ -53,11 +57,32 @@ const AdminProducts = () => {
   const [uploading, setUploading] = useState(false);
   const [formData, setFormData] = useState({ ...defaultValues });
 
+  // Bulk Selection State
+  const [selectedProductIds, setSelectedProductIds] = useState([]);
+
+  const [categories, setCategories] = useState(fallbackCategories);
+  const [collections, setCollections] = useState(fallbackCollections);
+
+  const loadCategories = async () => {
+    try {
+      const { data } = await axiosClient.get("/api/categories");
+      if (Array.isArray(data) && data.length > 0) {
+        const catNames = data.filter((c) => c.type === "category").map((c) => c.name);
+        const colNames = data.filter((c) => c.type === "collection").map((c) => c.name);
+        if (catNames.length) setCategories(catNames);
+        if (colNames.length) setCollections(colNames);
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   const loadProducts = async () => {
     setLoading(true);
     try {
-      const { data } = await axiosClient.get("/api/products", { params: { limit: 50 } });
+      const { data } = await axiosClient.get("/api/products", { params: { limit: 100 } });
       setProducts(data.data || []);
+      setSelectedProductIds([]);
     } catch (error) {
       showToast(t("adminProductsPage.toast.loadError"), "error");
     } finally {
@@ -67,10 +92,11 @@ const AdminProducts = () => {
 
   useEffect(() => {
     loadProducts();
+    loadCategories();
   }, []);
 
   const handleChange = (field) => (event) => {
-    const value = event.target.value;
+    const value = event.target.type === "checkbox" ? event.target.checked : event.target.value;
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
@@ -78,8 +104,11 @@ const AdminProducts = () => {
     name: formData.name.trim(),
     description: formData.description.trim(),
     price: Number(formData.price) || 0,
+    originalPrice: formData.originalPrice ? Number(formData.originalPrice) : null,
+    discountTag: formData.discountTag.trim(),
     category: formData.category.trim(),
     productCollection: formData.productCollection.trim(),
+    inStock: formData.inStock,
     sizes: formData.sizes
       ? formData.sizes
           .split(",")
@@ -105,8 +134,9 @@ const AdminProducts = () => {
   const saveProduct = async () => {
     const payload = buildPayload();
     try {
-      if (editingProduct?._id) {
-        await axiosClient.put(`/api/products/${editingProduct._id}`, payload);
+      if (editingProduct?._id || editingProduct?.id) {
+        const prodId = editingProduct._id || editingProduct.id;
+        await axiosClient.put(`/api/products/${prodId}`, payload);
         showToast(t("adminProductsPage.toast.updateSuccess"), "success");
       } else {
         await axiosClient.post("/api/products", payload);
@@ -139,8 +169,11 @@ const AdminProducts = () => {
       name: product.name || "",
       description: product.description || "",
       price: product.price?.toString() || "",
+      originalPrice: product.originalPrice?.toString() || "",
+      discountTag: product.discountTag || "",
       category: product.category || "",
       productCollection: product.productCollection || "",
+      inStock: product.inStock !== false,
       sizes: product.sizes?.join(", ") || "",
       colors: product.colors?.join(", ") || "",
     });
@@ -154,6 +187,47 @@ const AdminProducts = () => {
       loadProducts();
     } catch (error) {
       showToast(t("adminProductsPage.toast.deleteError"), "error");
+    }
+  };
+
+  // Bulk Actions
+  const toggleSelectAll = () => {
+    if (selectedProductIds.length === products.length) {
+      setSelectedProductIds([]);
+    } else {
+      setSelectedProductIds(products.map((p) => p._id || p.id));
+    }
+  };
+
+  const toggleSelectProduct = (id) => {
+    setSelectedProductIds((prev) =>
+      prev.includes(id) ? prev.filter((pId) => pId !== id) : [...prev, id]
+    );
+  };
+
+  const handleBulkAction = async (action, inStockVal = true) => {
+    if (selectedProductIds.length === 0) return;
+    if (action === "delete" && !window.confirm(`هل أنت تأكد من حذف ${selectedProductIds.length} منتج؟`)) return;
+
+    try {
+      await axiosClient.post("/api/products/bulk", {
+        productIds: selectedProductIds,
+        action,
+        inStock: inStockVal,
+      });
+      showToast(`تم تنفيذ الإجراء على ${selectedProductIds.length} منتج بنجاح`, "success");
+      loadProducts();
+    } catch (error) {
+      showToast("فشل تنفيذ الإجراء الجماعي", "error");
+    }
+  };
+
+  // Drag-and-Drop Image Uploader
+  const handleDropImages = (e) => {
+    e.preventDefault();
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      const filesArr = Array.from(e.dataTransfer.files).filter((file) => file.type.startsWith("image/"));
+      setSelectedFiles((prev) => [...prev, ...filesArr]);
     }
   };
 
@@ -185,8 +259,14 @@ const AdminProducts = () => {
   };
 
   return (
-    <div className="mx-auto max-w-6xl px-6 py-16">
-      <div className={`mb-6 flex ${isRTL ? "justify-start" : "justify-end"}`}>
+    <div className="mx-auto max-w-7xl px-4 py-12 md:px-6">
+      <div className="mb-6 flex items-center justify-between">
+        <Link
+          to="/admin/categories"
+          className="inline-flex items-center gap-2 rounded-2xl border border-secondary-400/40 bg-secondary-500/20 px-4 py-2 text-sm font-semibold text-secondary-200 hover:bg-secondary-500/30"
+        >
+          ⚙️ إدارة الفئات والمجموعات
+        </Link>
         <Link
           to="/admin/dashboard"
           className="inline-flex items-center gap-2 rounded-full border border-white/30 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/10"
@@ -194,11 +274,14 @@ const AdminProducts = () => {
           {isRTL ? `${t("adminProductsPage.backToDashboard")} →` : `← ${t("adminProductsPage.backToDashboard")}`}
         </Link>
       </div>
-      <div className="glass-card grid gap-8 p-10 lg:grid-cols-[1.2fr,1fr]">
-        <section className={isRTL ? "text-right" : "text-left"}>
+
+      <div className="grid gap-8 lg:grid-cols-[1.1fr,1.3fr]">
+        {/* Product Form */}
+        <section className={`glass-card p-8 rounded-3xl border border-white/10 bg-neutral-900/80 backdrop-blur-xl ${isRTL ? "text-right" : "text-left"}`}>
           <h2 className="text-2xl font-bold text-white">
             {editingProduct ? t("adminProductsPage.editTitle") : t("adminProductsPage.createTitle")}
           </h2>
+          
           <form className={`mt-6 grid gap-5 ${isRTL ? "text-right" : "text-left"}`} onSubmit={handleSubmit}>
             <div>
               <label className="mb-2 block text-sm text-white/70">{t("adminProductsPage.form.name")}</label>
@@ -206,9 +289,11 @@ const AdminProducts = () => {
                 value={formData.name}
                 onChange={handleChange("name")}
                 required
-                className="w-full rounded-2xl border border-white/20 bg-white/10 px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary-300"
+                className="w-full rounded-2xl border border-white/20 bg-neutral-800/80 px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
               />
             </div>
+
+            {/* Price & Original Price */}
             <div className="grid gap-4 md:grid-cols-2">
               <div>
                 <label className="mb-2 block text-sm text-white/70">{t("adminProductsPage.form.price")}</label>
@@ -219,56 +304,102 @@ const AdminProducts = () => {
                   value={formData.price}
                   onChange={handleChange("price")}
                   required
-                  className="w-full rounded-2xl border border-white/20 bg-white/10 px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary-300"
+                  placeholder="مثال: 35"
+                  className="w-full rounded-2xl border border-white/20 bg-neutral-800/80 px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
                 />
               </div>
+              <div>
+                <label className="mb-2 block text-sm text-amber-200 font-medium">السعر قبل الخصم (اختياري)</label>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.1"
+                  value={formData.originalPrice}
+                  onChange={handleChange("originalPrice")}
+                  placeholder="مثال: 45"
+                  className="w-full rounded-2xl border border-amber-400/30 bg-neutral-800/80 px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-amber-300"
+                />
+              </div>
+            </div>
+
+            {/* Discount Tag */}
+            <div>
+              <label className="mb-2 block text-sm text-pink-200 font-medium">تاغ العرض / الخصم</label>
+              <input
+                type="text"
+                value={formData.discountTag}
+                onChange={handleChange("discountTag")}
+                placeholder="تاغ العرض الترويجي (مثال: خصم 20%)"
+                className="w-full rounded-2xl border border-pink-400/30 bg-neutral-800/80 px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-pink-300"
+              />
+            </div>
+
+            {/* Category & Collection */}
+            <div className="grid gap-4 md:grid-cols-2">
               <div>
                 <label className="mb-2 block text-sm text-white/70">{t("adminProductsPage.form.category")}</label>
                 <select
                   value={formData.category}
                   onChange={handleChange("category")}
-                  className="w-full rounded-2xl border border-white/20 bg-white/10 px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary-300"
+                  className="w-full rounded-2xl border border-white/20 bg-neutral-800 px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
                 >
                   <option value="">{t("adminProductsPage.form.categoryPlaceholder")}</option>
-                  {categoryOptions.map((option) => (
-                    <option key={option.value} value={option.value} className="text-black">
-                      {t(option.labelKey)}
+                  {categories.map((cat) => (
+                    <option key={cat} value={cat}>
+                      {cat}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="mb-2 block text-sm text-white/70">{t("adminProductsPage.form.collection")}</label>
+                <select
+                  value={formData.productCollection}
+                  onChange={handleChange("productCollection")}
+                  className="w-full rounded-2xl border border-white/20 bg-neutral-800 px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                >
+                  <option value="">{t("adminProductsPage.form.collectionPlaceholder")}</option>
+                  {collections.map((col) => (
+                    <option key={col} value={col}>
+                      {col}
                     </option>
                   ))}
                 </select>
               </div>
             </div>
-            <div>
-              <label className="mb-2 block text-sm text-white/70">{t("adminProductsPage.form.collection")}</label>
-              <select
-                value={formData.productCollection}
-                onChange={handleChange("productCollection")}
-                className="w-full rounded-2xl border border-white/20 bg-white/10 px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary-300"
-              >
-                <option value="">{t("adminProductsPage.form.collectionPlaceholder")}</option>
-                {collectionOptions.map((option) => (
-                  <option key={option.value} value={option.value} className="text-black">
-                    {t(option.labelKey)}
-                  </option>
-                ))}
-              </select>
+
+            {/* Stock Availability Toggle */}
+            <div className="flex items-center gap-3">
+              <input
+                type="checkbox"
+                id="inStock"
+                checked={formData.inStock}
+                onChange={handleChange("inStock")}
+                className="h-5 w-5 rounded border-white/20 bg-neutral-800 text-primary-600 focus:ring-primary-500"
+              />
+              <label htmlFor="inStock" className="text-sm font-semibold text-white">
+                متوفر في المخزون حالياً
+              </label>
             </div>
+
             <div>
               <label className="mb-2 block text-sm text-white/70">{t("adminProductsPage.form.description")}</label>
               <textarea
                 rows="3"
                 value={formData.description}
                 onChange={handleChange("description")}
-                className="w-full rounded-2xl border border-white/20 bg-white/10 px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary-300"
+                className="w-full rounded-2xl border border-white/20 bg-neutral-800/80 px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
               />
             </div>
+
             <div className="grid gap-4 md:grid-cols-2">
               <div>
                 <label className="mb-2 block text-sm text-white/70">{t("adminProductsPage.form.sizes")}</label>
                 <input
                   value={formData.sizes}
                   onChange={handleChange("sizes")}
-                  className="w-full rounded-2xl border border-white/20 bg-white/10 px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary-300"
+                  placeholder="S, M, L, XL"
+                  className="w-full rounded-2xl border border-white/20 bg-neutral-800/80 px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
                 />
               </div>
               <div>
@@ -276,50 +407,66 @@ const AdminProducts = () => {
                 <input
                   value={formData.colors}
                   onChange={handleChange("colors")}
-                  className="w-full rounded-2xl border border-white/20 bg-white/10 px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary-300"
+                  placeholder="أسود، كحلي، بيج"
+                  className="w-full rounded-2xl border border-white/20 bg-neutral-800/80 px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
                 />
               </div>
             </div>
+
+            {/* Drag and Drop Image Dropzone */}
             <div>
               <label className="mb-2 block text-sm text-white/70">{t("adminProductsPage.form.images")}</label>
-              <input
-                type="file"
-                multiple
-                accept="image/*"
-                onChange={(event) => setSelectedFiles(Array.from(event.target.files || []))}
-                disabled={uploading}
-                className="w-full rounded-2xl border border-dashed border-white/20 bg-transparent px-4 py-3 text-sm text-white file:mr-4 file:rounded-full file:border-0 file:bg-primary-500 file:px-4 file:py-2 file:text-white"
-              />
-              <div className={`mt-3 flex flex-wrap items-center gap-3 ${isRTL ? "justify-end" : "justify-start"}`}>
+              <div
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={handleDropImages}
+                className="relative border-2 border-dashed border-white/20 hover:border-primary-500 rounded-3xl p-6 text-center bg-neutral-800/50 transition cursor-pointer"
+              >
+                <input
+                  type="file"
+                  multiple
+                  accept="image/*"
+                  onChange={(event) => setSelectedFiles(Array.from(event.target.files || []))}
+                  disabled={uploading}
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                />
+                <div className="text-3xl mb-2">📸</div>
+                <p className="text-sm font-semibold text-white">اسحب الصور وأفلتها هنا أو انقر للاختيار</p>
+                <p className="text-xs text-white/50 mt-1">تنسيقات مسموحة: JPG, PNG, WEBP</p>
+              </div>
+
+              <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
                 {selectedFiles.length > 0 && (
-                  <p className="text-sm text-white/70">
-                    {t("adminProductsPage.form.selectedImagesCount", { count: selectedFiles.length })}
+                  <p className="text-xs font-medium text-emerald-400">
+                    تم اختيار {selectedFiles.length} ملفات جاهزة للرفع
                   </p>
                 )}
                 <button
                   type="button"
                   onClick={handleUploadImages}
                   disabled={selectedFiles.length === 0 || uploading}
-                  className="rounded-full border border-white/30 px-4 py-2 text-sm text-white transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="rounded-full bg-primary-600 px-5 py-2 text-xs font-bold text-white transition hover:bg-primary-500 disabled:opacity-50"
                 >
-                  {t("adminProductsPage.form.uploadImagesButton")}
+                  {uploading ? "جاري الرفع..." : t("adminProductsPage.form.uploadImagesButton")}
                 </button>
               </div>
-              <div className={`mt-4 flex flex-wrap gap-3 ${isRTL ? "justify-end" : "justify-start"}`}>
+
+              {/* Uploaded Thumbnails */}
+              <div className="mt-4 flex flex-wrap gap-3">
                 {uploadedImages.map((imageUrl, index) => (
-                  <div key={`${imageUrl}-${index}`} className="relative h-24 w-24 overflow-hidden rounded-2xl">
+                  <div key={`${imageUrl}-${index}`} className="relative h-20 w-20 overflow-hidden rounded-2xl border border-white/10 group">
                     <img src={imageUrl} alt="product" className="h-full w-full object-cover" />
                     <button
                       type="button"
                       onClick={() => removeImage(imageUrl)}
-                      className="absolute inset-0 flex items-center justify-center bg-black/60 text-sm"
+                      className="absolute inset-0 flex items-center justify-center bg-black/70 text-xs font-bold text-rose-300 opacity-0 group-hover:opacity-100 transition"
                     >
-                      &times;
+                      حذف ✕
                     </button>
                   </div>
                 ))}
               </div>
             </div>
+
             <div className={`flex gap-3 ${isRTL ? "justify-start" : "justify-end"}`}>
               <button type="submit" className="btn-primary">
                 {editingProduct ? t("adminProductsPage.form.submitUpdate") : t("adminProductsPage.form.submitCreate")}
@@ -328,7 +475,7 @@ const AdminProducts = () => {
                 <button
                   type="button"
                   onClick={resetForm}
-                  className="rounded-full border border-white/30 px-4 py-2 text-sm text-white transition hover:bg-white/10"
+                  className="rounded-full border border-white/30 px-5 py-2 text-sm text-white transition hover:bg-white/10"
                 >
                   {t("adminProductsPage.form.cancelEdit")}
                 </button>
@@ -337,55 +484,123 @@ const AdminProducts = () => {
           </form>
         </section>
 
-        <section className={`space-y-4 overflow-y-auto ${isRTL ? "text-right" : "text-left"}`}>
-          <h3 className="text-lg font-semibold text-white">{t("adminProductsPage.sections.currentProducts")}</h3>
+        {/* Products List & Bulk Actions */}
+        <section className={`glass-card p-6 rounded-3xl border border-white/10 bg-neutral-900/80 backdrop-blur-xl ${isRTL ? "text-right" : "text-left"}`}>
+          <div className="flex items-center justify-between mb-4 border-b border-white/10 pb-4">
+            <h3 className="text-lg font-bold text-white">
+              قائمة المنتجات ({products.length})
+            </h3>
+            
+            <div className="flex items-center gap-2">
+              <button
+                onClick={toggleSelectAll}
+                className="text-xs font-semibold text-primary-400 hover:underline"
+              >
+                {selectedProductIds.length === products.length ? "إلغاء تحديد الكل" : "تحديد الكل"}
+              </button>
+            </div>
+          </div>
+
+          {/* Bulk Action Bar */}
+          {selectedProductIds.length > 0 && (
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-2 rounded-2xl bg-purple-950/80 border border-purple-400/30 p-3">
+              <span className="text-xs font-bold text-white">
+                تم تحديد ({selectedProductIds.length}) منتجات:
+              </span>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => handleBulkAction("updateStock", true)}
+                  className="rounded-xl bg-emerald-600/80 px-3 py-1 text-xs font-semibold text-white hover:bg-emerald-500"
+                >
+                  تعيين كـ متوفر
+                </button>
+                <button
+                  onClick={() => handleBulkAction("updateStock", false)}
+                  className="rounded-xl bg-amber-600/80 px-3 py-1 text-xs font-semibold text-white hover:bg-amber-500"
+                >
+                  تعيين كـ غير متوفر
+                </button>
+                <button
+                  onClick={() => handleBulkAction("delete")}
+                  className="rounded-xl bg-rose-600/80 px-3 py-1 text-xs font-semibold text-white hover:bg-rose-500"
+                >
+                  حذف المحدد
+                </button>
+              </div>
+            </div>
+          )}
+
           {loading ? (
-            <div className="glass-card h-32 animate-pulse bg-white/5" />
+            <div className="h-48 animate-pulse bg-white/5 rounded-2xl" />
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-3 max-h-[700px] overflow-y-auto pr-1">
               {products.map((product) => {
+                const prodId = product._id || product.id;
+                const isSelected = selectedProductIds.includes(prodId);
                 const coverImage = normalizeImages(product.images, product.image)[0];
+
                 return (
                   <div
-                    key={product._id}
-                    className={`glass-card flex items-center justify-between p-4 ${isRTL ? "flex-row-reverse" : ""}`}
+                    key={prodId}
+                    className={`rounded-2xl border p-3 transition flex items-center justify-between gap-3 ${
+                      isSelected
+                        ? "border-primary-500 bg-primary-950/30"
+                        : "border-white/10 bg-white/5 hover:border-white/20"
+                    }`}
                   >
-                    <div className={`flex items-center gap-4 ${isRTL ? "flex-row-reverse" : ""}`}>
-                      <div className="h-14 w-14 overflow-hidden rounded-2xl">
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="checkbox"
+                        checked={isSelected}
+                        onChange={() => toggleSelectProduct(prodId)}
+                        className="h-4 w-4 rounded border-white/20 bg-neutral-800 text-primary-600"
+                      />
+                      <div className="h-14 w-14 overflow-hidden rounded-xl bg-neutral-800 shrink-0">
                         {coverImage ? (
                           <img src={coverImage} alt={product.name} className="h-full w-full object-cover" />
                         ) : (
-                          <div className="flex h-full items-center justify-center bg-white/5 text-white/40">
-                            {t("adminProductsPage.list.noImage")}
+                          <div className="flex h-full items-center justify-center text-[10px] text-white/40">
+                            بدون صورة
                           </div>
                         )}
                       </div>
-                      <div className={isRTL ? "text-right" : "text-left"}>
-                        <p className="text-sm font-semibold text-white">{product.name}</p>
-                        <p className="text-xs text-white/60">
-                          {product.price} {t("adminProductsPage.list.priceSuffix")}
-                        </p>
+                      <div className="min-w-0">
+                        <p className="text-sm font-bold text-white truncate">{product.name}</p>
+                        <div className="flex items-center gap-2 text-xs">
+                          <span className="text-primary-300 font-bold">{product.price} د.أ</span>
+                          {product.inStock === false ? (
+                            <span className="rounded bg-rose-500/20 px-1.5 py-0.5 text-[10px] text-rose-300 border border-rose-500/30 font-semibold">
+                              غير متوفر ❌
+                            </span>
+                          ) : (
+                            <span className="rounded bg-emerald-500/20 px-1.5 py-0.5 text-[10px] text-emerald-300 border border-emerald-500/30 font-semibold">
+                              متوفر ✅
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </div>
-                    <div className={`flex gap-2 text-xs ${isRTL ? "flex-row-reverse" : ""}`}>
+
+                    <div className="flex gap-1.5 shrink-0">
                       <button
                         onClick={() => handleEdit(product)}
-                        className="rounded-full border border-white/30 px-3 py-1 text-white/80 transition hover:bg-white/10"
+                        className="rounded-xl border border-white/20 px-3 py-1 text-xs text-white/80 transition hover:bg-white/10"
                       >
-                        {t("adminProductsPage.list.edit")}
+                        تعديل
                       </button>
                       <button
-                        onClick={() => handleDelete(product._id)}
-                        className="rounded-full border border-rose-400/40 px-3 py-1 text-rose-200 transition hover:bg-rose-500/20"
+                        onClick={() => handleDelete(prodId)}
+                        className="rounded-xl border border-rose-500/30 px-3 py-1 text-xs text-rose-300 transition hover:bg-rose-500/20"
                       >
-                        {t("adminProductsPage.list.delete")}
+                        حذف
                       </button>
                     </div>
                   </div>
                 );
               })}
+
               {products.length === 0 && (
-                <div className="glass-card p-6 text-center text-white/60">{t("adminProductsPage.list.empty")}</div>
+                <div className="p-8 text-center text-xs text-white/50">لا يوجد منتجات مسجلة حالياً.</div>
               )}
             </div>
           )}
@@ -396,4 +611,3 @@ const AdminProducts = () => {
 };
 
 export default AdminProducts;
-

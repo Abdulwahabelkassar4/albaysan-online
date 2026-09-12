@@ -46,6 +46,8 @@ const formatProduct = (productDoc) => {
     _id: id,
     name: product.name,
     price: product.price,
+    originalPrice: product.originalPrice !== undefined && product.originalPrice !== null ? Number(product.originalPrice) : null,
+    discountTag: product.discountTag ?? "",
     description: product.description ?? "",
     category: product.category ?? "",
     productCollection: product.productCollection ?? product.collection ?? "",
@@ -58,7 +60,7 @@ const formatProduct = (productDoc) => {
 
 router.get("/", async (req, res, next) => {
   try {
-    const { category, productCollection, search, page = 1, limit = 12 } = req.query;
+    const { category, productCollection, search, offersOnly, page = 1, limit = 12 } = req.query;
     const filters = {};
 
     if (category) filters.category = category;
@@ -67,6 +69,9 @@ router.get("/", async (req, res, next) => {
         { productCollection },
         { collection: productCollection },
       ];
+    }
+    if (offersOnly === "true" || offersOnly === true) {
+      filters.originalPrice = { $gt: 0 };
     }
     if (search) filters.$text = { $search: search };
 
@@ -107,6 +112,8 @@ router.post("/", authMiddleware, async (req, res, next) => {
     const {
       name,
       price,
+      originalPrice,
+      discountTag,
       description,
       category,
       productCollection,
@@ -118,7 +125,9 @@ router.post("/", authMiddleware, async (req, res, next) => {
 
     const product = new Product({
       name,
-      price,
+      price: Number(price),
+      originalPrice: originalPrice ? Number(originalPrice) : null,
+      discountTag: discountTag || "",
       description,
       category,
       productCollection,
@@ -144,6 +153,8 @@ router.put("/:id", authMiddleware, async (req, res, next) => {
     const {
       name,
       price,
+      originalPrice,
+      discountTag,
       description,
       category,
       productCollection,
@@ -156,7 +167,9 @@ router.put("/:id", authMiddleware, async (req, res, next) => {
     const updateData = {};
 
     if (name !== undefined) updateData.name = name;
-    if (price !== undefined) updateData.price = price;
+    if (price !== undefined) updateData.price = Number(price);
+    if (originalPrice !== undefined) updateData.originalPrice = originalPrice ? Number(originalPrice) : null;
+    if (discountTag !== undefined) updateData.discountTag = discountTag;
     if (description !== undefined) updateData.description = description;
     if (category !== undefined) updateData.category = category;
     if (productCollection !== undefined) updateData.productCollection = productCollection;
@@ -185,6 +198,30 @@ router.delete("/:id", authMiddleware, async (req, res, next) => {
       return res.status(404).json({ message: "المنتج غير موجود" });
     }
     res.json({ message: "Product deleted successfully" });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post("/bulk", authMiddleware, async (req, res, next) => {
+  try {
+    const { productIds, action, inStock } = req.body;
+
+    if (!Array.isArray(productIds) || productIds.length === 0) {
+      return res.status(400).json({ message: "يرجى تحديد المنتجات" });
+    }
+
+    if (action === "delete") {
+      await Product.deleteMany({ _id: { $in: productIds } });
+      return res.json({ message: `تم حذف ${productIds.length} منتجات بنجاح` });
+    }
+
+    if (action === "updateStock" && typeof inStock === "boolean") {
+      await Product.updateMany({ _id: { $in: productIds } }, { $set: { inStock } });
+      return res.json({ message: `تم تحديث توفر ${productIds.length} منتجات` });
+    }
+
+    res.status(400).json({ message: "إجراء غير صالح" });
   } catch (error) {
     next(error);
   }

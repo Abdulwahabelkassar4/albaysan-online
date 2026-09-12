@@ -17,6 +17,8 @@ const orderSchema = new mongoose.Schema(
     customerName: { type: String, required: true },
     phone: { type: String, required: true },
     address: { type: String },
+    height: { type: String },
+    weight: { type: String },
     items: [orderItemSchema],
     pickupDate: { type: Date },
     status: {

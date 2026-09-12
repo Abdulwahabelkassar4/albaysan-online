@@ -5,20 +5,21 @@ import axiosClient from "../api/axiosClient.js";
 import ProductCard from "../components/ProductCard.jsx";
 import { CloseIcon, FilterIcon, SearchIcon, SparkleIcon } from "../components/icons.jsx";
 import { requestWithRetry } from "../utils/requestWithRetry.js";
+import { ProductSkeleton } from "../components/SkeletonLoader.jsx";
 
-const categoryOptions = [
-  { value: "عباءات", key: "abayas" },
-  { value: "ادناءات", key: "idnaas" },
-  { value: "سبورات شرعية", key: "sports" },
-  { value: "نقابات", key: "niqabs" },
-  { value: "حقائب", key: "bags" },
+const fallbackCategories = [
+  "عباءات",
+  "ادناءات",
+  "سبورات شرعية",
+  "نقابات",
+  "حقائب",
 ];
 
-const collectionOptions = [
-  { value: "الكوليكشن الصيفي", key: "summer" },
-  { value: "الكوليكشن الخريفي", key: "autumn" },
-  { value: "الكوليكشن الشتوي", key: "winter" },
-  { value: "الكوليكشن الربيعي", key: "spring" },
+const fallbackCollections = [
+  "الكوليكشن الصيفي",
+  "الكوليكشن الخريفي",
+  "الكوليكشن الشتوي",
+  "الكوليكشن الربيعي",
 ];
 
 const Shop = () => {
@@ -28,6 +29,28 @@ const Shop = () => {
   const [totalPages, setTotalPages] = useState(1);
   const { t, i18n } = useTranslation();
   const isRTL = i18n.language === "ar";
+
+  const [categories, setCategories] = useState(fallbackCategories);
+  const [collections, setCollections] = useState(fallbackCollections);
+  const [sortOption, setSortOption] = useState("newest"); // "newest", "price_asc", "price_desc"
+  const [maxPriceFilter, setMaxPriceFilter] = useState("");
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const { data } = await axiosClient.get("/api/categories");
+        if (Array.isArray(data) && data.length > 0) {
+          const catNames = data.filter((c) => c.type === "category").map((c) => c.name);
+          const colNames = data.filter((c) => c.type === "collection").map((c) => c.name);
+          if (catNames.length) setCategories(catNames);
+          if (colNames.length) setCollections(colNames);
+        }
+      } catch (error) {
+        console.error("Unable to load dynamic categories", error);
+      }
+    };
+    fetchCategories();
+  }, []);
 
   const filters = useMemo(
     () => ({
@@ -82,11 +105,33 @@ const Shop = () => {
 
   const clearAllFilters = () => {
     setSearchParams(new URLSearchParams());
+    setMaxPriceFilter("");
+    setSortOption("newest");
   };
 
+  // Client-side filtering & sorting over fetched dataset
+  const filteredAndSortedProducts = useMemo(() => {
+    let result = [...products];
+
+    if (maxPriceFilter) {
+      const maxP = Number(maxPriceFilter);
+      if (!isNaN(maxP) && maxP > 0) {
+        result = result.filter((p) => p.price <= maxP);
+      }
+    }
+
+    if (sortOption === "price_asc") {
+      result.sort((a, b) => a.price - b.price);
+    } else if (sortOption === "price_desc") {
+      result.sort((a, b) => b.price - a.price);
+    }
+
+    return result;
+  }, [products, maxPriceFilter, sortOption]);
+
   return (
-    <div className="mx-auto max-w-6xl px-6 py-16">
-      <section className="glass-card p-6">
+    <div className="mx-auto max-w-6xl px-4 py-12 md:px-6">
+      <section className="glass-card p-6 rounded-3xl border border-white/10 shadow-xl bg-neutral-900/80 backdrop-blur-xl">
         <div
           className={`flex flex-col justify-between gap-6 md:flex-row md:items-end ${
             isRTL ? "md:text-right" : "md:text-left"
@@ -94,102 +139,135 @@ const Shop = () => {
         >
           <div>
             <h1 className="flex items-center gap-2 text-3xl font-bold text-white">
-              <SparkleIcon className="h-6 w-6 text-secondary-200" />
+              <SparkleIcon className="h-7 w-7 text-primary-400 animate-pulse" />
               {t("shop.title")}
             </h1>
             <p className="mt-2 text-sm text-white/70">{t("shop.intro")}</p>
           </div>
-          <div
-            className={`relative w-full md:w-72 ${isRTL ? "text-right" : "text-left"}`}
-          >
-            <SearchIcon className={`pointer-events-none absolute top-1/2 h-4 w-4 -translate-y-1/2 text-white/45 ${isRTL ? "right-4" : "left-4"}`} />
-            <input
-              type="search"
-              placeholder={t("shop.searchPlaceholder")}
-              value={filters.search}
-              onChange={(event) => updateFilter("search", event.target.value)}
-              className={`w-full rounded-full border border-white/20 bg-white/10 py-3 text-sm text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-primary-300 ${
-                isRTL ? "pr-11 pl-5 text-right" : "pl-11 pr-5 text-left"
-              }`}
-            />
+          
+          <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+            {/* Search Input */}
+            <div className="relative w-full sm:w-64">
+              <SearchIcon className={`pointer-events-none absolute top-1/2 h-4 w-4 -translate-y-1/2 text-white/45 ${isRTL ? "right-4" : "left-4"}`} />
+              <input
+                type="search"
+                placeholder={t("shop.searchPlaceholder")}
+                value={filters.search}
+                onChange={(event) => updateFilter("search", event.target.value)}
+                className={`w-full rounded-full border border-white/20 bg-neutral-800/80 py-2.5 text-sm text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-primary-500 ${
+                  isRTL ? "pr-11 pl-5 text-right" : "pl-11 pr-5 text-left"
+                }`}
+              />
+            </div>
+
+            {/* Sort Selector */}
+            <select
+              value={sortOption}
+              onChange={(e) => setSortOption(e.target.value)}
+              className="rounded-full border border-white/20 bg-neutral-800/80 px-4 py-2.5 text-xs text-white focus:outline-none focus:ring-2 focus:ring-primary-500 cursor-pointer"
+            >
+              <option value="newest">الأحدث وصولاً</option>
+              <option value="price_asc">السعر: من الأقل للأعلى</option>
+              <option value="price_desc">السعر: من الأعلى للأقل</option>
+            </select>
           </div>
         </div>
-        <div className="mt-6 flex items-center gap-2 text-xs font-semibold text-white/70">
-          <FilterIcon className="h-4 w-4 text-secondary-200" />
-          <span>{t("shop.categoryFilterLabel")}</span>
+
+        {/* Categories filter */}
+        <div className="mt-6 flex items-center justify-between border-t border-white/10 pt-4">
+          <div className="flex items-center gap-2 text-xs font-semibold text-white/80">
+            <FilterIcon className="h-4 w-4 text-primary-400" />
+            <span>{t("shop.categoryFilterLabel")}</span>
+          </div>
+          
+          {/* Price Range Filter Input */}
+          <div className="flex items-center gap-2 text-xs text-white/70">
+            <span>الحد الأقصى للسعر:</span>
+            <input
+              type="number"
+              placeholder="مثال: 50"
+              value={maxPriceFilter}
+              onChange={(e) => setMaxPriceFilter(e.target.value)}
+              className="w-24 rounded-full border border-white/15 bg-neutral-800 px-3 py-1 text-xs text-white focus:outline-none focus:ring-1 focus:ring-primary-400"
+            />
+            <span>د.أ</span>
+          </div>
         </div>
-        <div className="mt-3 flex flex-wrap gap-3">
+
+        <div className="mt-3 flex flex-wrap gap-2">
           <button
             onClick={() => updateFilter("category", "")}
             className={`rounded-full px-4 py-2 text-xs font-semibold transition ${
-              filters.category ? "bg-white/10 text-white/70" : "bg-primary-500 text-white"
+              filters.category ? "bg-white/10 text-white/70 hover:bg-white/20" : "bg-primary-600 text-white shadow-md shadow-primary-600/30"
             }`}
           >
             {t("shop.allCategories")}
           </button>
-          {categoryOptions.map((category) => (
+          {categories.map((catName) => (
             <button
-              key={category.value}
-              onClick={() => updateFilter("category", category.value)}
+              key={catName}
+              onClick={() => updateFilter("category", catName)}
               className={`rounded-full px-4 py-2 text-xs font-semibold transition ${
-                filters.category === category.value
-                  ? "bg-primary-500 text-white"
-                  : "bg-white/10 text-white/70"
+                filters.category === catName
+                  ? "bg-primary-600 text-white shadow-md shadow-primary-600/30"
+                  : "bg-white/10 text-white/70 hover:bg-white/20"
               }`}
             >
-              {t(`shop.categories.${category.key}`)}
+              {catName}
             </button>
           ))}
         </div>
-        <div className="mt-6 flex items-center gap-2 text-xs font-semibold text-white/70">
-          <FilterIcon className="h-4 w-4 text-secondary-200" />
+
+        {/* Collections filter */}
+        <div className="mt-6 flex items-center gap-2 text-xs font-semibold text-white/80">
+          <FilterIcon className="h-4 w-4 text-secondary-400" />
           <span>{t("shop.collectionFilterLabel")}</span>
         </div>
-        <div className="mt-3 flex flex-wrap gap-3">
+        <div className="mt-3 flex flex-wrap gap-2">
           <button
             onClick={() => updateFilter("productCollection", "")}
             className={`rounded-full px-4 py-2 text-xs font-semibold transition ${
-              filters.productCollection ? "bg-white/10 text-white/70" : "bg-secondary-500 text-white"
+              filters.productCollection ? "bg-white/10 text-white/70 hover:bg-white/20" : "bg-secondary-600 text-white shadow-md"
             }`}
           >
             {t("shop.allCollections")}
           </button>
-          {collectionOptions.map((collection) => (
+          {collections.map((colName) => (
             <button
-              key={collection.value}
-              onClick={() => updateFilter("productCollection", collection.value)}
+              key={colName}
+              onClick={() => updateFilter("productCollection", colName)}
               className={`rounded-full px-4 py-2 text-xs font-semibold transition ${
-                filters.productCollection === collection.value
-                  ? "bg-secondary-500 text-white"
-                  : "bg-white/10 text-white/70"
+                filters.productCollection === colName
+                  ? "bg-secondary-600 text-white shadow-md"
+                  : "bg-white/10 text-white/70 hover:bg-white/20"
               }`}
             >
-              {t(`shop.collections.${collection.key}`)}
+              {colName}
             </button>
           ))}
         </div>
       </section>
 
+      {/* Products Grid */}
       <section className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {loading
-          ? Array.from({ length: 6 }).map((_, idx) => (
-              <div key={idx} className="glass-card h-96 animate-pulse bg-white/5" />
-            ))
-          : products.map((product) => <ProductCard key={product._id} product={product} />)}
-        {!loading && products.length === 0 && (
-          <div className="col-span-full glass-card p-10 text-center text-white/60">
-            <p>{t("shop.empty")}</p>
-            <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
+          ? Array.from({ length: 6 }).map((_, idx) => <ProductSkeleton key={idx} />)
+          : filteredAndSortedProducts.map((product) => <ProductCard key={product._id || product.id} product={product} />)}
+        
+        {!loading && filteredAndSortedProducts.length === 0 && (
+          <div className="col-span-full glass-card p-12 text-center text-white/70 rounded-3xl border border-white/10">
+            <p className="text-base font-medium">{t("shop.empty")}</p>
+            <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
               <button
                 onClick={clearAllFilters}
-                className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-xs font-semibold text-white hover:bg-white/20"
+                className="inline-flex items-center gap-2 rounded-full bg-primary-600 px-5 py-2.5 text-xs font-semibold text-white shadow-lg hover:bg-primary-500 transition"
               >
                 <CloseIcon className="h-4 w-4" />
                 {t("shop.resetFilters")}
               </button>
               <Link
                 to="/collections"
-                className="rounded-full border border-white/20 px-4 py-2 text-xs font-semibold text-white/80 hover:bg-white/10"
+                className="rounded-full border border-white/20 px-5 py-2.5 text-xs font-semibold text-white/80 hover:bg-white/10 transition"
               >
                 {t("nav.collections")}
               </Link>
@@ -198,22 +276,27 @@ const Shop = () => {
         )}
       </section>
 
-      <div className="mt-10 flex justify-center gap-3">
-        {Array.from({ length: totalPages }).map((_, index) => {
-          const pageNumber = index + 1;
-          return (
-            <button
-              key={pageNumber}
-              onClick={() => updateFilter("page", String(pageNumber))}
-              className={`rounded-full px-4 py-2 text-xs font-semibold ${
-                pageNumber === filters.page ? "bg-primary-500 text-white" : "bg-white/10 text-white/60"
-              }`}
-            >
-              {pageNumber}
-            </button>
-          );
-        })}
-      </div>
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="mt-12 flex justify-center gap-2">
+          {Array.from({ length: totalPages }).map((_, index) => {
+            const pageNumber = index + 1;
+            return (
+              <button
+                key={pageNumber}
+                onClick={() => updateFilter("page", String(pageNumber))}
+                className={`rounded-full h-9 w-9 text-xs font-bold transition flex items-center justify-center ${
+                  pageNumber === filters.page
+                    ? "bg-primary-600 text-white ring-2 ring-primary-400"
+                    : "bg-white/10 text-white/70 hover:bg-white/20"
+                }`}
+              >
+                {pageNumber}
+              </button>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 };
