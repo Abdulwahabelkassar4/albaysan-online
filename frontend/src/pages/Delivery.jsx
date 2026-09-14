@@ -13,21 +13,17 @@ const Delivery = () => {
   const { cartItems, totalPrice, clearCart } = useCart();
   const isRTL = i18n.language === "ar";
 
+  const deliveryFee = 2.00;
+  const finalTotal = totalPrice + deliveryFee;
+
   const formatOrderDetails = () => {
     if (!cartItems.length) {
       return t("orders.cartEmpty");
     }
     const lines = cartItems.map((item) =>
-      t("orders.itemLine", {
-        name: item.name,
-        size: item.size || t("product.defaultSize"),
-        color: item.color || t("product.defaultColor"),
-        qty: item.qty,
-      })
+      `• ${item.name} (${item.size || "وسيط"}، ${item.color || "افتراضي"}) × ${item.qty} = ${((item.price || 0) * item.qty).toFixed(2)} د.أ`
     );
-    return `${lines.join("\n")}\n\n${t("orders.total", {
-      amount: totalPrice.toFixed(2),
-    })}`;
+    return `${lines.join("\n")}\n\nرسوم التوصيل الثابتة: 2.00 د.أ\nالإجمالي الكلي: ${finalTotal.toFixed(2)} د.أ`;
   };
 
   const orderDetails = formatOrderDetails();
@@ -43,24 +39,29 @@ const Delivery = () => {
     try {
       const { customerName, phone, address, height, weight } = values;
 
+      const itemLines = cartItems.map((item) =>
+        `• ${item.name} (المقاس ${item.size || "وسيط"}، اللون ${item.color || "افتراضي"}) × ${item.qty}`
+      ).join("\n");
+
       const messageLines = [
-        t("orders.newDeliveryTitle", { customer: customerName }),
-        orderDetails,
-        t("orders.whatsappPhone", { phone }),
+        `🛵 طلب جديد من ${customerName}`,
+        "",
+        itemLines,
+        "",
+        `الإجمالي الكلي: ${finalTotal.toFixed(2)} د.أ`,
+        "",
+        `📞 رقم الهاتف: ${phone}`,
+        "",
+        `📍 العنوان: ${address}`,
+        "",
+        `📏 طول الزبونة: ${height} سم`,
+        "",
+        `⚖️ الوزن الحقيقي: ${weight} كغم`,
+        "",
+        `⌚ تم الإرسال من موقع البيلسان أونلاين`
       ];
-      if (address) {
-        messageLines.push(t("orders.whatsappAddress", { address }));
-      }
-      if (height) {
-        messageLines.push(t("orders.whatsappHeight", { height }));
-      }
-      if (weight) {
-        messageLines.push(t("orders.whatsappWeight", { weight }));
-      }
-      messageLines.push(t("orders.whatsappFooter"));
 
-      const orderText = messageLines.join("\n\n");
-
+      const orderText = messageLines.join("\n");
       const whatsappURL = buildWhatsAppLink({ message: orderText });
 
       await axiosClient.post("/api/orders", {
@@ -71,6 +72,8 @@ const Delivery = () => {
         height,
         weight,
         items: cartItems.map(({ lineId, ...item }) => ({ ...item })),
+        deliveryFee,
+        totalPrice: finalTotal,
         notes: orderDetails,
       });
 

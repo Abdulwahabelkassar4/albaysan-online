@@ -7,6 +7,7 @@ const orderItemSchema = new mongoose.Schema(
     size: { type: String },
     color: { type: String },
     price: { type: Number },
+    image: { type: String },
   },
   { _id: false }
 );
@@ -20,6 +21,8 @@ const orderSchema = new mongoose.Schema(
     height: { type: String },
     weight: { type: String },
     items: [orderItemSchema],
+    deliveryFee: { type: Number, default: 0 },
+    totalPrice: { type: Number, default: 0 },
     pickupDate: { type: Date },
     status: {
       type: String,
@@ -34,4 +37,5 @@ const orderSchema = new mongoose.Schema(
 orderSchema.index({ type: 1, status: 1, createdAt: -1 });
 
 export const Order = mongoose.model("Order", orderSchema);
+
 

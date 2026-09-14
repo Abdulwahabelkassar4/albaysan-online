@@ -62,6 +62,7 @@ const AdminProducts = () => {
 
   const [categories, setCategories] = useState(fallbackCategories);
   const [collections, setCollections] = useState(fallbackCollections);
+  const [colorGuides, setColorGuides] = useState([]);
 
   const loadCategories = async () => {
     try {
@@ -71,6 +72,17 @@ const AdminProducts = () => {
         const colNames = data.filter((c) => c.type === "collection").map((c) => c.name);
         if (catNames.length) setCategories(catNames);
         if (colNames.length) setCollections(colNames);
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const loadColorGuides = async () => {
+    try {
+      const { data } = await axiosClient.get("/api/colors");
+      if (Array.isArray(data)) {
+        setColorGuides(data);
       }
     } catch (error) {
       console.error(error);
@@ -93,11 +105,25 @@ const AdminProducts = () => {
   useEffect(() => {
     loadProducts();
     loadCategories();
+    loadColorGuides();
   }, []);
 
   const handleChange = (field) => (event) => {
     const value = event.target.type === "checkbox" ? event.target.checked : event.target.value;
     setFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const toggleColor = (colorName) => {
+    const currentColors = formData.colors
+      ? formData.colors.split(",").map((c) => c.trim()).filter(Boolean)
+      : [];
+    let updated;
+    if (currentColors.includes(colorName)) {
+      updated = currentColors.filter((c) => c !== colorName);
+    } else {
+      updated = [...currentColors, colorName];
+    }
+    setFormData((prev) => ({ ...prev, colors: updated.join(", ") }));
   };
 
   const buildPayload = () => ({
@@ -260,13 +286,21 @@ const AdminProducts = () => {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-12 md:px-6">
-      <div className="mb-6 flex items-center justify-between">
-        <Link
-          to="/admin/categories"
-          className="inline-flex items-center gap-2 rounded-2xl border border-secondary-400/40 bg-secondary-500/20 px-4 py-2 text-sm font-semibold text-secondary-200 hover:bg-secondary-500/30"
-        >
-          ⚙️ إدارة الفئات والمجموعات
-        </Link>
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-3">
+          <Link
+            to="/admin/categories"
+            className="inline-flex items-center gap-2 rounded-2xl border border-secondary-400/40 bg-secondary-500/20 px-4 py-2 text-sm font-semibold text-secondary-200 hover:bg-secondary-500/30"
+          >
+            ⚙️ إدارة الفئات والمجموعات
+          </Link>
+          <Link
+            to="/admin/colors"
+            className="inline-flex items-center gap-2 rounded-2xl border border-purple-400/40 bg-purple-500/20 px-4 py-2 text-sm font-semibold text-purple-200 hover:bg-purple-500/30"
+          >
+            🎨 دليل مرجعية الألوان
+          </Link>
+        </div>
         <Link
           to="/admin/dashboard"
           className="inline-flex items-center gap-2 rounded-full border border-white/30 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/10"
@@ -403,11 +437,49 @@ const AdminProducts = () => {
                 />
               </div>
               <div>
-                <label className="mb-2 block text-sm text-white/70">{t("adminProductsPage.form.colors")}</label>
+                <label className="mb-2 block text-sm text-white/70 flex items-center justify-between">
+                  <span>{t("adminProductsPage.form.colors")} (انقر لاختيار الألوان)</span>
+                  <Link to="/admin/colors" className="text-xs text-secondary-300 hover:underline">
+                    🎨 مرجعية الألوان
+                  </Link>
+                </label>
+
+                {/* Interactive Palette Chips Selector */}
+                {colorGuides.length > 0 && (
+                  <div className="mb-3 flex flex-wrap gap-2 rounded-2xl border border-white/10 bg-black/40 p-3 max-h-36 overflow-y-auto">
+                    {colorGuides.map((guide) => {
+                      const selectedList = formData.colors
+                        ? formData.colors.split(",").map((c) => c.trim()).filter(Boolean)
+                        : [];
+                      const isSelected = selectedList.includes(guide.name);
+
+                      return (
+                        <button
+                          key={guide._id || guide.name}
+                          type="button"
+                          onClick={() => toggleColor(guide.name)}
+                          className={`inline-flex items-center gap-2 rounded-xl border px-3 py-1.5 text-xs font-semibold transition ${
+                            isSelected
+                              ? "border-secondary-400 bg-secondary-500/30 text-white ring-2 ring-secondary-400/50"
+                              : "border-white/20 bg-neutral-800/80 text-white/70 hover:border-white/40 hover:text-white"
+                          }`}
+                        >
+                          <span
+                            className="h-3.5 w-3.5 rounded-full border border-white/30 shadow-sm shrink-0"
+                            style={{ backgroundColor: guide.hexCode || "#121212" }}
+                          />
+                          <span>{guide.name}</span>
+                          {isSelected && <span className="text-emerald-400">✓</span>}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+
                 <input
                   value={formData.colors}
                   onChange={handleChange("colors")}
-                  placeholder="أسود، كحلي، بيج"
+                  placeholder="أسود، كحلي، بيج (أو انقر على لوحة الألوان أعلاه)"
                   className="w-full rounded-2xl border border-white/20 bg-neutral-800/80 px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
                 />
               </div>

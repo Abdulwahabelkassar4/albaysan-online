@@ -11,6 +11,7 @@ import productRoutes from "./routes/productRoutes.js";
 import orderRoutes from "./routes/orderRoutes.js";
 import categoryRoutes from "./routes/categoryRoutes.js";
 import offerSettingRoutes from "./routes/offerSettingRoutes.js";
+import colorRoutes from "./routes/colorRoutes.js";
 import uploadRoute from "./routes/upload.js";
 import healthRoutes from "./routes/healthRoutes.js";
 import { notFound, errorHandler } from "./middleware/errorMiddleware.js";
@@ -73,6 +74,7 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/categories", categoryRoutes);
+app.use("/api/colors", colorRoutes);
 app.use("/api/offer-settings", offerSettingRoutes);
 app.use("/api", uploadRoute);
 

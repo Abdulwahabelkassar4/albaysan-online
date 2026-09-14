@@ -245,17 +245,30 @@ const AdminOrders = () => {
                   )}
 
                   {order.items && order.items.length > 0 && (
-                    <div className="mt-3 rounded-2xl bg-black/40 p-3 space-y-1 text-xs text-white/80 border border-white/5">
+                    <div className="mt-3 rounded-2xl bg-black/40 p-3 space-y-2 text-xs text-white/80 border border-white/5">
                       <p className="font-semibold text-primary-300 mb-1">{t("adminOrdersPage.cards.items")}</p>
                       {order.items.map((item, index) => (
-                        <div key={index} className="flex justify-between">
-                          <span>• {item.name || "منتج"} ({item.size || "قياس موحد"} - {item.color || "لون أصل"}) × {item.qty || 1}</span>
-                          <span className="font-mono">{(item.price * item.qty).toFixed(2)} د.أ</span>
+                        <div key={index} className="flex items-center justify-between gap-3">
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            {item.image ? (
+                              <img src={item.image} alt={item.name} className="h-10 w-10 rounded-xl object-cover border border-white/10 shrink-0" />
+                            ) : (
+                              <div className="h-10 w-10 rounded-xl bg-neutral-800 flex items-center justify-center text-[9px] text-white/40 shrink-0">بدون صورة</div>
+                            )}
+                            <span className="truncate">• {item.name || "منتج"} ({item.size || "وسيط"} - {item.color || "افتراضي"}) × {item.qty || 1}</span>
+                          </div>
+                          <span className="font-mono text-emerald-300 shrink-0">{((item.price || 0) * (item.qty || 1)).toFixed(2)} د.أ</span>
                         </div>
                       ))}
+                      {order.deliveryFee > 0 && (
+                        <div className="flex justify-between text-[11px] text-white/60 pt-1">
+                          <span>رسوم التوصيل:</span>
+                          <span>{order.deliveryFee.toFixed(2)} د.أ</span>
+                        </div>
+                      )}
                       <div className="pt-2 mt-2 border-t border-white/10 flex justify-between font-bold text-sm text-white">
                         <span>المجموع الإجمالي:</span>
-                        <span className="text-emerald-400">{total.toFixed(2)} د.أ</span>
+                        <span className="text-emerald-400">{(order.totalPrice || total).toFixed(2)} د.أ</span>
                       </div>
                     </div>
                   )}
@@ -358,21 +371,36 @@ const AdminOrders = () => {
                 <tbody className="divide-y divide-neutral-200">
                   {(selectedInvoiceOrder.items || []).map((item, idx) => (
                     <tr key={idx}>
-                      <td className="py-2 font-medium">{item.name || "منتج"}</td>
+                      <td className="py-2.5 font-medium flex items-center gap-2">
+                        {item.image ? (
+                          <img src={item.image} alt={item.name} className="h-9 w-9 rounded-lg object-cover border border-neutral-200 shrink-0" />
+                        ) : (
+                          <div className="h-9 w-9 rounded-lg bg-neutral-100 flex items-center justify-center text-[9px] text-neutral-400 shrink-0">بدون صورة</div>
+                        )}
+                        <span>{item.name || "منتج"}</span>
+                      </td>
                       <td className="py-2 text-center">{item.size || "-"} / {item.color || "-"}</td>
                       <td className="py-2 text-center">{item.qty || 1}</td>
-                      <td className="py-2 text-left font-mono">{(item.price * item.qty).toFixed(2)} د.أ</td>
+                      <td className="py-2 text-left font-mono">{((item.price || 0) * (item.qty || 1)).toFixed(2)} د.أ</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
 
               {/* Invoice Footer Total */}
-              <div className="border-t-2 border-neutral-900 pt-4 flex justify-between items-center text-sm font-bold text-neutral-900">
-                <span>المجموع النهائي:</span>
-                <span className="text-lg text-primary-700 font-mono">
-                  {formatOrderTotal(selectedInvoiceOrder).toFixed(2)} د.أ
-                </span>
+              <div className="space-y-1 border-t-2 border-neutral-900 pt-3 text-xs text-neutral-800">
+                {selectedInvoiceOrder.deliveryFee > 0 && (
+                  <div className="flex justify-between text-neutral-600">
+                    <span>رسوم التوصيل:</span>
+                    <span className="font-mono">{selectedInvoiceOrder.deliveryFee.toFixed(2)} د.أ</span>
+                  </div>
+                )}
+                <div className="flex justify-between items-center text-sm font-bold text-neutral-900 pt-1">
+                  <span>المجموع النهائي:</span>
+                  <span className="text-lg text-primary-700 font-mono">
+                    {(selectedInvoiceOrder.totalPrice || formatOrderTotal(selectedInvoiceOrder)).toFixed(2)} د.أ
+                  </span>
+                </div>
               </div>
 
               <div className="text-center pt-4 text-[11px] text-neutral-500 border-t border-neutral-200">

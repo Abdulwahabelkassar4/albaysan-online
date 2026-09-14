@@ -18,16 +18,9 @@ const Reservation = () => {
       return t("orders.cartEmpty");
     }
     const lines = cartItems.map((item) =>
-      t("orders.itemLine", {
-        name: item.name,
-        size: item.size || t("product.defaultSize"),
-        color: item.color || t("product.defaultColor"),
-        qty: item.qty,
-      })
+      `• ${item.name} (${item.size || "وسيط"}، ${item.color || "افتراضي"}) × ${item.qty} = ${((item.price || 0) * item.qty).toFixed(2)} د.أ`
     );
-    return `${lines.join("\n")}\n\n${t("orders.total", {
-      amount: totalPrice.toFixed(2),
-    })}`;
+    return `${lines.join("\n")}\n\nنوع الطلب: استلام من المتجر (0.00 د.أ توصيل)\nالإجمالي الكلي: ${totalPrice.toFixed(2)} د.أ`;
   };
 
   const orderDetails = formatOrderDetails();
@@ -41,42 +34,44 @@ const Reservation = () => {
     try {
       const { customerName, phone, pickupDate, height, weight } = values;
       const locale = isRTL ? "ar-JO" : "en-US";
+      const formattedDate = pickupDate ? new Date(pickupDate).toLocaleDateString(locale) : "";
+
+      const itemLines = cartItems.map((item) =>
+        `• ${item.name} (المقاس ${item.size || "وسيط"}، اللون ${item.color || "افتراضي"}) × ${item.qty}`
+      ).join("\n");
 
       const messageLines = [
-        t("orders.newReservationTitle", { customer: customerName }),
-        orderDetails,
-        t("orders.whatsappPhone", { phone }),
+        `🛵 طلب جديد من ${customerName}`,
+        "",
+        itemLines,
+        "",
+        `الإجمالي الكلي: ${totalPrice.toFixed(2)} د.أ`,
+        "",
+        `📞 رقم الهاتف: ${phone}`,
+        "",
+        `📍 العنوان: استلام من المتجر${formattedDate ? ` (تاريخ الاستلام: ${formattedDate})` : ""}`,
+        "",
+        `📏 طول الزبونة: ${height} سم`,
+        "",
+        `⚖️ الوزن الحقيقي: ${weight} كغم`,
+        "",
+        `⌚ تم الإرسال من موقع البيلسان أونلاين`
       ];
 
-      if (pickupDate) {
-        messageLines.push(
-          t("orders.whatsappPickup", {
-            date: new Date(pickupDate).toLocaleDateString(locale),
-          })
-        );
-      }
-
-      if (height) {
-        messageLines.push(t("orders.whatsappHeight", { height }));
-      }
-      if (weight) {
-        messageLines.push(t("orders.whatsappWeight", { weight }));
-      }
-
-      messageLines.push(t("orders.whatsappFooter"));
-
-      const orderText = messageLines.join("\n\n");
-
+      const orderText = messageLines.join("\n");
       const whatsappURL = buildWhatsAppLink({ message: orderText });
 
       await axiosClient.post("/api/orders", {
         type: "reservation",
         customerName,
         phone,
+        address: "استلام من المتجر",
         pickupDate,
         height,
         weight,
         items: cartItems.map(({ lineId, ...item }) => ({ ...item })),
+        deliveryFee: 0,
+        totalPrice,
         notes: orderDetails,
       });
 

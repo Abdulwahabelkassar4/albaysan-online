@@ -15,6 +15,7 @@ import AdminProducts from "./pages/AdminProducts.jsx";
 import AdminCategories from "./pages/AdminCategories.jsx";
 import AdminOrders from "./pages/AdminOrders.jsx";
 import AdminOffersConfig from "./pages/AdminOffersConfig.jsx";
+import AdminColors from "./pages/AdminColors.jsx";
 
 const AppRoutes = () => (
   <Routes>
@@ -34,6 +35,7 @@ const AppRoutes = () => (
       <Route path="/admin/dashboard" element={<AdminDashboard />} />
       <Route path="/admin/products" element={<AdminProducts />} />
       <Route path="/admin/categories" element={<AdminCategories />} />
+      <Route path="/admin/colors" element={<AdminColors />} />
       <Route path="/admin/orders" element={<AdminOrders />} />
       <Route path="/admin/offers-config" element={<AdminOffersConfig />} />
     </Route>

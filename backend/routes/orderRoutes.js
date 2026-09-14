@@ -23,8 +23,18 @@ router.post("/", async (req, res, next) => {
       return res.status(400).json({ message: "تاريخ الاستلام مطلوب للحجز" });
     }
 
+    const deliveryFee = type === "delivery" ? 2 : 0;
+    const itemsPrice = (items || []).reduce(
+      (sum, item) => sum + (Number(item.price) || 0) * (Number(item.qty) || 1),
+      0
+    );
+    const calculatedTotal = itemsPrice + deliveryFee;
+
     const order = await Order.create({
       ...req.body,
+      address: type === "delivery" ? address : (address || "استلام من المتجر"),
+      deliveryFee,
+      totalPrice: calculatedTotal,
       status: "pending",
     });
 
@@ -48,16 +58,18 @@ router.get("/stats", authMiddleware, async (req, res, next) => {
     // Recent orders
     const recentOrders = await Order.find().sort({ createdAt: -1 }).limit(5);
 
-    // Calculate revenue from completed/confirmed orders
+    // Calculate revenue from orders
     const orders = await Order.find();
     let totalRevenue = 0;
     const monthlyStatsMap = {};
 
     orders.forEach((ord) => {
-      const orderTotal = (ord.items || []).reduce(
-        (sum, item) => sum + (Number(item.price) || 0) * (Number(item.qty) || 1),
-        0
-      );
+      const orderTotal = ord.totalPrice !== undefined && ord.totalPrice > 0
+        ? ord.totalPrice
+        : (ord.items || []).reduce(
+            (sum, item) => sum + (Number(item.price) || 0) * (Number(item.qty) || 1),
+            0
+          ) + (ord.type === "delivery" ? 2 : 0);
       totalRevenue += orderTotal;
 
       const monthKey = new Date(ord.createdAt).toLocaleDateString("ar-EG", {

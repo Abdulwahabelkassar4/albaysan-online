@@ -2,12 +2,13 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import axiosClient from "../api/axiosClient.js";
-import { ArrowForwardIcon, BoxIcon, ChartIcon, ClipboardIcon, ClockIcon, SparkleIcon } from "../components/icons.jsx";
+import { ArrowForwardIcon, BoxIcon, ChartIcon, ClipboardIcon, ClockIcon, PaletteIcon, SparkleIcon } from "../components/icons.jsx";
 import { useToast } from "../context/ToastContext.jsx";
 
 const controlLinks = [
   { to: "/admin/products", icon: BoxIcon, labelKey: "admin.links.products" },
   { to: "/admin/categories", icon: ChartIcon, labelKey: "admin.links.categories" },
+  { to: "/admin/colors", icon: PaletteIcon, labelKey: "🎨 دليل وركام الألوان" },
   { to: "/admin/orders", icon: ClipboardIcon, labelKey: "admin.links.orders" },
   { to: "/admin/offers-config", icon: ClockIcon, labelKey: "عداد العروض والتخفيضات" },
 ];
@@ -156,12 +157,13 @@ const AdminDashboard = ({ onLogout }) => {
       {/* Action Links */}
       <section className="mt-12 text-center">
         <h2 className="text-xl font-bold text-white/80 mb-6">{t("admin.linksTitle")}</h2>
-        <div className="grid grid-cols-1 justify-items-center gap-6 sm:grid-cols-3">
-          {controlLinks.map((item, index) => {
+        <div className="grid grid-cols-1 justify-items-center gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {controlLinks.map((item) => {
             const Icon = item.icon;
+            const labelText = item.labelKey.startsWith("admin.") ? t(item.labelKey) : item.labelKey;
             return (
               <Link
-                key={item.labelKey}
+                key={item.to}
                 to={item.to}
                 className={`action-panel w-full text-white rounded-3xl p-6 border border-white/10 bg-neutral-900/80 hover:border-primary-500/50 transition ${
                   isRTL ? "text-right" : "text-left"
@@ -173,7 +175,7 @@ const AdminDashboard = ({ onLogout }) => {
                   </span>
                   <ArrowForwardIcon className={`h-5 w-5 text-white/70 ${isRTL ? "rotate-180" : ""}`} />
                 </div>
-                <span className="mt-4 block text-lg font-bold">{t(item.labelKey)}</span>
+                <span className="mt-4 block text-lg font-bold">{labelText}</span>
               </Link>
             );
           })}

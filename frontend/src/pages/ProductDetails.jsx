@@ -7,7 +7,8 @@ import { buildWhatsAppLink } from "../config/contact.js";
 import { requestWithRetry } from "../utils/requestWithRetry.js";
 import ProductCard from "../components/ProductCard.jsx";
 import { ProductSkeleton } from "../components/SkeletonLoader.jsx";
-import { CloseIcon, ArrowForwardIcon, SparkleIcon, WhatsAppIcon } from "../components/icons.jsx";
+import { CloseIcon, ArrowForwardIcon, SparkleIcon, WhatsAppIcon, PaletteIcon } from "../components/icons.jsx";
+import ColorGuideModal from "../components/ColorGuideModal.jsx";
 
 const normalizeImages = (images, fallbackImage) => {
   const normalized = Array.isArray(images)
@@ -31,6 +32,8 @@ const ProductDetails = () => {
   const [relatedProducts, setRelatedProducts] = useState([]);
   const [loadingRelated, setLoadingRelated] = useState(false);
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
+  const [colorGuides, setColorGuides] = useState([]);
+  const [isColorGuideOpen, setIsColorGuideOpen] = useState(false);
 
   const { addItem, openCart } = useCart();
   const { t, i18n } = useTranslation();
@@ -40,6 +43,18 @@ const ProductDetails = () => {
 
   const galleryImages = normalizeImages(product?.images, product?.image);
   const primaryImage = selectedImage || product?.images?.[0] || galleryImages[0] || product?.image || "";
+
+  useEffect(() => {
+    const fetchColors = async () => {
+      try {
+        const { data } = await axiosClient.get("/api/colors");
+        if (Array.isArray(data)) setColorGuides(data);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    fetchColors();
+  }, []);
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -220,24 +235,46 @@ const ProductDetails = () => {
             </div>
           )}
 
-          {/* Color Picker */}
+          {/* Color Picker with Color Reference Guide Button */}
           {product.colors?.length > 0 && (
-            <div className="space-y-2">
-              <label className="text-xs font-semibold text-white/80">{t("product.selectColor")}</label>
-              <div className="flex flex-wrap gap-2">
-                {product.colors.map((color) => (
-                  <button
-                    key={color}
-                    onClick={() => setSelectedColor(color)}
-                    className={`rounded-full px-4 py-2 text-xs font-bold transition ${
-                      selectedColor === color
-                        ? "bg-secondary-600 text-white shadow-lg"
-                        : "bg-white/10 text-white/70 hover:bg-white/20"
-                    }`}
-                  >
-                    {color}
-                  </button>
-                ))}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-semibold text-white/80">{t("product.selectColor")}</label>
+                <button
+                  type="button"
+                  onClick={() => setIsColorGuideOpen(true)}
+                  className="inline-flex items-center gap-1.5 rounded-full border border-secondary-400/40 bg-secondary-500/20 px-3 py-1 text-xs font-bold text-secondary-200 hover:bg-secondary-500/30 transition shadow-sm"
+                >
+                  <PaletteIcon className="h-4 w-4" />
+                  🎨 مرجعية الألوان (عينات الصور)
+                </button>
+              </div>
+
+              <div className="flex flex-wrap gap-2.5">
+                {product.colors.map((colorName) => {
+                  const match = colorGuides.find((g) => g.name === colorName);
+                  const isSelected = selectedColor === colorName;
+
+                  return (
+                    <button
+                      key={colorName}
+                      onClick={() => setSelectedColor(colorName)}
+                      className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-xs font-bold transition-all duration-300 ${
+                        isSelected
+                          ? "bg-secondary-600 text-white ring-2 ring-secondary-400 shadow-lg scale-105"
+                          : "bg-white/10 text-white/80 hover:bg-white/20 hover:text-white"
+                      }`}
+                    >
+                      {match?.hexCode && (
+                        <span
+                          className="h-4 w-4 rounded-full border border-white/40 shadow-sm shrink-0"
+                          style={{ backgroundColor: match.hexCode }}
+                        />
+                      )}
+                      <span>{colorName}</span>
+                    </button>
+                  );
+                })}
               </div>
             </div>
           )}
@@ -300,6 +337,15 @@ const ProductDetails = () => {
           />
         </div>
       )}
+
+      {/* Color Reference Guide Modal */}
+      <ColorGuideModal
+        isOpen={isColorGuideOpen}
+        onClose={() => setIsColorGuideOpen(false)}
+        colorGuides={colorGuides}
+        selectedColor={selectedColor}
+        onSelectColor={(colorName) => setSelectedColor(colorName)}
+      />
     </div>
   );
 };
