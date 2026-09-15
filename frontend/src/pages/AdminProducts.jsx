@@ -92,7 +92,7 @@ const AdminProducts = () => {
   const loadProducts = async () => {
     setLoading(true);
     try {
-      const { data } = await axiosClient.get("/api/products", { params: { limit: 100 } });
+      const { data } = await axiosClient.get("/api/products", { params: { limit: 100, raw: true } });
       setProducts(data.data || []);
       setSelectedProductIds([]);
     } catch (error) {

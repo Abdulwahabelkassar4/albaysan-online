@@ -1,8 +1,20 @@
 import express from "express";
 import { Product } from "../models/Product.js";
+import { OfferSetting } from "../models/OfferSetting.js";
 import { authMiddleware } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
+
+const checkOfferActive = async () => {
+  try {
+    const settings = await OfferSetting.findOne();
+    if (!settings || !settings.isEnabled) return false;
+    if (!settings.endDate) return false;
+    return new Date() < new Date(settings.endDate);
+  } catch (error) {
+    return false;
+  }
+};
 
 const normalizeImages = (images, fallbackImage) => {
   const normalized = Array.isArray(images)
@@ -31,7 +43,7 @@ const parseImagesInput = (images) => {
   return [];
 };
 
-const formatProduct = (productDoc) => {
+const formatProduct = (productDoc, isOfferActive = true, raw = false) => {
   if (!productDoc) return null;
 
   const product =
@@ -40,14 +52,38 @@ const formatProduct = (productDoc) => {
   const normalizedImages = normalizeImages(product.images, product.image);
 
   const id = product._id?.toString?.() ?? product._id;
+  const storedOriginalPrice = product.originalPrice !== undefined && product.originalPrice !== null ? Number(product.originalPrice) : null;
+  const storedPrice = Number(product.price);
+
+  // If raw mode (admin) OR global offer is active, keep stored discounted price & original price
+  if (raw || isOfferActive) {
+    return {
+      id,
+      _id: id,
+      name: product.name,
+      price: storedPrice,
+      originalPrice: storedOriginalPrice,
+      discountTag: product.discountTag ?? "",
+      description: product.description ?? "",
+      category: product.category ?? "",
+      productCollection: product.productCollection ?? product.collection ?? "",
+      sizes: Array.isArray(product.sizes) ? product.sizes : [],
+      colors: Array.isArray(product.colors) ? product.colors : [],
+      images: normalizedImages,
+      inStock: typeof product.inStock === "boolean" ? product.inStock : true,
+    };
+  }
+
+  // Offer is EXPIRED or DISABLED: Revert selling price to originalPrice automatically
+  const effectivePrice = storedOriginalPrice && storedOriginalPrice > 0 ? storedOriginalPrice : storedPrice;
 
   return {
     id,
     _id: id,
     name: product.name,
-    price: product.price,
-    originalPrice: product.originalPrice !== undefined && product.originalPrice !== null ? Number(product.originalPrice) : null,
-    discountTag: product.discountTag ?? "",
+    price: effectivePrice,
+    originalPrice: null,
+    discountTag: "",
     description: product.description ?? "",
     category: product.category ?? "",
     productCollection: product.productCollection ?? product.collection ?? "",
@@ -60,7 +96,10 @@ const formatProduct = (productDoc) => {
 
 router.get("/", async (req, res, next) => {
   try {
-    const { category, productCollection, search, offersOnly, page = 1, limit = 12 } = req.query;
+    const { category, productCollection, search, offersOnly, page = 1, limit = 12, raw } = req.query;
+    const isRaw = raw === "true" || raw === true;
+    const isOfferActive = await checkOfferActive();
+
     const filters = {};
 
     if (category) filters.category = category;
@@ -71,6 +110,16 @@ router.get("/", async (req, res, next) => {
       ];
     }
     if (offersOnly === "true" || offersOnly === true) {
+      if (!isOfferActive && !isRaw) {
+        return res.json({
+          data: [],
+          pagination: {
+            total: 0,
+            page: 1,
+            pages: 0,
+          },
+        });
+      }
       filters.originalPrice = { $gt: 0 };
     }
     if (search) filters.$text = { $search: search };
@@ -83,7 +132,7 @@ router.get("/", async (req, res, next) => {
     const products = await query.skip((currentPage - 1) * perPage).limit(perPage);
 
     res.json({
-      data: products.map((product) => formatProduct(product)),
+      data: products.map((product) => formatProduct(product, isOfferActive, isRaw)),
       pagination: {
         total,
         page: currentPage,
@@ -97,11 +146,13 @@ router.get("/", async (req, res, next) => {
 
 router.get("/:id", async (req, res, next) => {
   try {
+    const isRaw = req.query.raw === "true" || req.query.raw === true;
+    const isOfferActive = await checkOfferActive();
     const product = await Product.findById(req.params.id);
     if (!product) {
       return res.status(404).json({ message: "المنتج غير موجود" });
     }
-    res.json(formatProduct(product));
+    res.json(formatProduct(product, isOfferActive, isRaw));
   } catch (error) {
     next(error);
   }
