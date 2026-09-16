@@ -117,9 +117,41 @@
 
 ---
 
-## 7️⃣ حالة النشر التحديثات الأخيرة (Recent Feature Deployment)
+---
+
+## 8️⃣ محرك أكواد الخصم المتقدم ونطاقات العروض المرنة (Multi-Promo Codes & Flexible Offer Scopes)
+
+### 🔹 القرار النهائي والتنفيذ:
+1. **نظام أكواد الخصم المتعددة (`PromoCode` Model & API)**:
+   - إنشاء نموذج `PromoCode` مستقل يدعم:
+     - **رموز متعددة** لكل كود خصم على حدة.
+     - **نوع الخصم**: نسبة مئوية (٪) أو خصم مباشر (مبلغ ثابت د.أ).
+     - **المدد والتواريخ (Duration)**: تاريخ بدء وتاريخ انتهاء محدد لكل كود.
+     - **نطاق التطبيق (Scope)**: تطبيق عام (Global) على كامل السلة، أو مخصص لأقسام محددة (Categories)، أو منتجات محددة (Products).
+     - **التحقق التفاعلي**: مسار `/api/promo-codes/validate` الذي يتحقق تلقائياً من تاريخ الصلاحية ونطاق المنتجات والسلة وتطبيق الخصم فوراً.
+2. **مرونة نطاق التخفيض التنازلي في العروض**:
+   - تحديث نموذج `OfferSetting` لدعم 3 نطاقات لتطبيق التخفيض التنازلي:
+     - 🌐 **تطبيق عام (Global)**
+     - 📁 **تحديد أقسام معينة (Categories)**
+     - 🎯 **منتجات محددة (Selective Products)**
+3. **مركز لوحة تحكم الأدمن للخصومات والأكواد (`AdminOffersConfig.jsx`)**:
+   - تبويبات منفصلة لإدارة العروض التنازلية وإدارة أكواد الخصم مع نافذة منبثقة تفاعلية لإضافة وتعديل الأكواد والمدد والنطاقات.
+
+### 🔹 الملفات المضافة والمعدلة:
+- `backend/models/PromoCode.js`: [جديد] نموذج Mongoose لإدارة أكواد الخصم.
+- `backend/routes/promoCodeRoutes.js`: [جديد] مسارات CRUD وتدقيق سريان الأكواد.
+- `backend/models/OfferSetting.js` & `offerSettingRoutes.js`: إضافة `scope` و `categories`.
+- `backend/routes/productRoutes.js`: دعم نطاقات العروض المختلفة (عام / أقسام / منتجات).
+- `backend/server.js`: تسجيل مسارات `/api/promo-codes`.
+- `frontend/src/pages/AdminOffersConfig.jsx`: مركز إعدادات العروض وأكواد الخصم بالتبويبات والنوافذ المنبثقة.
+- `frontend/src/pages/Delivery.jsx` & `Reservation.jsx`: الربط بالـ Validator المتقدم وحساب الخصم المباشر أو النسبة المئوية.
+- `ADMIN_OFFERS_GUIDE.md`: دليل تفصيلي شامل للأدمن باللغة العربية.
+
+---
+
+## 9️⃣ حالة النشر والتحديث الأخير (Latest Deployment Status)
 
 - **الحالة**: ✅ **تم التنفيذ بالكامل والنشر بنجاح (Fully Implemented & Deployed)**.
-- **التاريخ**: 2026-09-16.
-- **المستودع (Git Commit)**: تم الرفع والتطبيق المباشر على فرع `main -> main` (`feat: implement selective product offer campaigns`).
+- **التاريخ**: 2026-09-17.
+- **المستودع (Git Commit)**: تم الرفع والتطبيق المباشر على فرع `main -> main` (`feat: implement multi-promo code engine and flexible offer scopes`).
 

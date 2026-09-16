@@ -30,6 +30,15 @@ const offerSettingSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    scope: {
+      type: String,
+      enum: ["selective", "global", "categories"],
+      default: "selective",
+    },
+    categories: {
+      type: [String],
+      default: [],
+    },
     products: [
       {
         type: mongoose.Schema.Types.ObjectId,

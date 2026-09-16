@@ -26,7 +26,18 @@ router.get("/", async (_req, res, next) => {
 // @route PUT /api/offer-settings (Admin Protected)
 router.put("/", authMiddleware, async (req, res, next) => {
   try {
-    const { title, subtitle, endDate, isEnabled, badgeText, promoCode, discountPercentage, products } = req.body;
+    const {
+      title,
+      subtitle,
+      endDate,
+      isEnabled,
+      badgeText,
+      promoCode,
+      discountPercentage,
+      scope,
+      categories,
+      products,
+    } = req.body;
 
     let settings = await getOrCreateSettings();
 
@@ -37,6 +48,8 @@ router.put("/", authMiddleware, async (req, res, next) => {
     if (badgeText !== undefined) settings.badgeText = badgeText.trim();
     if (promoCode !== undefined) settings.promoCode = promoCode.trim().toUpperCase();
     if (discountPercentage !== undefined) settings.discountPercentage = Math.max(0, Math.min(100, Number(discountPercentage) || 0));
+    if (scope !== undefined) settings.scope = scope;
+    if (Array.isArray(categories)) settings.categories = categories;
     if (Array.isArray(products)) {
       settings.products = products.filter(Boolean);
     }

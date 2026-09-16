@@ -9,15 +9,16 @@ const checkOfferSettings = async () => {
   try {
     const settings = await OfferSetting.findOne();
     if (!settings || !settings.isEnabled || !settings.endDate) {
-      return { isOfferActive: false, offerProductIds: new Set() };
+      return { isOfferActive: false, offerProductIds: new Set(), scope: "selective", offerCategories: new Set() };
     }
     const isOfferActive = new Date() < new Date(settings.endDate);
     const offerProductIds = new Set(
       (settings.products || []).map((id) => id.toString())
     );
-    return { isOfferActive, offerProductIds };
+    const offerCategories = new Set(settings.categories || []);
+    return { isOfferActive, offerProductIds, scope: settings.scope || "selective", offerCategories };
   } catch (error) {
-    return { isOfferActive: false, offerProductIds: new Set() };
+    return { isOfferActive: false, offerProductIds: new Set(), scope: "selective", offerCategories: new Set() };
   }
 };
 
@@ -48,7 +49,7 @@ const parseImagesInput = (images) => {
   return [];
 };
 
-const formatProduct = (productDoc, offerContext = { isOfferActive: false, offerProductIds: new Set() }, raw = false) => {
+const formatProduct = (productDoc, offerContext = { isOfferActive: false, offerProductIds: new Set(), scope: "selective", offerCategories: new Set() }, raw = false) => {
   if (!productDoc) return null;
 
   const product =
@@ -60,8 +61,18 @@ const formatProduct = (productDoc, offerContext = { isOfferActive: false, offerP
   const storedOriginalPrice = product.originalPrice !== undefined && product.originalPrice !== null ? Number(product.originalPrice) : null;
   const storedPrice = Number(product.price);
 
-  const { isOfferActive = false, offerProductIds = new Set() } = offerContext;
-  const isProductInOffer = isOfferActive && offerProductIds.has(id);
+  const { isOfferActive = false, offerProductIds = new Set(), scope = "selective", offerCategories = new Set() } = offerContext;
+
+  let isProductInOffer = false;
+  if (isOfferActive) {
+    if (scope === "global") {
+      isProductInOffer = (storedOriginalPrice && storedOriginalPrice > storedPrice) || !!product.discountTag;
+    } else if (scope === "categories") {
+      isProductInOffer = product.category && offerCategories.has(product.category);
+    } else {
+      isProductInOffer = offerProductIds.has(id);
+    }
+  }
 
   // If raw mode (admin) OR product is in active offer campaign, keep stored discounted price & original price
   if (raw || isProductInOffer) {
@@ -121,7 +132,7 @@ router.get("/", async (req, res, next) => {
     }
     if (offersOnly === "true" || offersOnly === true) {
       if (!isRaw) {
-        if (!offerContext.isOfferActive || offerContext.offerProductIds.size === 0) {
+        if (!offerContext.isOfferActive) {
           return res.json({
             data: [],
             pagination: {
@@ -131,7 +142,23 @@ router.get("/", async (req, res, next) => {
             },
           });
         }
-        filters._id = { $in: Array.from(offerContext.offerProductIds) };
+        if (offerContext.scope === "categories") {
+          filters.category = { $in: Array.from(offerContext.offerCategories) };
+        } else if (offerContext.scope === "selective") {
+          if (offerContext.offerProductIds.size === 0) {
+            return res.json({
+              data: [],
+              pagination: {
+                total: 0,
+                page: 1,
+                pages: 0,
+              },
+            });
+          }
+          filters._id = { $in: Array.from(offerContext.offerProductIds) };
+        } else {
+          filters.originalPrice = { $gt: 0 };
+        }
       } else {
         filters.originalPrice = { $gt: 0 };
       }

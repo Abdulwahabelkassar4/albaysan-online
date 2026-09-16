@@ -34,7 +34,11 @@ const Reservation = () => {
     }
     setValidatingPromo(true);
     try {
-      const { data } = await axiosClient.post("/api/offer-settings/validate-promo", { code });
+      const { data } = await axiosClient.post("/api/promo-codes/validate", {
+        code,
+        cartItems,
+        subtotal: totalPrice,
+      });
       if (data.valid) {
         setAppliedPromo(data);
         showToast(data.message || "تم تطبيق الخصم بنجاح 🎉", "success");
@@ -57,8 +61,7 @@ const Reservation = () => {
   };
 
   const subtotal = totalPrice;
-  const discountPercentage = appliedPromo?.discountPercentage || 0;
-  const discountAmount = appliedPromo ? (subtotal * discountPercentage) / 100 : 0;
+  const discountAmount = appliedPromo ? Number(appliedPromo.discountAmount) || 0 : 0;
   const finalTotal = Math.max(0, subtotal - discountAmount);
 
   const formatOrderDetails = () => {

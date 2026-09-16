@@ -12,6 +12,7 @@ import orderRoutes from "./routes/orderRoutes.js";
 import categoryRoutes from "./routes/categoryRoutes.js";
 import offerSettingRoutes from "./routes/offerSettingRoutes.js";
 import colorRoutes from "./routes/colorRoutes.js";
+import promoCodeRoutes from "./routes/promoCodeRoutes.js";
 import uploadRoute from "./routes/upload.js";
 import healthRoutes from "./routes/healthRoutes.js";
 import { notFound, errorHandler } from "./middleware/errorMiddleware.js";
@@ -76,6 +77,7 @@ app.use("/api/orders", orderRoutes);
 app.use("/api/categories", categoryRoutes);
 app.use("/api/colors", colorRoutes);
 app.use("/api/offer-settings", offerSettingRoutes);
+app.use("/api/promo-codes", promoCodeRoutes);
 app.use("/api", uploadRoute);
 
 app.get("/", (_req, res) => {
