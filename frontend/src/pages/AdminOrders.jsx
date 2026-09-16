@@ -260,6 +260,12 @@ const AdminOrders = () => {
                           <span className="font-mono text-emerald-300 shrink-0">{((item.price || 0) * (item.qty || 1)).toFixed(2)} د.أ</span>
                         </div>
                       ))}
+                      {order.discountAmount > 0 && (
+                        <div className="flex justify-between text-[11px] text-amber-300 pt-1 font-medium">
+                          <span>خصم الكود ({order.promoCode || "عرض"}):</span>
+                          <span>-{order.discountAmount.toFixed(2)} د.أ</span>
+                        </div>
+                      )}
                       {order.deliveryFee > 0 && (
                         <div className="flex justify-between text-[11px] text-white/60 pt-1">
                           <span>رسوم التوصيل:</span>
@@ -389,6 +395,12 @@ const AdminOrders = () => {
 
               {/* Invoice Footer Total */}
               <div className="space-y-1 border-t-2 border-neutral-900 pt-3 text-xs text-neutral-800">
+                {selectedInvoiceOrder.discountAmount > 0 && (
+                  <div className="flex justify-between text-amber-700 font-semibold">
+                    <span>خصم الكود ({selectedInvoiceOrder.promoCode || "عرض"}):</span>
+                    <span className="font-mono">-{selectedInvoiceOrder.discountAmount.toFixed(2)} د.أ</span>
+                  </div>
+                )}
                 {selectedInvoiceOrder.deliveryFee > 0 && (
                   <div className="flex justify-between text-neutral-600">
                     <span>رسوم التوصيل:</span>

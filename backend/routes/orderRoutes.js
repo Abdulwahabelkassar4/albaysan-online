@@ -9,7 +9,7 @@ const router = express.Router();
 // Create new order (Public)
 router.post("/", async (req, res, next) => {
   try {
-    const { type, customerName, phone, address, items, pickupDate } = req.body;
+    const { type, customerName, phone, address, items, pickupDate, promoCode, discountAmount } = req.body;
 
     if (!type || !customerName || !phone) {
       return res.status(400).json({ message: "النوع والاسم ورقم الهاتف مطلوبة" });
@@ -28,12 +28,15 @@ router.post("/", async (req, res, next) => {
       (sum, item) => sum + (Number(item.price) || 0) * (Number(item.qty) || 1),
       0
     );
-    const calculatedTotal = itemsPrice + deliveryFee;
+    const validDiscount = Math.max(0, Number(discountAmount) || 0);
+    const calculatedTotal = Math.max(0, itemsPrice - validDiscount) + deliveryFee;
 
     const order = await Order.create({
       ...req.body,
       address: type === "delivery" ? address : (address || "استلام من المتجر"),
       deliveryFee,
+      discountAmount: validDiscount,
+      promoCode: promoCode || "",
       totalPrice: calculatedTotal,
       status: "pending",
     });

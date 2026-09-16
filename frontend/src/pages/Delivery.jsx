@@ -1,9 +1,10 @@
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import axiosClient from "../api/axiosClient.js";
 import { useToast } from "../context/ToastContext.jsx";
 import { useTranslation } from "react-i18next";
 import { useCart } from "../context/CartContext.jsx";
-import { CalendarIcon, ShieldIcon, TruckIcon } from "../components/icons.jsx";
+import { CalendarIcon, ShieldIcon, TruckIcon, SparkleIcon } from "../components/icons.jsx";
 import { buildWhatsAppLink } from "../config/contact.js";
 
 const Delivery = () => {
@@ -13,8 +14,53 @@ const Delivery = () => {
   const { cartItems, totalPrice, clearCart } = useCart();
   const isRTL = i18n.language === "ar";
 
+  const [promoCodeInput, setPromoCodeInput] = useState("");
+  const [appliedPromo, setAppliedPromo] = useState(null);
+  const [validatingPromo, setValidatingPromo] = useState(false);
+
+  useEffect(() => {
+    const savedCode = sessionStorage.getItem("applied_promo_code");
+    if (savedCode) {
+      setPromoCodeInput(savedCode);
+      handleApplyPromo(savedCode);
+    }
+  }, []);
+
+  const handleApplyPromo = async (codeToTest) => {
+    const code = (typeof codeToTest === "string" ? codeToTest : promoCodeInput).trim();
+    if (!code) {
+      showToast("يرجى كتابة كود الخصم أولاً", "error");
+      return;
+    }
+    setValidatingPromo(true);
+    try {
+      const { data } = await axiosClient.post("/api/offer-settings/validate-promo", { code });
+      if (data.valid) {
+        setAppliedPromo(data);
+        showToast(data.message || "تم تطبيق الخصم بنجاح 🎉", "success");
+      }
+    } catch (error) {
+      console.error(error);
+      const msg = error.response?.data?.message || "كود الخصم غير صالح";
+      setAppliedPromo(null);
+      showToast(msg, "error");
+    } finally {
+      setValidatingPromo(false);
+    }
+  };
+
+  const handleRemovePromo = () => {
+    setAppliedPromo(null);
+    setPromoCodeInput("");
+    sessionStorage.removeItem("applied_promo_code");
+    showToast("تم إزالة كود الخصم", "info");
+  };
+
   const deliveryFee = 2.00;
-  const finalTotal = totalPrice + deliveryFee;
+  const subtotal = totalPrice;
+  const discountPercentage = appliedPromo?.discountPercentage || 0;
+  const discountAmount = appliedPromo ? (subtotal * discountPercentage) / 100 : 0;
+  const finalTotal = Math.max(0, subtotal - discountAmount) + deliveryFee;
 
   const formatOrderDetails = () => {
     if (!cartItems.length) {
@@ -23,7 +69,12 @@ const Delivery = () => {
     const lines = cartItems.map((item) =>
       `• ${item.name} (${item.size || "وسيط"}، ${item.color || "افتراضي"}) × ${item.qty} = ${((item.price || 0) * item.qty).toFixed(2)} د.أ`
     );
-    return `${lines.join("\n")}\n\nرسوم التوصيل الثابتة: 2.00 د.أ\nالإجمالي الكلي: ${finalTotal.toFixed(2)} د.أ`;
+    let summary = `${lines.join("\n")}\n\nالمجموع الفرعي: ${subtotal.toFixed(2)} د.أ`;
+    if (discountAmount > 0) {
+      summary += `\nخصم الكود (${appliedPromo.promoCode} - ${discountPercentage}%): -${discountAmount.toFixed(2)} د.أ`;
+    }
+    summary += `\nرسوم التوصيل الثابتة: 2.00 د.أ\nالإجمالي الكلي: ${finalTotal.toFixed(2)} د.أ`;
+    return summary;
   };
 
   const orderDetails = formatOrderDetails();
@@ -48,7 +99,10 @@ const Delivery = () => {
         "",
         itemLines,
         "",
-        `الإجمالي الكلي: ${finalTotal.toFixed(2)} د.أ`,
+        `المجموع الفرعي: ${subtotal.toFixed(2)} د.أ`,
+        appliedPromo && discountAmount > 0 ? `🏷️ كود الخصم: ${appliedPromo.promoCode} (خصم ${discountPercentage}% = -${discountAmount.toFixed(2)} د.أ)` : null,
+        `🚚 التوصيل: ${deliveryFee.toFixed(2)} د.أ`,
+        `💰 الإجمالي الكلي: ${finalTotal.toFixed(2)} د.أ`,
         "",
         `📞 رقم الهاتف: ${phone}`,
         "",
@@ -59,7 +113,7 @@ const Delivery = () => {
         `⚖️ الوزن الحقيقي: ${weight} كغم`,
         "",
         `⌚ تم الإرسال من موقع البيلسان أونلاين`
-      ];
+      ].filter(Boolean);
 
       const orderText = messageLines.join("\n");
       const whatsappURL = buildWhatsAppLink({ message: orderText });
@@ -73,12 +127,15 @@ const Delivery = () => {
         weight,
         items: cartItems.map(({ lineId, ...item }) => ({ ...item })),
         deliveryFee,
+        discountAmount,
+        promoCode: appliedPromo?.promoCode || "",
         totalPrice: finalTotal,
         notes: orderDetails,
       });
 
       clearCart();
       reset();
+      sessionStorage.removeItem("applied_promo_code");
       showToast(t("deliveryPage.toast.success"), "success");
       window.location.assign(whatsappURL);
     } catch (error) {
@@ -226,6 +283,47 @@ const Delivery = () => {
                   <p className="text-xs font-medium text-pink-200/90 leading-relaxed">
                     💡 {t("forms.sizeNote")}
                   </p>
+                </div>
+
+                {/* Promo Code Input Box */}
+                <div className="rounded-2xl border border-white/10 bg-black/30 p-4 space-y-2">
+                  <label className="block text-xs font-bold text-white/80 flex items-center gap-1.5">
+                    <SparkleIcon className="h-4 w-4 text-amber-400" />
+                    هل لديك كود خصم؟ (Promo Code)
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={promoCodeInput}
+                      onChange={(e) => setPromoCodeInput(e.target.value)}
+                      placeholder="أدخل كود الخصم (مثال: BAYSAN20)"
+                      disabled={!!appliedPromo || validatingPromo}
+                      className="w-full rounded-xl border border-white/20 bg-white/10 px-3.5 py-2 text-xs text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-primary-400 uppercase font-mono"
+                    />
+                    {appliedPromo ? (
+                      <button
+                        type="button"
+                        onClick={handleRemovePromo}
+                        className="px-4 py-2 rounded-xl bg-red-500/20 text-red-300 border border-red-500/30 text-xs font-semibold hover:bg-red-500/30 transition whitespace-nowrap"
+                      >
+                        إلغاء الخصم
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => handleApplyPromo()}
+                        disabled={validatingPromo || !promoCodeInput.trim()}
+                        className="px-4 py-2 rounded-xl bg-gradient-to-r from-primary-600 to-pink-600 text-white text-xs font-semibold hover:opacity-90 transition disabled:opacity-50 whitespace-nowrap"
+                      >
+                        {validatingPromo ? "جاري التحقق..." : "تطبيق الخصم"}
+                      </button>
+                    )}
+                  </div>
+                  {appliedPromo && (
+                    <p className="text-xs text-emerald-400 font-semibold flex items-center gap-1">
+                      ✓ تم تطبيق كود الخصم ({appliedPromo.promoCode}) - تم خصم {appliedPromo.discountPercentage}% (-{discountAmount.toFixed(2)} د.أ)
+                    </p>
+                  )}
                 </div>
 
                 <div>

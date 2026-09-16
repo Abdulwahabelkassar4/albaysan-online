@@ -56,9 +56,14 @@ const OfferCountdown = ({
 
   const handleCopyCode = () => {
     if (!promoCode) return;
-    navigator.clipboard.writeText(promoCode);
+    try {
+      navigator.clipboard.writeText(promoCode);
+      sessionStorage.setItem("applied_promo_code", promoCode);
+    } catch (e) {
+      console.warn("Failed to copy code", e);
+    }
     setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    setTimeout(() => setCopied(false), 2500);
   };
 
   // Determine localized or custom title/subtitle/badge

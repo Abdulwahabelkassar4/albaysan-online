@@ -33,6 +33,7 @@ const AdminOffersConfig = () => {
     subtitle: "خصومات مميزة على أرقى تشكيلات العباءات والسبورات الشرعية لفترة محدودة",
     badgeText: "عرض لفترة محدودة 🔥",
     promoCode: "BAYSAN20",
+    discountPercentage: 20,
     endDate: "",
     isEnabled: true,
   });
@@ -51,6 +52,7 @@ const AdminOffersConfig = () => {
           subtitle: settingsData.subtitle || "",
           badgeText: settingsData.badgeText || "",
           promoCode: settingsData.promoCode || "",
+          discountPercentage: settingsData.discountPercentage !== undefined ? settingsData.discountPercentage : 0,
           endDate: toDatetimeLocal(settingsData.endDate),
           isEnabled: typeof settingsData.isEnabled === "boolean" ? settingsData.isEnabled : true,
         });
@@ -219,8 +221,8 @@ const AdminOffersConfig = () => {
                 />
               </div>
 
-              {/* Badge Text & Promo Code */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Badge Text, Promo Code & Discount Percentage */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
                   <label className="mb-2 block text-xs font-semibold text-white/80">نص الشارة الأعلى</label>
                   <input
@@ -239,6 +241,19 @@ const AdminOffersConfig = () => {
                     value={formData.promoCode}
                     onChange={handleChange("promoCode")}
                     placeholder="مثال: BAYSAN20"
+                    className="w-full rounded-2xl border border-white/20 bg-neutral-800/90 px-4 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary-500 font-mono"
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-xs font-semibold text-white/80">نسبة الخصم %</label>
+                  <input
+                    type="number"
+                    min="0"
+                    max="100"
+                    value={formData.discountPercentage}
+                    onChange={handleChange("discountPercentage")}
+                    placeholder="مثال: 20"
                     className="w-full rounded-2xl border border-white/20 bg-neutral-800/90 px-4 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary-500 font-mono"
                   />
                 </div>

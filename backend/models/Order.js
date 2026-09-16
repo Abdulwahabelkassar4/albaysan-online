@@ -22,6 +22,8 @@ const orderSchema = new mongoose.Schema(
     weight: { type: String },
     items: [orderItemSchema],
     deliveryFee: { type: Number, default: 0 },
+    discountAmount: { type: Number, default: 0 },
+    promoCode: { type: String, default: "" },
     totalPrice: { type: Number, default: 0 },
     pickupDate: { type: Date },
     status: {

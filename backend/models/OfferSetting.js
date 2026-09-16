@@ -26,6 +26,10 @@ const offerSettingSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
+    discountPercentage: {
+      type: Number,
+      default: 0,
+    },
     products: [
       {
         type: mongoose.Schema.Types.ObjectId,
