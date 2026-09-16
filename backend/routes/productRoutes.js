@@ -5,14 +5,19 @@ import { authMiddleware } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
-const checkOfferActive = async () => {
+const checkOfferSettings = async () => {
   try {
     const settings = await OfferSetting.findOne();
-    if (!settings || !settings.isEnabled) return false;
-    if (!settings.endDate) return false;
-    return new Date() < new Date(settings.endDate);
+    if (!settings || !settings.isEnabled || !settings.endDate) {
+      return { isOfferActive: false, offerProductIds: new Set() };
+    }
+    const isOfferActive = new Date() < new Date(settings.endDate);
+    const offerProductIds = new Set(
+      (settings.products || []).map((id) => id.toString())
+    );
+    return { isOfferActive, offerProductIds };
   } catch (error) {
-    return false;
+    return { isOfferActive: false, offerProductIds: new Set() };
   }
 };
 
@@ -43,7 +48,7 @@ const parseImagesInput = (images) => {
   return [];
 };
 
-const formatProduct = (productDoc, isOfferActive = true, raw = false) => {
+const formatProduct = (productDoc, offerContext = { isOfferActive: false, offerProductIds: new Set() }, raw = false) => {
   if (!productDoc) return null;
 
   const product =
@@ -55,8 +60,11 @@ const formatProduct = (productDoc, isOfferActive = true, raw = false) => {
   const storedOriginalPrice = product.originalPrice !== undefined && product.originalPrice !== null ? Number(product.originalPrice) : null;
   const storedPrice = Number(product.price);
 
-  // If raw mode (admin) OR global offer is active, keep stored discounted price & original price
-  if (raw || isOfferActive) {
+  const { isOfferActive = false, offerProductIds = new Set() } = offerContext;
+  const isProductInOffer = isOfferActive && offerProductIds.has(id);
+
+  // If raw mode (admin) OR product is in active offer campaign, keep stored discounted price & original price
+  if (raw || isProductInOffer) {
     return {
       id,
       _id: id,
@@ -71,10 +79,11 @@ const formatProduct = (productDoc, isOfferActive = true, raw = false) => {
       colors: Array.isArray(product.colors) ? product.colors : [],
       images: normalizedImages,
       inStock: typeof product.inStock === "boolean" ? product.inStock : true,
+      isInActiveOffer: isProductInOffer,
     };
   }
 
-  // Offer is EXPIRED or DISABLED: Revert selling price to originalPrice automatically
+  // Offer is EXPIRED, DISABLED, or product NOT in active offer: Revert selling price to originalPrice automatically
   const effectivePrice = storedOriginalPrice && storedOriginalPrice > 0 ? storedOriginalPrice : storedPrice;
 
   return {
@@ -91,6 +100,7 @@ const formatProduct = (productDoc, isOfferActive = true, raw = false) => {
     colors: Array.isArray(product.colors) ? product.colors : [],
     images: normalizedImages,
     inStock: typeof product.inStock === "boolean" ? product.inStock : true,
+    isInActiveOffer: false,
   };
 };
 
@@ -98,7 +108,7 @@ router.get("/", async (req, res, next) => {
   try {
     const { category, productCollection, search, offersOnly, page = 1, limit = 12, raw } = req.query;
     const isRaw = raw === "true" || raw === true;
-    const isOfferActive = await checkOfferActive();
+    const offerContext = await checkOfferSettings();
 
     const filters = {};
 
@@ -110,29 +120,34 @@ router.get("/", async (req, res, next) => {
       ];
     }
     if (offersOnly === "true" || offersOnly === true) {
-      if (!isOfferActive && !isRaw) {
-        return res.json({
-          data: [],
-          pagination: {
-            total: 0,
-            page: 1,
-            pages: 0,
-          },
-        });
+      if (!isRaw) {
+        if (!offerContext.isOfferActive || offerContext.offerProductIds.size === 0) {
+          return res.json({
+            data: [],
+            pagination: {
+              total: 0,
+              page: 1,
+              pages: 0,
+            },
+          });
+        }
+        filters._id = { $in: Array.from(offerContext.offerProductIds) };
+      } else {
+        filters.originalPrice = { $gt: 0 };
       }
-      filters.originalPrice = { $gt: 0 };
     }
     if (search) filters.$text = { $search: search };
 
-    const query = Product.find(filters).sort({ createdAt: -1 });
-    const total = await Product.countDocuments(filters);
     const currentPage = Number(page) || 1;
     const perPage = Number(limit) || 12;
+
+    const query = Product.find(filters).sort({ createdAt: -1 });
+    const total = await Product.countDocuments(filters);
 
     const products = await query.skip((currentPage - 1) * perPage).limit(perPage);
 
     res.json({
-      data: products.map((product) => formatProduct(product, isOfferActive, isRaw)),
+      data: products.map((product) => formatProduct(product, offerContext, isRaw)),
       pagination: {
         total,
         page: currentPage,
@@ -147,12 +162,12 @@ router.get("/", async (req, res, next) => {
 router.get("/:id", async (req, res, next) => {
   try {
     const isRaw = req.query.raw === "true" || req.query.raw === true;
-    const isOfferActive = await checkOfferActive();
+    const offerContext = await checkOfferSettings();
     const product = await Product.findById(req.params.id);
     if (!product) {
       return res.status(404).json({ message: "المنتج غير موجود" });
     }
-    res.json(formatProduct(product, isOfferActive, isRaw));
+    res.json(formatProduct(product, offerContext, isRaw));
   } catch (error) {
     next(error);
   }

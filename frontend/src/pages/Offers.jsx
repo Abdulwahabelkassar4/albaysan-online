@@ -22,12 +22,12 @@ const Offers = () => {
       setLoading(true);
       try {
         const [{ data: productsRes }, { data: settingsRes }] = await Promise.all([
-          axiosClient.get("/api/products", { params: { limit: 50 } }),
+          axiosClient.get("/api/products", { params: { offersOnly: true, limit: 50 } }),
           axiosClient.get("/api/offer-settings").catch(() => ({ data: null })),
         ]);
 
         const items = (productsRes.data || []).filter(
-          (p) => (p.originalPrice && p.originalPrice > p.price) || p.discountTag
+          (p) => p.isInActiveOffer || (p.originalPrice && p.originalPrice > p.price) || p.discountTag
         );
         setProducts(items);
         if (settingsRes) {

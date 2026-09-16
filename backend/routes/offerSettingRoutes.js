@@ -26,7 +26,7 @@ router.get("/", async (_req, res, next) => {
 // @route PUT /api/offer-settings (Admin Protected)
 router.put("/", authMiddleware, async (req, res, next) => {
   try {
-    const { title, subtitle, endDate, isEnabled, badgeText, promoCode } = req.body;
+    const { title, subtitle, endDate, isEnabled, badgeText, promoCode, products } = req.body;
 
     let settings = await getOrCreateSettings();
 
@@ -36,6 +36,9 @@ router.put("/", authMiddleware, async (req, res, next) => {
     if (typeof isEnabled === "boolean") settings.isEnabled = isEnabled;
     if (badgeText !== undefined) settings.badgeText = badgeText.trim();
     if (promoCode !== undefined) settings.promoCode = promoCode.trim().toUpperCase();
+    if (Array.isArray(products)) {
+      settings.products = products.filter(Boolean);
+    }
 
     await settings.save();
 

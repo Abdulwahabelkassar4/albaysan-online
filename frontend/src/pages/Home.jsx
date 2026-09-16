@@ -25,17 +25,22 @@ const Home = () => {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const { data } = await requestWithRetry(
-          () => axiosClient.get("/api/products?limit=8", { timeout: 12000 }),
-          { timeoutMs: 65000 }
-        );
-        const allItems = data.data || [];
-        setLatestProducts(allItems.slice(0, 4));
-        // Offers items (discounted or discountTag)
-        const offers = allItems.filter(
-          (p) => (p.originalPrice && p.originalPrice > p.price) || p.discountTag
-        );
-        setOfferProducts(offers.slice(0, 4));
+        const [{ data: latestRes }, { data: offersRes }] = await Promise.all([
+          requestWithRetry(
+            () => axiosClient.get("/api/products?limit=4", { timeout: 12000 }),
+            { timeoutMs: 65000 }
+          ),
+          requestWithRetry(
+            () => axiosClient.get("/api/products?offersOnly=true&limit=4", { timeout: 12000 }),
+            { timeoutMs: 65000 }
+          ).catch(() => ({ data: { data: [] } })),
+        ]);
+
+        const allItems = latestRes?.data || [];
+        setLatestProducts(allItems);
+
+        const offerItems = offersRes?.data || [];
+        setOfferProducts(offerItems);
       } catch (error) {
         console.error("Failed to load products", error);
       } finally {
