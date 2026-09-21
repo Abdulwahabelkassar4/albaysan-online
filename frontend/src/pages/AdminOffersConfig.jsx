@@ -891,6 +891,82 @@ const AdminOffersConfig = () => {
                 </div>
               )}
 
+              {/* Scope Products Checklist */}
+              {promoFormData.scope === "products" && (
+                <div className="p-3.5 rounded-2xl border border-white/10 bg-black/30 space-y-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <label className="block font-semibold text-white/80">اختر المنتجات المشمولة بهذا الكود:</label>
+                    <div className="flex items-center gap-1.5 text-[10px]">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setPromoFormData((prev) => ({
+                            ...prev,
+                            applicableProducts: allProducts.map((p) => p._id || p.id),
+                          }))
+                        }
+                        className="px-2 py-1 rounded-lg bg-white/10 text-white hover:bg-white/20 transition"
+                      >
+                        تحديد الكل
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setPromoFormData((prev) => ({
+                            ...prev,
+                            applicableProducts: [],
+                          }))
+                        }
+                        className="px-2 py-1 rounded-lg bg-red-500/20 text-red-300 border border-red-500/30 hover:bg-red-500/30 transition"
+                      >
+                        إلغاء الكل
+                      </button>
+                    </div>
+                  </div>
+
+                  <span className="text-[10px] text-white/50 block">
+                    تم تحديد {promoFormData.applicableProducts?.length || 0} من {allProducts.length} منتج
+                  </span>
+
+                  <div className="max-h-48 overflow-y-auto space-y-1.5 pr-1">
+                    {allProducts.map((prod) => {
+                      const pId = prod._id || prod.id;
+                      const isSelected = promoFormData.applicableProducts.includes(pId);
+
+                      return (
+                        <div
+                          key={pId}
+                          onClick={() =>
+                            setPromoFormData((prev) => ({
+                              ...prev,
+                              applicableProducts: isSelected
+                                ? prev.applicableProducts.filter((id) => id !== pId)
+                                : [...prev.applicableProducts, pId],
+                            }))
+                          }
+                          className={`flex items-center justify-between p-2 rounded-xl border cursor-pointer text-[11px] transition ${
+                            isSelected
+                              ? "bg-primary-950/60 border-primary-500/60 text-white font-bold"
+                              : "bg-neutral-800/60 border-white/5 text-white/70 hover:border-white/20"
+                          }`}
+                        >
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="checkbox"
+                              checked={isSelected}
+                              onChange={() => {}}
+                              className="h-3.5 w-3.5 rounded border-white/30 bg-neutral-800 text-primary-600 focus:ring-primary-500"
+                            />
+                            <span>{prod.name}</span>
+                          </div>
+                          <span className="text-[10px] text-primary-400 font-mono">{prod.price} د.أ</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
               {/* Enabled & Usage Limit */}
               <div className="grid grid-cols-2 gap-4 pt-2">
                 <div>

@@ -65,6 +65,12 @@ const Delivery = () => {
   const discountAmount = appliedPromo ? Number(appliedPromo.discountAmount) || 0 : 0;
   const finalTotal = Math.max(0, subtotal - discountAmount) + deliveryFee;
 
+  const discountLabel = appliedPromo
+    ? appliedPromo.discountType === "percentage"
+      ? `${appliedPromo.discountValue}%`
+      : `${appliedPromo.discountValue} د.أ`
+    : "";
+
   const formatOrderDetails = () => {
     if (!cartItems.length) {
       return t("orders.cartEmpty");
@@ -74,7 +80,7 @@ const Delivery = () => {
     );
     let summary = `${lines.join("\n")}\n\nالمجموع الفرعي: ${subtotal.toFixed(2)} د.أ`;
     if (discountAmount > 0) {
-      summary += `\nخصم الكود (${appliedPromo.promoCode} - ${discountPercentage}%): -${discountAmount.toFixed(2)} د.أ`;
+      summary += `\nخصم الكود (${appliedPromo.promoCode} - ${discountLabel}): -${discountAmount.toFixed(2)} د.أ`;
     }
     summary += `\nرسوم التوصيل الثابتة: 2.00 د.أ\nالإجمالي الكلي: ${finalTotal.toFixed(2)} د.أ`;
     return summary;
@@ -103,7 +109,7 @@ const Delivery = () => {
         itemLines,
         "",
         `المجموع الفرعي: ${subtotal.toFixed(2)} د.أ`,
-        appliedPromo && discountAmount > 0 ? `🏷️ كود الخصم: ${appliedPromo.promoCode} (خصم ${discountPercentage}% = -${discountAmount.toFixed(2)} د.أ)` : null,
+        appliedPromo && discountAmount > 0 ? `🏷️ كود الخصم: ${appliedPromo.promoCode} (خصم ${discountLabel} = -${discountAmount.toFixed(2)} د.أ)` : null,
         `🚚 التوصيل: ${deliveryFee.toFixed(2)} د.أ`,
         `💰 الإجمالي الكلي: ${finalTotal.toFixed(2)} د.أ`,
         "",
@@ -324,7 +330,7 @@ const Delivery = () => {
                   </div>
                   {appliedPromo && (
                     <p className="text-xs text-emerald-400 font-semibold flex items-center gap-1">
-                      ✓ تم تطبيق كود الخصم ({appliedPromo.promoCode}) - تم خصم {appliedPromo.discountPercentage}% (-{discountAmount.toFixed(2)} د.أ)
+                      ✓ تم تطبيق كود الخصم ({appliedPromo.promoCode}) - تم خصم {discountLabel} (-{discountAmount.toFixed(2)} د.أ)
                     </p>
                   )}
                 </div>

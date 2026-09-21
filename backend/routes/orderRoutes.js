@@ -1,6 +1,7 @@
 import express from "express";
 import { Order } from "../models/Order.js";
 import { Product } from "../models/Product.js";
+import { PromoCode } from "../models/PromoCode.js";
 import { authMiddleware } from "../middleware/authMiddleware.js";
 import { validate, orderSchema } from "../middleware/validate.js";
 
@@ -40,6 +41,13 @@ router.post("/", async (req, res, next) => {
       totalPrice: calculatedTotal,
       status: "pending",
     });
+
+    if (promoCode) {
+      await PromoCode.updateOne(
+        { code: promoCode.trim().toUpperCase() },
+        { $inc: { usageCount: 1 } }
+      ).catch((err) => console.error("Error updating promo code usage count:", err));
+    }
 
     res.status(201).json(order);
   } catch (error) {

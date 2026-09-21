@@ -64,6 +64,12 @@ const Reservation = () => {
   const discountAmount = appliedPromo ? Number(appliedPromo.discountAmount) || 0 : 0;
   const finalTotal = Math.max(0, subtotal - discountAmount);
 
+  const discountLabel = appliedPromo
+    ? appliedPromo.discountType === "percentage"
+      ? `${appliedPromo.discountValue}%`
+      : `${appliedPromo.discountValue} د.أ`
+    : "";
+
   const formatOrderDetails = () => {
     if (!cartItems.length) {
       return t("orders.cartEmpty");
@@ -73,7 +79,7 @@ const Reservation = () => {
     );
     let summary = `${lines.join("\n")}\n\nالمجموع الفرعي: ${subtotal.toFixed(2)} د.أ`;
     if (discountAmount > 0) {
-      summary += `\nخصم الكود (${appliedPromo.promoCode} - ${discountPercentage}%): -${discountAmount.toFixed(2)} د.أ`;
+      summary += `\nخصم الكود (${appliedPromo.promoCode} - ${discountLabel}): -${discountAmount.toFixed(2)} د.أ`;
     }
     summary += `\nنوع الطلب: استلام من المتجر (0.00 د.أ توصيل)\nالإجمالي الكلي: ${finalTotal.toFixed(2)} د.أ`;
     return summary;
@@ -102,7 +108,7 @@ const Reservation = () => {
         itemLines,
         "",
         `المجموع الفرعي: ${subtotal.toFixed(2)} د.أ`,
-        appliedPromo && discountAmount > 0 ? `🏷️ كود الخصم: ${appliedPromo.promoCode} (خصم ${discountPercentage}% = -${discountAmount.toFixed(2)} د.أ)` : null,
+        appliedPromo && discountAmount > 0 ? `🏷️ كود الخصم: ${appliedPromo.promoCode} (خصم ${discountLabel} = -${discountAmount.toFixed(2)} د.أ)` : null,
         `💰 الإجمالي الكلي: ${finalTotal.toFixed(2)} د.أ`,
         "",
         `📞 رقم الهاتف: ${phone}`,
@@ -284,7 +290,7 @@ const Reservation = () => {
               </div>
               {appliedPromo && (
                 <p className="text-xs text-emerald-400 font-semibold flex items-center gap-1">
-                  ✓ تم تطبيق كود الخصم ({appliedPromo.promoCode}) - تم خصم {appliedPromo.discountPercentage}% (-{discountAmount.toFixed(2)} د.أ)
+                  ✓ تم تطبيق كود الخصم ({appliedPromo.promoCode}) - تم خصم {discountLabel} (-{discountAmount.toFixed(2)} د.أ)
                 </p>
               )}
             </div>
