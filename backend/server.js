@@ -21,6 +21,10 @@ validateEnv();
 
 const app = express();
 
+// Trust Render's reverse proxy so rate limiting uses the real client IP
+// instead of the shared proxy IP (which was causing all users to share one quota)
+app.set("trust proxy", 1);
+
 const allowedOrigins = (process.env.CORS_ORIGIN || "")
   .split(",")
   .map((origin) => origin.trim())
@@ -56,7 +60,7 @@ app.use(morgan("dev"));
 
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 200, // Limit each IP to 200 requests per windowMs
+  max: 1000, // Limit each IP to 1000 requests per 15 min window
   standardHeaders: true,
   legacyHeaders: false,
   message: { message: "عدد كبير جداً من الطلبات، يرجى المحاولة لاحقاً." },
