@@ -71,16 +71,16 @@ const TestimonialsSection = () => {
           </div>
         </div>
 
-        {/* Testimonials Grid */}
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        {/* Testimonials Grid — Centered & Gapped */}
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 justify-center">
           {reviews.map((rev) => (
             <div
               key={rev._id}
-              className="glass-card flex flex-col justify-between rounded-3xl border border-white/10 bg-neutral-900/80 p-6 backdrop-blur-xl transition duration-300 hover:-translate-y-1 hover:border-primary-500/40 hover:shadow-xl hover:shadow-primary-950/30 text-right"
+              className="glass-card flex flex-col justify-between rounded-3xl border border-white/10 bg-neutral-900/80 p-6 backdrop-blur-xl transition duration-300 hover:-translate-y-1 hover:border-primary-500/40 hover:shadow-xl hover:shadow-primary-950/30 text-right w-full min-h-[220px]"
             >
-              <div>
+              <div className="space-y-3">
                 {/* Header with Avatar, Name, and Verified Badge */}
-                <div className="flex items-center justify-between gap-3 mb-4">
+                <div className="flex items-center justify-between gap-3 border-b border-white/5 pb-3">
                   <div className="flex items-center gap-3 min-w-0">
                     <div className="h-10 w-10 shrink-0 rounded-full bg-gradient-to-br from-primary-500 to-secondary-500 p-0.5 shadow-md">
                       <div className="flex h-full w-full items-center justify-center rounded-full bg-neutral-900 text-xs font-bold text-white">
