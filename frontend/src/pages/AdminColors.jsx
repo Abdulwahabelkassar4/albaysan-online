@@ -128,24 +128,16 @@ const AdminColors = () => {
   };
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-12 md:px-6">
+    <div className="mx-auto max-w-7xl px-4 py-8 md:px-8 space-y-6">
       {/* Top Header */}
-      <div className="mb-8 flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-            <PaletteIcon className="h-7 w-7 text-secondary-300" />
-            إدارة دليل الألوان ولوحة الألوان (Admin Color Guide)
-          </h1>
-          <p className="text-xs text-white/70 mt-1">
-            إضافة وتعديل الألوان المعتمدة مع عينات صور الأقمشة الحقيقية ورموز لوحة الألوان.
-          </p>
-        </div>
-        <Link
-          to="/admin/dashboard"
-          className="inline-flex items-center gap-2 rounded-full border border-white/30 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/10"
-        >
-          {isRTL ? "العودة للوحة التحكّم →" : "← Back to Dashboard"}
-        </Link>
+      <div className="flex flex-col gap-2">
+        <h1 className="text-2xl md:text-3xl font-black text-white flex items-center gap-2.5">
+          <PaletteIcon className="h-7 w-7 text-amber-400" />
+          <span>دليل وركام الألوان المعتمدة</span>
+        </h1>
+        <p className="text-xs md:text-sm text-white/60">
+          إضافة وتعديل الألوان المعتمدة مع عينات صور الأقمشة الحقيقية ورموز HEX
+        </p>
       </div>
 
       <div className="grid gap-8 lg:grid-cols-[1.1fr,1.3fr]">

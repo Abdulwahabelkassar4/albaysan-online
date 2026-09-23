@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import { Navigate, Outlet } from "react-router-dom";
+import { Navigate } from "react-router-dom";
 import axiosClient from "../api/axiosClient.js";
+import AdminLayout from "./admin/AdminLayout.jsx";
 
 const ProtectedRoute = () => {
   const [status, setStatus] = useState("loading");
@@ -40,8 +41,11 @@ const ProtectedRoute = () => {
 
   if (status === "loading") {
     return (
-      <div className="flex min-h-[40vh] items-center justify-center text-sm text-white/80">
-        جارٍ التحقق…
+      <div className="flex min-h-[60vh] items-center justify-center">
+        <div className="flex flex-col items-center gap-3">
+          <div className="h-8 w-8 rounded-full border-2 border-primary-500 border-t-transparent animate-spin" />
+          <span className="text-sm text-white/70 font-semibold">جارٍ التحقق من صلاحيات الإدارة…</span>
+        </div>
       </div>
     );
   }
@@ -50,7 +54,7 @@ const ProtectedRoute = () => {
     return <Navigate to="/admin/login" replace />;
   }
 
-  return <Outlet />;
+  return <AdminLayout />;
 };
 
 export default ProtectedRoute;

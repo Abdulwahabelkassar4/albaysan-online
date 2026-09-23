@@ -106,27 +106,16 @@ const AdminReviews = () => {
   };
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-12 md:px-6 text-right">
-      {/* Top Bar Navigation */}
-      <div className="mb-6 flex items-center justify-between">
-        <Link
-          to="/admin/dashboard"
-          className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/5 px-4 py-2 text-xs font-semibold text-white hover:bg-white/10 transition"
-        >
-          ← العودة للوحة التحكم
-        </Link>
-        <span className="text-xs text-white/60">إجمالي التقييمات: {counts.total}</span>
-      </div>
-
+    <div className="mx-auto max-w-7xl px-4 py-8 md:px-8 space-y-6 text-right">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-extrabold text-white flex items-center gap-2">
+          <h1 className="text-2xl md:text-3xl font-black text-white flex items-center gap-2.5">
             <SparkleIcon className="h-7 w-7 text-amber-400" />
-            إدارة آراء وتقييمات العملاء
+            <span>إدارة آراء وتقييمات العملاء</span>
           </h1>
-          <p className="mt-1 text-sm text-white/70">
-            مراجعة التقييمات الواردة من الزبائن الموثقين، النشر، الردود، والتواصل المباشر
+          <p className="mt-1 text-xs md:text-sm text-white/60">
+            مراجعة التقييمات الواردة من الزبائن الموثقين، النشر، الردود، والتواصل المباشر (إجمالي: {counts.total})
           </p>
         </div>
 

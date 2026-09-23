@@ -1,9 +1,16 @@
-import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import axiosClient from "../api/axiosClient.js";
 import { useToast } from "../context/ToastContext.jsx";
 import ProductConfigBuilder from "../components/ProductConfigBuilder.jsx";
+import {
+  BoxIcon,
+  PlusIcon,
+  SearchIcon,
+  SparkleIcon,
+  CloseIcon,
+  FilterIcon,
+} from "../components/icons.jsx";
 
 const defaultValues = {
   name: "",
@@ -60,6 +67,16 @@ const AdminProducts = () => {
   const [uploading, setUploading] = useState(false);
   const [formData, setFormData] = useState({ ...defaultValues });
 
+  // Form Tabs State
+  const [activeFormTab, setActiveFormTab] = useState("basic"); // 'basic' | 'variants' | 'configurator'
+
+  // Mobile View Switch
+  const [mobileView, setMobileView] = useState("list"); // 'list' | 'form'
+
+  // Search & Filter for Product List
+  const [productSearch, setProductSearch] = useState("");
+  const [productCategoryFilter, setProductCategoryFilter] = useState("");
+
   // Bulk Selection State
   const [selectedProductIds, setSelectedProductIds] = useState([]);
 
@@ -99,7 +116,7 @@ const AdminProducts = () => {
       setProducts(data.data || []);
       setSelectedProductIds([]);
     } catch (error) {
-      showToast(t("adminProductsPage.toast.loadError"), "error");
+      showToast("تعذر تحميل المنتجات", "error");
     } finally {
       setLoading(false);
     }
@@ -160,42 +177,39 @@ const AdminProducts = () => {
     setSelectedFiles([]);
     setUploadedImages([]);
     setFormData({ ...defaultValues });
-  };
-
-  const saveProduct = async () => {
-    const payload = buildPayload();
-    try {
-      if (editingProduct?._id || editingProduct?.id) {
-        const prodId = editingProduct._id || editingProduct.id;
-        await axiosClient.put(`/api/products/${prodId}`, payload);
-        showToast(t("adminProductsPage.toast.updateSuccess"), "success");
-      } else {
-        await axiosClient.post("/api/products", payload);
-        showToast(t("adminProductsPage.toast.createSuccess"), "success");
-      }
-      resetForm();
-      loadProducts();
-    } catch (error) {
-      showToast(
-        editingProduct ? t("adminProductsPage.toast.updateError") : t("adminProductsPage.toast.createError"),
-        "error"
-      );
-    }
+    setActiveFormTab("basic");
   };
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    if (!formData.category || !formData.productCollection) {
-      showToast(t("adminProductsPage.validation.categoryCollection"), "error");
+    const payload = buildPayload();
+
+    if (!payload.name || payload.price === undefined || payload.price === null || isNaN(payload.price)) {
+      showToast("يرجى تعبئة اسم المنتج وسعره بالشكل الصحيح", "error");
       return;
     }
-    await saveProduct();
+
+    try {
+      if (editingProduct) {
+        await axiosClient.put(`/api/products/${editingProduct._id || editingProduct.id}`, payload);
+        showToast("تم تحديث المنتج بنجاح", "success");
+      } else {
+        await axiosClient.post("/api/products", payload);
+        showToast("تم إنشاء المنتج بنجاح", "success");
+      }
+      resetForm();
+      loadProducts();
+      setMobileView("list");
+    } catch (error) {
+      showToast("تعذر حفظ المنتج، يرجى المحاولة لاحقاً", "error");
+    }
   };
 
   const handleEdit = (product) => {
     setEditingProduct(product);
+    const existingImages = normalizeImages(product.images, product.image);
+    setUploadedImages(existingImages);
     setSelectedFiles([]);
-    setUploadedImages(product.images || []);
     setFormData({
       name: product.name || "",
       description: product.description || "",
@@ -210,25 +224,42 @@ const AdminProducts = () => {
       configurable: product.configurable || false,
       pieces: product.pieces || [],
     });
+    setMobileView("form");
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm(t("adminProductsPage.confirmDelete"))) return;
+    if (!window.confirm("هل أنت متأكد من رغبتك في حذف هذا المنتج نهائياً؟")) return;
     try {
       await axiosClient.delete(`/api/products/${id}`);
-      showToast(t("adminProductsPage.toast.deleteSuccess"), "info");
+      showToast("تم حذف المنتج بنجاح", "info");
       loadProducts();
     } catch (error) {
-      showToast(t("adminProductsPage.toast.deleteError"), "error");
+      showToast("تعذر حذف المنتج", "error");
+    }
+  };
+
+  const toggleQuickInStock = async (product, e) => {
+    e.stopPropagation();
+    const prodId = product._id || product.id;
+    const nextStatus = !product.inStock;
+    try {
+      await axiosClient.put(`/api/products/${prodId}`, { inStock: nextStatus });
+      setProducts((prev) =>
+        prev.map((p) => ((p._id || p.id) === prodId ? { ...p, inStock: nextStatus } : p))
+      );
+      showToast(`تم ${nextStatus ? "تفعيل توفر" : "إيقاف توفر"} المنتج`, "success");
+    } catch (err) {
+      showToast("فشل تحديث حالة التوفر", "error");
     }
   };
 
   // Bulk Actions
   const toggleSelectAll = () => {
-    if (selectedProductIds.length === products.length) {
+    if (selectedProductIds.length === filteredProducts.length) {
       setSelectedProductIds([]);
     } else {
-      setSelectedProductIds(products.map((p) => p._id || p.id));
+      setSelectedProductIds(filteredProducts.map((p) => p._id || p.id));
     }
   };
 
@@ -240,7 +271,7 @@ const AdminProducts = () => {
 
   const handleBulkAction = async (action, inStockVal = true) => {
     if (selectedProductIds.length === 0) return;
-    if (action === "delete" && !window.confirm(`هل أنت تأكد من حذف ${selectedProductIds.length} منتج؟`)) return;
+    if (action === "delete" && !window.confirm(`هل أنت متأكد من حذف ${selectedProductIds.length} منتج؟`)) return;
 
     try {
       await axiosClient.post("/api/products/bulk", {
@@ -275,12 +306,12 @@ const AdminProducts = () => {
       });
       if (Array.isArray(data.urls)) {
         setUploadedImages((prev) => [...prev, ...data.urls]);
-        showToast(t("adminProductsPage.toast.uploadSuccess"), "success");
+        showToast("تم رفع الصور بنجاح", "success");
       } else {
         throw new Error("Invalid upload response");
       }
     } catch (error) {
-      showToast(t("adminProductsPage.toast.uploadError"), "error");
+      showToast("فشل رفع الصور", "error");
     } finally {
       setUploading(false);
       setSelectedFiles([]);
@@ -298,7 +329,6 @@ const AdminProducts = () => {
       const [selected] = copy.splice(index, 1);
       return [selected, ...copy];
     });
-    showToast("تم تعيين الصورة كغلاف أساسي للمنتج ⭐", "success");
   };
 
   const reorderImage = (index, direction) => {
@@ -313,530 +343,586 @@ const AdminProducts = () => {
     });
   };
 
+  // Filtered Products
+  const filteredProducts = products.filter((p) => {
+    const matchesSearch = productSearch === "" || p.name?.toLowerCase().includes(productSearch.toLowerCase());
+    const matchesCategory = productCategoryFilter === "" || p.category === productCategoryFilter;
+    return matchesSearch && matchesCategory;
+  });
+
   return (
-    <div className="mx-auto max-w-7xl px-4 py-12 md:px-6">
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-        <div className="flex flex-wrap items-center gap-3">
-          <Link
-            to="/admin/categories"
-            className="inline-flex items-center gap-2 rounded-2xl border border-secondary-400/40 bg-secondary-500/20 px-4 py-2 text-sm font-semibold text-secondary-200 hover:bg-secondary-500/30"
-          >
-            ⚙️ إدارة الفئات والمجموعات
-          </Link>
-          <Link
-            to="/admin/colors"
-            className="inline-flex items-center gap-2 rounded-2xl border border-purple-400/40 bg-purple-500/20 px-4 py-2 text-sm font-semibold text-purple-200 hover:bg-purple-500/30"
-          >
-            🎨 دليل مرجعية الألوان
-          </Link>
+    <div className="mx-auto max-w-7xl px-4 py-8 md:px-8 space-y-6">
+      {/* ─── Top Header ─── */}
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div>
+          <h1 className="text-2xl md:text-3xl font-black text-white flex items-center gap-2.5">
+            <BoxIcon className="h-7 w-7 text-secondary-400" />
+            <span>إدارة المنتجات والمخزون</span>
+          </h1>
+          <p className="text-xs md:text-sm text-white/60 mt-1">
+            إضافة وتعديل المنتجات، خيارات التفصيل والتخصيص، وتحديد الأسعار والخصومات
+          </p>
         </div>
-        <Link
-          to="/admin/dashboard"
-          className="inline-flex items-center gap-2 rounded-full border border-white/30 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/10"
-        >
-          {isRTL ? `${t("adminProductsPage.backToDashboard")} →` : `← ${t("adminProductsPage.backToDashboard")}`}
-        </Link>
+
+        {/* Mobile Screen Tab Switcher */}
+        <div className="lg:hidden flex rounded-2xl bg-white/5 border border-white/10 p-1">
+          <button
+            onClick={() => setMobileView("list")}
+            className={`flex-1 rounded-xl py-2 text-xs font-bold transition ${
+              mobileView === "list" ? "bg-primary-600 text-white shadow" : "text-white/60 hover:text-white"
+            }`}
+          >
+            قائمة المنتجات ({products.length})
+          </button>
+          <button
+            onClick={() => setMobileView("form")}
+            className={`flex-1 rounded-xl py-2 text-xs font-bold transition ${
+              mobileView === "form" ? "bg-primary-600 text-white shadow" : "text-white/60 hover:text-white"
+            }`}
+          >
+            {editingProduct ? "✏️ تعديل المنتج" : "➕ إضافة منتج"}
+          </button>
+        </div>
       </div>
 
-      <div className="grid gap-8 lg:grid-cols-[1.1fr,1.3fr]">
-        {/* Product Form */}
-        <section className={`glass-card p-8 rounded-3xl border border-white/10 bg-neutral-900/80 backdrop-blur-xl ${isRTL ? "text-right" : "text-left"}`}>
-          <h2 className="text-2xl font-bold text-white">
-            {editingProduct ? t("adminProductsPage.editTitle") : t("adminProductsPage.createTitle")}
-          </h2>
-          
-          <form className={`mt-6 grid gap-5 ${isRTL ? "text-right" : "text-left"}`} onSubmit={handleSubmit}>
-            <div>
-              <label className="mb-2 block text-sm text-white/70">{t("adminProductsPage.form.name")}</label>
-              <input
-                value={formData.name}
-                onChange={handleChange("name")}
-                required
-                className="w-full rounded-2xl border border-white/20 bg-neutral-800/80 px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
-              />
-            </div>
-
-            {/* Price & Original Price */}
-            <div className="grid gap-4 md:grid-cols-2">
-              <div>
-                <label className="mb-2 block text-sm text-white/70">{t("adminProductsPage.form.price")}</label>
-                <input
-                  type="number"
-                  min="0"
-                  step="0.1"
-                  value={formData.price}
-                  onChange={handleChange("price")}
-                  required
-                  placeholder="مثال: 35"
-                  className="w-full rounded-2xl border border-white/20 bg-neutral-800/80 px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
-                />
-              </div>
-              <div>
-                <label className="mb-2 block text-sm text-amber-200 font-medium">السعر قبل الخصم (اختياري)</label>
-                <input
-                  type="number"
-                  min="0"
-                  step="0.1"
-                  value={formData.originalPrice}
-                  onChange={handleChange("originalPrice")}
-                  placeholder="مثال: 45"
-                  className="w-full rounded-2xl border border-amber-400/30 bg-neutral-800/80 px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-amber-300"
-                />
-              </div>
-            </div>
-
-            {/* Discount Tag */}
-            <div>
-              <label className="mb-2 block text-sm text-pink-200 font-medium">تاغ العرض / الخصم</label>
-              <input
-                type="text"
-                value={formData.discountTag}
-                onChange={handleChange("discountTag")}
-                placeholder="تاغ العرض الترويجي (مثال: خصم 20%)"
-                className="w-full rounded-2xl border border-pink-400/30 bg-neutral-800/80 px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-pink-300"
-              />
-            </div>
-
-            {/* Category & Collection */}
-            <div className="grid gap-4 md:grid-cols-2">
-              <div>
-                <label className="mb-2 block text-sm text-white/70">{t("adminProductsPage.form.category")}</label>
-                <select
-                  value={formData.category}
-                  onChange={handleChange("category")}
-                  className="w-full rounded-2xl border border-white/20 bg-neutral-800 px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
-                >
-                  <option value="">{t("adminProductsPage.form.categoryPlaceholder")}</option>
-                  {categories.map((cat) => (
-                    <option key={cat} value={cat}>
-                      {cat}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="mb-2 block text-sm text-white/70">{t("adminProductsPage.form.collection")}</label>
-                <select
-                  value={formData.productCollection}
-                  onChange={handleChange("productCollection")}
-                  className="w-full rounded-2xl border border-white/20 bg-neutral-800 px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
-                >
-                  <option value="">{t("adminProductsPage.form.collectionPlaceholder")}</option>
-                  {collections.map((col) => (
-                    <option key={col} value={col}>
-                      {col}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            {/* Stock Availability Toggle */}
-            <div className="flex items-center gap-3">
-              <input
-                type="checkbox"
-                id="inStock"
-                checked={formData.inStock}
-                onChange={handleChange("inStock")}
-                className="h-5 w-5 rounded border-white/20 bg-neutral-800 text-primary-600 focus:ring-primary-500"
-              />
-              <label htmlFor="inStock" className="text-sm font-semibold text-white">
-                متوفر في المخزون حالياً
-              </label>
-            </div>
-
-            <div>
-              <label className="mb-2 block text-sm text-white/70">{t("adminProductsPage.form.description")}</label>
-              <textarea
-                rows="3"
-                value={formData.description}
-                onChange={handleChange("description")}
-                className="w-full rounded-2xl border border-white/20 bg-neutral-800/80 px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
-              />
-            </div>
-
-            {/* ──── Product Configuration Toggle & Builder ──── */}
-            <div className="rounded-2xl border border-secondary-400/30 bg-secondary-950/20 p-4 space-y-4">
-              <div className="flex items-center gap-3">
-                <input
-                  type="checkbox"
-                  id="configurable"
-                  checked={formData.configurable}
-                  onChange={handleChange("configurable")}
-                  className="h-5 w-5 rounded border-white/20 bg-neutral-800 text-secondary-500 focus:ring-secondary-400"
-                />
-                <label htmlFor="configurable" className="text-sm font-semibold text-secondary-200 cursor-pointer">
-                  🧩 تفعيل تهيئة المنتج المتقدمة
-                </label>
-              </div>
-              {formData.configurable && (
-                <p className="text-xs text-white/50 -mt-2">
-                  حدد قطع المنتج والخيارات المتاحة لكل قطعة. يمكنك تعديل السعر والوصف لكل خيار.
-                </p>
-              )}
-              {formData.configurable && (
-                <ProductConfigBuilder
-                  pieces={formData.pieces}
-                  onChange={(newPieces) => setFormData((prev) => ({ ...prev, pieces: newPieces }))}
-                  baseDescription={formData.description}
-                />
-              )}
-            </div>
-
-            <div className="grid gap-4 md:grid-cols-2">
-              <div>
-                <label className="mb-2 block text-sm text-white/70">{t("adminProductsPage.form.sizes")}</label>
-                <input
-                  value={formData.sizes}
-                  onChange={handleChange("sizes")}
-                  placeholder="S, M, L, XL"
-                  className="w-full rounded-2xl border border-white/20 bg-neutral-800/80 px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
-                />
-              </div>
-              <div>
-                <label className="mb-2 block text-sm text-white/70 flex items-center justify-between">
-                  <span>{t("adminProductsPage.form.colors")} (انقر لاختيار الألوان)</span>
-                  <Link to="/admin/colors" className="text-xs text-secondary-300 hover:underline">
-                    🎨 مرجعية الألوان
-                  </Link>
-                </label>
-
-                {/* Interactive Palette Chips Selector */}
-                {colorGuides.length > 0 && (
-                  <div className="mb-3 flex flex-wrap gap-2 rounded-2xl border border-white/10 bg-black/40 p-3 max-h-36 overflow-y-auto">
-                    {colorGuides.map((guide) => {
-                      const selectedList = formData.colors
-                        ? formData.colors.split(",").map((c) => c.trim()).filter(Boolean)
-                        : [];
-                      const isSelected = selectedList.includes(guide.name);
-
-                      return (
-                        <button
-                          key={guide._id || guide.name}
-                          type="button"
-                          onClick={() => toggleColor(guide.name)}
-                          className={`inline-flex items-center gap-2 rounded-xl border px-3 py-1.5 text-xs font-semibold transition ${
-                            isSelected
-                              ? "border-secondary-400 bg-secondary-500/30 text-white ring-2 ring-secondary-400/50"
-                              : "border-white/20 bg-neutral-800/80 text-white/70 hover:border-white/40 hover:text-white"
-                          }`}
-                        >
-                          <span
-                            className="h-3.5 w-3.5 rounded-full border border-white/30 shadow-sm shrink-0"
-                            style={{ backgroundColor: guide.hexCode || "#121212" }}
-                          />
-                          <span>{guide.name}</span>
-                          {isSelected && <span className="text-emerald-400">✓</span>}
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
-
-                <input
-                  value={formData.colors}
-                  onChange={handleChange("colors")}
-                  placeholder="أسود، كحلي، بيج (أو انقر على لوحة الألوان أعلاه)"
-                  className="w-full rounded-2xl border border-white/20 bg-neutral-800/80 px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
-                />
-              </div>
-            </div>
-
-            {/* Drag and Drop Image Dropzone */}
-            <div>
-              <label className="mb-2 block text-sm text-white/70">{t("adminProductsPage.form.images")}</label>
-              <div
-                onDragOver={(e) => e.preventDefault()}
-                onDrop={handleDropImages}
-                className="relative border-2 border-dashed border-white/20 hover:border-primary-500 rounded-3xl p-6 text-center bg-neutral-800/50 transition cursor-pointer"
+      {/* ─── Main Grid: Form (Left) & Products List (Right) ─── */}
+      <div className="grid gap-6 lg:grid-cols-[1.2fr,1.3fr]">
+        {/* ─── PRODUCT FORM (Tabbed & Structured) ─── */}
+        <section
+          className={`rounded-3xl border border-white/10 bg-neutral-900/80 p-6 shadow-2xl backdrop-blur-xl ${
+            mobileView === "list" ? "hidden lg:block" : "block"
+          }`}
+        >
+          <div className="flex items-center justify-between pb-4 border-b border-white/10">
+            <h2 className="text-lg font-black text-white flex items-center gap-2">
+              <SparkleIcon className="h-5 w-5 text-primary-400" />
+              <span>{editingProduct ? "تعديل بيانات المنتج" : "إضافة منتج جديد للمتجر"}</span>
+            </h2>
+            {editingProduct && (
+              <button
+                type="button"
+                onClick={resetForm}
+                className="text-xs text-rose-300 font-bold hover:underline"
               >
-                <input
-                  type="file"
-                  multiple
-                  accept="image/*"
-                  onChange={(event) => setSelectedFiles(Array.from(event.target.files || []))}
-                  disabled={uploading}
-                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                />
-                <div className="text-3xl mb-2">📸</div>
-                <p className="text-sm font-semibold text-white">اسحب الصور وأفلتها هنا أو انقر للاختيار</p>
-                <p className="text-xs text-white/50 mt-1">تنسيقات مسموحة: JPG, PNG, WEBP</p>
-              </div>
+                إلغاء التعديل ✕
+              </button>
+            )}
+          </div>
 
-              <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
-                {selectedFiles.length > 0 && (
-                  <p className="text-xs font-medium text-emerald-400">
-                    تم اختيار {selectedFiles.length} ملفات جاهزة للرفع
-                  </p>
-                )}
-                <button
-                  type="button"
-                  onClick={handleUploadImages}
-                  disabled={selectedFiles.length === 0 || uploading}
-                  className="rounded-full bg-primary-600 px-5 py-2 text-xs font-bold text-white transition hover:bg-primary-500 disabled:opacity-50"
-                >
-                  {uploading ? "جاري الرفع..." : t("adminProductsPage.form.uploadImagesButton")}
-                </button>
-              </div>
+          {/* Form Tabs Navigator */}
+          <div className="flex rounded-2xl bg-white/5 p-1 my-5 border border-white/10">
+            <button
+              type="button"
+              onClick={() => setActiveFormTab("basic")}
+              className={`flex-1 rounded-xl py-2 text-xs font-bold transition ${
+                activeFormTab === "basic"
+                  ? "bg-gradient-to-r from-primary-600 to-secondary-600 text-white shadow"
+                  : "text-white/60 hover:text-white"
+              }`}
+            >
+              1. الأساسيات والوسائط
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveFormTab("variants")}
+              className={`flex-1 rounded-xl py-2 text-xs font-bold transition ${
+                activeFormTab === "variants"
+                  ? "bg-gradient-to-r from-primary-600 to-secondary-600 text-white shadow"
+                  : "text-white/60 hover:text-white"
+              }`}
+            >
+              2. الألوان والمقاسات
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveFormTab("configurator")}
+              className={`flex-1 rounded-xl py-2 text-xs font-bold transition ${
+                activeFormTab === "configurator"
+                  ? "bg-gradient-to-r from-primary-600 to-secondary-600 text-white shadow"
+                  : "text-white/60 hover:text-white"
+              }`}
+            >
+              3. نظام التفصيل {formData.configurable && "✨"}
+            </button>
+          </div>
 
-              {/* Uploaded Thumbnails with Cover Selector */}
-              {uploadedImages.length > 0 && (
-                <div className="mt-4 space-y-2">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-white/80 font-bold">الصور المرفوعة ({uploadedImages.length}):</span>
-                    <span className="text-[11px] text-amber-300 font-medium">
-                      💡 الصورة الأولى ذات الإطار الذهبي ⭐ هي صورة الغلاف المعروضة في الكتالوج
-                    </span>
+          <form onSubmit={handleSubmit} className="space-y-5">
+            {/* TAB 1: BASIC INFO & MEDIA */}
+            {activeFormTab === "basic" && (
+              <div className="space-y-4 animate-fadeIn">
+                <div>
+                  <label className="mb-1.5 block text-xs font-bold text-white/70">اسم المنتج *</label>
+                  <input
+                    value={formData.name}
+                    onChange={handleChange("name")}
+                    required
+                    placeholder="مثال: عباءة البيلسان الملكية الفاخرة"
+                    className="w-full rounded-2xl border border-white/10 bg-neutral-950/60 px-4 py-2.5 text-xs text-white focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+                  />
+                </div>
+
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div>
+                    <label className="mb-1.5 block text-xs font-bold text-white/70">السعر النهائي (د.أ) *</label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.1"
+                      value={formData.price}
+                      onChange={handleChange("price")}
+                      required
+                      placeholder="مثال: 35.00"
+                      className="w-full rounded-2xl border border-white/10 bg-neutral-950/60 px-4 py-2.5 text-xs text-white font-mono focus:border-primary-500 focus:outline-none"
+                    />
                   </div>
 
-                  <div className="flex flex-wrap gap-3.5">
-                    {uploadedImages.map((imageUrl, index) => {
-                      const isCover = index === 0;
-                      return (
-                        <div
-                          key={`${imageUrl}-${index}`}
-                          className={`relative rounded-2xl overflow-hidden border-2 transition-all p-1 group flex flex-col items-center ${
-                            isCover
-                              ? "border-amber-400 bg-amber-950/20 shadow-lg shadow-amber-950/40 ring-2 ring-amber-400/40"
-                              : "border-white/10 bg-white/5 hover:border-white/30"
-                          }`}
-                        >
-                          <div className="relative h-24 w-24 overflow-hidden rounded-xl">
-                            <img src={imageUrl} alt={`product-${index}`} className="h-full w-full object-cover" />
+                  <div>
+                    <label className="mb-1.5 block text-xs font-bold text-amber-300">السعر قبل الخصم (اختياري)</label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.1"
+                      value={formData.originalPrice}
+                      onChange={handleChange("originalPrice")}
+                      placeholder="مثال: 45.00"
+                      className="w-full rounded-2xl border border-amber-500/20 bg-neutral-950/60 px-4 py-2.5 text-xs text-white font-mono focus:border-amber-400 focus:outline-none"
+                    />
+                  </div>
+                </div>
 
-                            {/* Cover Badge */}
-                            {isCover && (
-                              <span className="absolute top-1 right-1 rounded-md bg-amber-500 px-1.5 py-0.5 text-[9px] font-black text-black shadow-md flex items-center gap-0.5">
-                                ⭐ الغلاف
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div>
+                    <label className="mb-1.5 block text-xs font-bold text-white/70">التصنيف الرئيسي *</label>
+                    <select
+                      value={formData.category}
+                      onChange={handleChange("category")}
+                      className="w-full rounded-2xl border border-white/10 bg-neutral-950/60 px-4 py-2.5 text-xs text-white focus:border-primary-500 focus:outline-none"
+                    >
+                      <option value="">اختر التصنيف...</option>
+                      {categories.map((cat) => (
+                        <option key={cat} value={cat}>
+                          {cat}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="mb-1.5 block text-xs font-bold text-white/70">المجموعة / الكوليكشن</label>
+                    <select
+                      value={formData.productCollection}
+                      onChange={handleChange("productCollection")}
+                      className="w-full rounded-2xl border border-white/10 bg-neutral-950/60 px-4 py-2.5 text-xs text-white focus:border-primary-500 focus:outline-none"
+                    >
+                      <option value="">اختر المجموعة...</option>
+                      {collections.map((col) => (
+                        <option key={col} value={col}>
+                          {col}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="mb-1.5 block text-xs font-bold text-pink-300">شارة الخصم أو الترويج (Badge)</label>
+                  <input
+                    type="text"
+                    value={formData.discountTag}
+                    onChange={handleChange("discountTag")}
+                    placeholder="مثال: الأكثر مبيعاً ⭐ أو خصم 20%"
+                    className="w-full rounded-2xl border border-pink-500/20 bg-neutral-950/60 px-4 py-2.5 text-xs text-white focus:border-pink-400 focus:outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-1.5 block text-xs font-bold text-white/70">وصف المنتج</label>
+                  <textarea
+                    value={formData.description}
+                    onChange={handleChange("description")}
+                    rows={3}
+                    placeholder="وصف وتفاصيل القماش والقصة..."
+                    className="w-full rounded-2xl border border-white/10 bg-neutral-950/60 px-4 py-2.5 text-xs text-white focus:border-primary-500 focus:outline-none"
+                  />
+                </div>
+
+                {/* Stock Toggle */}
+                <div className="flex items-center gap-3 p-3 rounded-2xl bg-white/5 border border-white/10">
+                  <input
+                    type="checkbox"
+                    id="inStock"
+                    checked={formData.inStock}
+                    onChange={handleChange("inStock")}
+                    className="h-4 w-4 rounded border-white/20 bg-neutral-800 text-primary-600 focus:ring-primary-500"
+                  />
+                  <label htmlFor="inStock" className="text-xs font-bold text-white cursor-pointer">
+                    متوفر بالمخزون ومتاح للطلب الفوري
+                  </label>
+                </div>
+
+                {/* Drag-and-Drop Image Uploader */}
+                <div className="space-y-3 pt-2">
+                  <label className="block text-xs font-bold text-white/70">صور المنتج (اسحب وأفلت)</label>
+
+                  <div
+                    onDragOver={(e) => e.preventDefault()}
+                    onDrop={handleDropImages}
+                    className="rounded-2xl border-2 border-dashed border-white/20 bg-neutral-950/40 p-5 text-center transition hover:border-primary-500/50"
+                  >
+                    <input
+                      type="file"
+                      id="imageFileInput"
+                      multiple
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => {
+                        if (e.target.files && e.target.files.length > 0) {
+                          const filesArr = Array.from(e.target.files);
+                          setSelectedFiles((prev) => [...prev, ...filesArr]);
+                        }
+                      }}
+                    />
+                    <label htmlFor="imageFileInput" className="cursor-pointer space-y-1 block">
+                      <p className="text-xs font-bold text-primary-300">اضغط لاختيار صور من جهازك أو اسحبها هنا</p>
+                      <p className="text-[10px] text-white/40">PNG, JPG, WEBP مدعومة</p>
+                    </label>
+                  </div>
+
+                  {selectedFiles.length > 0 && (
+                    <div className="flex items-center justify-between rounded-xl bg-purple-950/60 border border-purple-500/30 p-2.5">
+                      <span className="text-xs text-purple-200 font-semibold">
+                        تم اختيار ({selectedFiles.length}) ملفات جاهزة للرفع
+                      </span>
+                      <button
+                        type="button"
+                        onClick={handleUploadImages}
+                        disabled={uploading}
+                        className="rounded-xl bg-purple-600 px-3 py-1 text-xs font-bold text-white hover:bg-purple-500 disabled:opacity-50"
+                      >
+                        {uploading ? "جارٍ الرفع..." : "رفع الصور الآن ⬆"}
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Uploaded Images Gallery & Cover Selector */}
+                  {uploadedImages.length > 0 && (
+                    <div className="flex flex-wrap gap-2.5 pt-2">
+                      {uploadedImages.map((imageUrl, idx) => {
+                        const isCover = idx === 0;
+                        return (
+                          <div
+                            key={idx}
+                            className={`relative rounded-xl overflow-hidden border p-1 group transition ${
+                              isCover ? "border-amber-400 bg-amber-950/20 ring-2 ring-amber-400/30" : "border-white/10 bg-white/5"
+                            }`}
+                          >
+                            <img src={imageUrl} alt="" className="h-16 w-16 object-cover rounded-lg" />
+                            {isCover ? (
+                              <span className="absolute bottom-1 right-1 rounded bg-amber-500 text-black text-[9px] font-black px-1">
+                                غلاف
                               </span>
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={() => setAsCover(idx)}
+                                className="absolute bottom-1 right-1 rounded bg-black/80 text-amber-300 text-[9px] font-bold px-1 hover:bg-amber-500 hover:text-black"
+                              >
+                                غلاف
+                              </button>
                             )}
-
-                            {/* Delete Button on Hover */}
                             <button
                               type="button"
                               onClick={() => removeImage(imageUrl)}
-                              className="absolute top-1 left-1 rounded-md bg-black/80 p-1 text-rose-400 opacity-0 group-hover:opacity-100 transition hover:bg-rose-900 hover:text-white"
-                              title="حذف الصورة"
+                              className="absolute top-1 left-1 rounded bg-black/80 text-rose-400 text-[10px] px-1 hover:bg-rose-600 hover:text-white"
                             >
                               ✕
                             </button>
                           </div>
-
-                          {/* Action Controls */}
-                          <div className="mt-1.5 flex items-center justify-between w-full gap-1 px-0.5">
-                            {!isCover ? (
-                              <button
-                                type="button"
-                                onClick={() => setAsCover(index)}
-                                className="flex-1 rounded-lg bg-white/10 px-2 py-0.5 text-[10px] font-bold text-amber-300 hover:bg-amber-500 hover:text-black transition"
-                                title="تعيين كصورة غلاف أساسية"
-                              >
-                                ⭐ غلاف
-                              </button>
-                            ) : (
-                              <span className="flex-1 text-center text-[10px] font-bold text-amber-400">
-                                أساسي
-                              </span>
-                            )}
-
-                            {/* Reorder Buttons respecting RTL/LTR */}
-                            <div className="flex items-center gap-0.5">
-                              {isRTL ? (
-                                <>
-                                  {/* In RTL: Right arrow → moves towards cover (index - 1), Left arrow ← moves forward (index + 1) */}
-                                  {index > 0 && (
-                                    <button
-                                      type="button"
-                                      onClick={() => reorderImage(index, -1)}
-                                      className="h-5 w-5 rounded bg-white/10 text-[10px] text-white hover:bg-white/20 flex items-center justify-center font-bold transition"
-                                      title="تقديم نحو الغلاف (يمين)"
-                                    >
-                                      →
-                                    </button>
-                                  )}
-                                  {index < uploadedImages.length - 1 && (
-                                    <button
-                                      type="button"
-                                      onClick={() => reorderImage(index, 1)}
-                                      className="h-5 w-5 rounded bg-white/10 text-[10px] text-white hover:bg-white/20 flex items-center justify-center font-bold transition"
-                                      title="تأخير (يسار)"
-                                    >
-                                      ←
-                                    </button>
-                                  )}
-                                </>
-                              ) : (
-                                <>
-                                  {/* In LTR: Left arrow ← moves towards cover (index - 1), Right arrow → moves forward (index + 1) */}
-                                  {index > 0 && (
-                                    <button
-                                      type="button"
-                                      onClick={() => reorderImage(index, -1)}
-                                      className="h-5 w-5 rounded bg-white/10 text-[10px] text-white hover:bg-white/20 flex items-center justify-center font-bold transition"
-                                      title="Move Left (Towards cover)"
-                                    >
-                                      ←
-                                    </button>
-                                  )}
-                                  {index < uploadedImages.length - 1 && (
-                                    <button
-                                      type="button"
-                                      onClick={() => reorderImage(index, 1)}
-                                      className="h-5 w-5 rounded bg-white/10 text-[10px] text-white hover:bg-white/20 flex items-center justify-center font-bold transition"
-                                      title="Move Right"
-                                    >
-                                      →
-                                    </button>
-                                  )}
-                                </>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
+              </div>
+            )}
 
-            <div className={`flex gap-3 ${isRTL ? "justify-start" : "justify-end"}`}>
-              <button type="submit" className="btn-primary">
-                {editingProduct ? t("adminProductsPage.form.submitUpdate") : t("adminProductsPage.form.submitCreate")}
+            {/* TAB 2: VARIANTS (COLORS & SIZES) */}
+            {activeFormTab === "variants" && (
+              <div className="space-y-5 animate-fadeIn">
+                <div>
+                  <label className="mb-1.5 block text-xs font-bold text-white/70">
+                    المقاسات المتوفرة (مفصولة بفاصلة)
+                  </label>
+                  <input
+                    value={formData.sizes}
+                    onChange={handleChange("sizes")}
+                    placeholder="مثال: 50, 52, 54, 56, 58, 60 أو S, M, L, XL"
+                    className="w-full rounded-2xl border border-white/10 bg-neutral-950/60 px-4 py-2.5 text-xs text-white focus:border-primary-500 focus:outline-none"
+                  />
+                  <span className="text-[10px] text-white/40 mt-1 block">اكتب المقاسات مفصولة بفواصل عادية (,)</span>
+                </div>
+
+                <div>
+                  <label className="mb-1.5 block text-xs font-bold text-white/70">
+                    الألوان المتاحة (نصياً أو اضغط على الدليل أدناه)
+                  </label>
+                  <input
+                    value={formData.colors}
+                    onChange={handleChange("colors")}
+                    placeholder="مثال: أسود ملكي, كحلي, زيتي, بيج"
+                    className="w-full rounded-2xl border border-white/10 bg-neutral-950/60 px-4 py-2.5 text-xs text-white focus:border-primary-500 focus:outline-none mb-3"
+                  />
+
+                  {/* Interactive Color Guide Chips */}
+                  {colorGuides.length > 0 && (
+                    <div className="rounded-2xl bg-white/5 border border-white/10 p-4 space-y-2">
+                      <span className="text-[11px] font-bold text-white/60 block">
+                        🎨 دليل الألوان الجاهز (اضغط للإضافة السريعة):
+                      </span>
+                      <div className="flex flex-wrap gap-2">
+                        {colorGuides.map((guide) => {
+                          const isSelected = (formData.colors || "").includes(guide.name);
+                          return (
+                            <button
+                              key={guide._id || guide.id}
+                              type="button"
+                              onClick={() => toggleColor(guide.name)}
+                              className={`flex items-center gap-1.5 rounded-xl px-2.5 py-1 text-xs font-bold border transition ${
+                                isSelected
+                                  ? "border-primary-400 bg-primary-600 text-white shadow"
+                                  : "border-white/10 bg-white/5 text-white/70 hover:bg-white/10"
+                              }`}
+                            >
+                              <span
+                                className="h-3 w-3 rounded-full border border-white/30"
+                                style={{ backgroundColor: guide.hex || "#333" }}
+                              />
+                              <span>{guide.name}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* TAB 3: CONFIGURATOR (PIECES & TREE) */}
+            {activeFormTab === "configurator" && (
+              <div className="space-y-4 animate-fadeIn">
+                <div className="flex items-center justify-between rounded-2xl bg-primary-950/40 border border-primary-500/30 p-4">
+                  <div>
+                    <h3 className="text-xs font-black text-white">تفعيل نظام التفصيل المرن لهذا المنتج</h3>
+                    <p className="text-[11px] text-white/60">يتيح للزبونة تخصيص القطع والإضافات واختيار المقاس لكل قطعة</p>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={formData.configurable}
+                    onChange={(e) => setFormData((p) => ({ ...p, configurable: e.target.checked }))}
+                    className="h-5 w-5 rounded border-white/20 bg-neutral-800 text-primary-600 cursor-pointer"
+                  />
+                </div>
+
+                {formData.configurable && (
+                  <ProductConfigBuilder
+                    pieces={formData.pieces}
+                    colorGuides={colorGuides}
+                    onChange={(newPieces) => setFormData((p) => ({ ...p, pieces: newPieces }))}
+                  />
+                )}
+              </div>
+            )}
+
+            {/* Form Actions */}
+            <div className="pt-4 border-t border-white/10 flex items-center justify-between gap-3">
+              <button
+                type="submit"
+                className="flex-1 rounded-2xl bg-gradient-to-r from-primary-600 via-secondary-600 to-pink-600 py-3 text-xs font-bold text-white shadow-xl shadow-primary-950/50 hover:scale-[1.01] active:scale-[0.99] transition"
+              >
+                {editingProduct ? "حفظ وتحديث المنتج ✓" : "إنشاء ونشر المنتج 🚀"}
               </button>
+
               {editingProduct && (
                 <button
                   type="button"
                   onClick={resetForm}
-                  className="rounded-full border border-white/30 px-5 py-2 text-sm text-white transition hover:bg-white/10"
+                  className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-xs font-bold text-white/80 hover:bg-white/10"
                 >
-                  {t("adminProductsPage.form.cancelEdit")}
+                  إلغاء
                 </button>
               )}
             </div>
           </form>
         </section>
 
-        {/* Products List & Bulk Actions */}
-        <section className={`glass-card p-6 rounded-3xl border border-white/10 bg-neutral-900/80 backdrop-blur-xl ${isRTL ? "text-right" : "text-left"}`}>
-          <div className="flex items-center justify-between mb-4 border-b border-white/10 pb-4">
-            <h3 className="text-lg font-bold text-white">
-              قائمة المنتجات ({products.length})
-            </h3>
-            
-            <div className="flex items-center gap-2">
+        {/* ─── PRODUCTS LISTING (Right Column) ─── */}
+        <section
+          className={`rounded-3xl border border-white/10 bg-neutral-900/80 p-6 shadow-2xl backdrop-blur-xl flex flex-col justify-between ${
+            mobileView === "form" ? "hidden lg:flex" : "flex"
+          }`}
+        >
+          <div className="space-y-4">
+            {/* List Header */}
+            <div className="flex items-center justify-between pb-3 border-b border-white/10">
+              <h2 className="text-base font-black text-white flex items-center gap-2">
+                <BoxIcon className="h-5 w-5 text-secondary-400" />
+                <span>المنتجات المسجلة ({filteredProducts.length})</span>
+              </h2>
+
               <button
                 onClick={toggleSelectAll}
-                className="text-xs font-semibold text-primary-400 hover:underline"
+                className="text-xs font-bold text-primary-300 hover:underline"
               >
-                {selectedProductIds.length === products.length ? "إلغاء تحديد الكل" : "تحديد الكل"}
+                {selectedProductIds.length === filteredProducts.length && filteredProducts.length > 0
+                  ? "إلغاء التحديد"
+                  : "تحديد الكل"}
               </button>
             </div>
-          </div>
 
-          {/* Bulk Action Bar */}
-          {selectedProductIds.length > 0 && (
-            <div className="mb-4 flex flex-wrap items-center justify-between gap-2 rounded-2xl bg-purple-950/80 border border-purple-400/30 p-3">
-              <span className="text-xs font-bold text-white">
-                تم تحديد ({selectedProductIds.length}) منتجات:
-              </span>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => handleBulkAction("updateStock", true)}
-                  className="rounded-xl bg-emerald-600/80 px-3 py-1 text-xs font-semibold text-white hover:bg-emerald-500"
-                >
-                  تعيين كـ متوفر
-                </button>
-                <button
-                  onClick={() => handleBulkAction("updateStock", false)}
-                  className="rounded-xl bg-amber-600/80 px-3 py-1 text-xs font-semibold text-white hover:bg-amber-500"
-                >
-                  تعيين كـ غير متوفر
-                </button>
-                <button
-                  onClick={() => handleBulkAction("delete")}
-                  className="rounded-xl bg-rose-600/80 px-3 py-1 text-xs font-semibold text-white hover:bg-rose-500"
-                >
-                  حذف المحدد
-                </button>
+            {/* Search and Category Filter for Products */}
+            <div className="flex gap-2">
+              <div className="relative flex-1">
+                <SearchIcon className="absolute right-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-white/40" />
+                <input
+                  type="search"
+                  placeholder="بحث في المنتجات..."
+                  value={productSearch}
+                  onChange={(e) => setProductSearch(e.target.value)}
+                  className="w-full rounded-xl border border-white/10 bg-neutral-950/60 pr-9 pl-3 py-2 text-xs text-white placeholder-white/40 focus:border-primary-500 focus:outline-none"
+                />
               </div>
+
+              <select
+                value={productCategoryFilter}
+                onChange={(e) => setProductCategoryFilter(e.target.value)}
+                className="rounded-xl border border-white/10 bg-neutral-950/60 px-3 py-2 text-xs text-white focus:border-primary-500 focus:outline-none"
+              >
+                <option value="">كل التصنيفات</option>
+                {categories.map((c) => (
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
+                ))}
+              </select>
             </div>
-          )}
 
-          {loading ? (
-            <div className="h-48 animate-pulse bg-white/5 rounded-2xl" />
-          ) : (
-            <div className="space-y-3 max-h-[700px] overflow-y-auto pr-1">
-              {products.map((product) => {
-                const prodId = product._id || product.id;
-                const isSelected = selectedProductIds.includes(prodId);
-                const coverImage = normalizeImages(product.images, product.image)[0];
-
-                return (
-                  <div
-                    key={prodId}
-                    className={`rounded-2xl border p-3 transition flex items-center justify-between gap-3 ${
-                      isSelected
-                        ? "border-primary-500 bg-primary-950/30"
-                        : "border-white/10 bg-white/5 hover:border-white/20"
-                    }`}
+            {/* Bulk Actions Banner */}
+            {selectedProductIds.length > 0 && (
+              <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl bg-purple-950/80 border border-purple-400/30 p-2.5 animate-fadeIn">
+                <span className="text-xs font-bold text-white">({selectedProductIds.length}) محدد:</span>
+                <div className="flex gap-1.5">
+                  <button
+                    onClick={() => handleBulkAction("updateStock", true)}
+                    className="rounded-lg bg-emerald-600/80 px-2.5 py-1 text-[11px] font-bold text-white hover:bg-emerald-500"
                   >
-                    <div className="flex items-center gap-3">
-                      <input
-                        type="checkbox"
-                        checked={isSelected}
-                        onChange={() => toggleSelectProduct(prodId)}
-                        className="h-4 w-4 rounded border-white/20 bg-neutral-800 text-primary-600"
-                      />
-                      <div className="h-14 w-14 overflow-hidden rounded-xl bg-neutral-800 shrink-0">
-                        {coverImage ? (
-                          <img src={coverImage} alt={product.name} className="h-full w-full object-cover" />
-                        ) : (
-                          <div className="flex h-full items-center justify-center text-[10px] text-white/40">
-                            بدون صورة
-                          </div>
-                        )}
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-sm font-bold text-white truncate">{product.name}</p>
-                        <div className="flex items-center gap-2 text-xs">
-                          <span className="text-primary-300 font-bold">{product.price} د.أ</span>
-                          {product.inStock === false ? (
-                            <span className="rounded bg-rose-500/20 px-1.5 py-0.5 text-[10px] text-rose-300 border border-rose-500/30 font-semibold">
-                              غير متوفر ❌
-                            </span>
+                    متوفر ✓
+                  </button>
+                  <button
+                    onClick={() => handleBulkAction("updateStock", false)}
+                    className="rounded-lg bg-amber-600/80 px-2.5 py-1 text-[11px] font-bold text-white hover:bg-amber-500"
+                  >
+                    غير متوفر ✕
+                  </button>
+                  <button
+                    onClick={() => handleBulkAction("delete")}
+                    className="rounded-lg bg-rose-600/80 px-2.5 py-1 text-[11px] font-bold text-white hover:bg-rose-500"
+                  >
+                    حذف
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Products Scrollable List */}
+            {loading ? (
+              <div className="space-y-3">
+                {[1, 2, 3, 4].map((i) => (
+                  <div key={i} className="h-20 rounded-2xl bg-white/5 animate-pulse" />
+                ))}
+              </div>
+            ) : filteredProducts.length === 0 ? (
+              <div className="p-8 text-center text-xs text-white/40">لا توجد منتجات مطابقة للبحث.</div>
+            ) : (
+              <div className="space-y-2.5 max-h-[620px] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-white/10">
+                {filteredProducts.map((product) => {
+                  const prodId = product._id || product.id;
+                  const isSelected = selectedProductIds.includes(prodId);
+                  const coverImage = normalizeImages(product.images, product.image)[0];
+
+                  return (
+                    <div
+                      key={prodId}
+                      className={`rounded-2xl border p-3 transition flex items-center justify-between gap-3 group ${
+                        isSelected
+                          ? "border-primary-500 bg-primary-950/30"
+                          : "border-white/10 bg-white/5 hover:border-white/20"
+                      }`}
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={() => toggleSelectProduct(prodId)}
+                          className="h-4 w-4 rounded border-white/20 bg-neutral-800 text-primary-600 cursor-pointer"
+                        />
+
+                        <div className="h-14 w-14 overflow-hidden rounded-xl bg-neutral-800 shrink-0 border border-white/10">
+                          {coverImage ? (
+                            <img src={coverImage} alt={product.name} className="h-full w-full object-cover group-hover:scale-105 transition" />
                           ) : (
-                            <span className="rounded bg-emerald-500/20 px-1.5 py-0.5 text-[10px] text-emerald-300 border border-emerald-500/30 font-semibold">
-                              متوفر ✅
-                            </span>
+                            <div className="flex h-full items-center justify-center text-[10px] text-white/40">
+                              بدون صورة
+                            </div>
                           )}
                         </div>
+
+                        <div className="min-w-0">
+                          <p className="text-xs font-bold text-white truncate max-w-[180px]">{product.name}</p>
+                          <div className="flex items-center gap-2 mt-1">
+                            <span className="text-xs font-black text-emerald-400 font-mono">{product.price} د.أ</span>
+                            <button
+                              type="button"
+                              onClick={(e) => toggleQuickInStock(product, e)}
+                              className={`rounded-full px-2 py-0.5 text-[10px] font-bold border transition ${
+                                product.inStock === false
+                                  ? "bg-rose-500/20 text-rose-300 border-rose-500/30 hover:bg-rose-500/30"
+                                  : "bg-emerald-500/20 text-emerald-300 border-emerald-500/30 hover:bg-emerald-500/30"
+                              }`}
+                              title="اضغط للتبديل السريع لحالة التوفر"
+                            >
+                              {product.inStock === false ? "غير متوفر ✕" : "متوفر ✓"}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => handleEdit(product)}
+                          className="rounded-xl border border-white/15 bg-white/5 px-2.5 py-1.5 text-xs font-bold text-white hover:bg-white/15 transition"
+                        >
+                          تعديل
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDelete(prodId)}
+                          className="rounded-xl border border-rose-500/20 bg-rose-500/10 px-2.5 py-1.5 text-xs font-bold text-rose-300 hover:bg-rose-500/20 transition"
+                        >
+                          حذف
+                        </button>
                       </div>
                     </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
 
-                    <div className="flex gap-1.5 shrink-0">
-                      <button
-                        onClick={() => handleEdit(product)}
-                        className="rounded-xl border border-white/20 px-3 py-1 text-xs text-white/80 transition hover:bg-white/10"
-                      >
-                        تعديل
-                      </button>
-                      <button
-                        onClick={() => handleDelete(prodId)}
-                        className="rounded-xl border border-rose-500/30 px-3 py-1 text-xs text-rose-300 transition hover:bg-rose-500/20"
-                      >
-                        حذف
-                      </button>
-                    </div>
-                  </div>
-                );
-              })}
-
-              {products.length === 0 && (
-                <div className="p-8 text-center text-xs text-white/50">لا يوجد منتجات مسجلة حالياً.</div>
-              )}
-            </div>
-          )}
+          <div className="pt-4 border-t border-white/10 text-center text-xs text-white/40">
+            متجر البيلسان • إدارة الكتالوج والمخزون
+          </div>
         </section>
       </div>
     </div>

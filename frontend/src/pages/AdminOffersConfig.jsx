@@ -280,28 +280,18 @@ const AdminOffersConfig = () => {
   });
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-12 md:px-6">
+    <div className="mx-auto max-w-7xl px-4 py-8 md:px-8 space-y-6">
       {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <nav className="mb-2 flex items-center gap-2 text-xs text-white/60">
-            <Link to="/admin" className="hover:text-white transition">لوحة التحكم</Link>
-            <span>/</span>
-            <span className="text-primary-400 font-semibold">مركز العروض وأكواد الخصم</span>
-          </nav>
-          <h1 className="text-3xl font-extrabold text-white flex items-center gap-3">
-            <ClockIcon className="h-8 w-8 text-primary-400" />
-            إدارة العروض التنازلية وأكواد الخصم
+          <h1 className="text-2xl md:text-3xl font-black text-white flex items-center gap-2.5">
+            <ClockIcon className="h-7 w-7 text-indigo-400" />
+            <span>إدارة العروض التنازلية وأكواد الخصم</span>
           </h1>
+          <p className="text-xs md:text-sm text-white/60 mt-1">
+            إعداد مؤقت العروض التنازلية، شريط الإعلان العلوي، وقسائم التخفيض وأكواد الخصم
+          </p>
         </div>
-
-        <Link
-          to="/admin"
-          className="btn-ghost self-start sm:self-auto text-xs"
-        >
-          {isRTL ? <ArrowForwardIcon className="h-4 w-4 rotate-180" /> : <ArrowForwardIcon className="h-4 w-4" />}
-          العودة للوحة التحكم
-        </Link>
       </div>
 
       {/* Main Tabs Header */}

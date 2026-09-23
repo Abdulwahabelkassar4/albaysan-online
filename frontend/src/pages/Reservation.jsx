@@ -76,10 +76,10 @@ const Reservation = () => {
     }
     const lines = cartItems.map((item) => {
       const itemPrice = getItemPrice(item);
-      let line = `👗 ${item.name} (${item.size || "وسيط"}، ${item.color || "افتراضي"}) × ${item.qty} = ${(itemPrice * item.qty).toFixed(2)} د.أ`;
+      let line = `• ${item.name} (${item.size || "وسيط"}، ${item.color || "افتراضي"}) × ${item.qty} = ${(itemPrice * item.qty).toFixed(2)} د.أ`;
       if (item.configSnapshot?.length) {
         const treeLines = item.configSnapshot.map(
-          (e, idx) => `   ${idx === item.configSnapshot.length - 1 ? "└─" : "├─"} ${e.pieceName ? `${e.pieceName}: ` : ""}${e.optionName} ➔ ${e.selectedValue}${e.priceAdjustment > 0 ? ` (+${e.priceAdjustment} د.أ)` : ""}`
+          (e) => `   ↳ ${e.pieceName ? `${e.pieceName}: ` : ""}${e.optionName}: ${e.selectedValue}${e.priceAdjustment > 0 ? ` (+${e.priceAdjustment} د.أ)` : ""}`
         );
         line += `\n${treeLines.join("\n")}`;
       }
@@ -107,32 +107,30 @@ const Reservation = () => {
       const formattedDate = pickupDate ? new Date(pickupDate).toLocaleDateString(locale) : "";
 
       const itemLines = cartItems.map((item) => {
-        let line = `• ${item.name} (المقاس ${item.size || "وسيط"}، اللون ${item.color || "افتراضي"}) × ${item.qty}`;
+        let line = `• ${item.name} (${item.size ? `المقاس ${item.size}` : "مقاس موحد"}، ${item.color ? `اللون ${item.color}` : "لون قياسي"}) × ${item.qty}`;
         if (item.configSnapshot?.length) {
-          const configStr = item.configSnapshot.map((e) => `${e.optionName}: ${e.selectedValue}`).join(", ");
-          line += ` [تهيئة: ${configStr}]`;
+          const configStr = item.configSnapshot.map((e) => `${e.optionName}: ${e.selectedValue}`).join("، ");
+          line += `\n  ↳ [${configStr}]`;
         }
         return line;
       }).join("\n");
 
       const messageLines = [
-        `🛵 طلب جديد من ${customerName}`,
+        `🛍️ *طلب حجز واستلام من المتجر*`,
+        `👤 *الاسم:* ${customerName}`,
+        `📞 *رقم الهاتف:* ${phone}`,
+        formattedDate ? `📅 *تاريخ الاستلام:* ${formattedDate}` : null,
+        `📏 *الطول:* ${height} سم`,
+        `⚖️ *الوزن:* ${weight} كغم`,
         "",
+        `📦 *المنتجات المطلوبة:*`,
         itemLines,
         "",
-        `المجموع الفرعي: ${subtotal.toFixed(2)} د.أ`,
-        appliedPromo && discountAmount > 0 ? `🏷️ كود الخصم: ${appliedPromo.promoCode} (خصم ${discountLabel} = -${discountAmount.toFixed(2)} د.أ)` : null,
-        `💰 الإجمالي الكلي: ${finalTotal.toFixed(2)} د.أ`,
+        `💵 *المجموع الفرعي:* ${subtotal.toFixed(2)} د.أ`,
+        appliedPromo && discountAmount > 0 ? `🏷️ *كود الخصم:* ${appliedPromo.promoCode} (${discountLabel} = -${discountAmount.toFixed(2)} د.أ)` : null,
+        `💰 *الإجمالي النهائي:* ${finalTotal.toFixed(2)} د.أ`,
         "",
-        `📞 رقم الهاتف: ${phone}`,
-        "",
-        `📍 العنوان: استلام من المتجر${formattedDate ? ` (تاريخ الاستلام: ${formattedDate})` : ""}`,
-        "",
-        `📏 طول الزبونة: ${height} سم`,
-        "",
-        `⚖️ الوزن الحقيقي: ${weight} كغم`,
-        "",
-        `⌚ تم الإرسال من موقع البيلسان أونلاين`
+        `✨ *تم الإرسال من موقع البيلسان أونلاين*`
       ].filter(Boolean);
 
       const orderText = messageLines.join("\n");

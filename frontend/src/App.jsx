@@ -58,17 +58,19 @@ const App = () => {
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-neutral-900/80 text-white">
-      <div
-        className="pointer-events-none absolute inset-0 bg-[url('/assets/background-floral.png')] bg-no-repeat bg-right-bottom bg-contain opacity-0 animate-floralFade"
-        aria-hidden="true"
-      />
+      {!isAdminRoute && (
+        <div
+          className="pointer-events-none absolute inset-0 bg-[url('/assets/background-floral.png')] bg-no-repeat bg-right-bottom bg-contain opacity-0 animate-floralFade"
+          aria-hidden="true"
+        />
+      )}
       <div className="relative z-10 flex min-h-screen flex-col">
-        <Navbar />
-        <BackendWarmupBanner />
+        {!isAdminRoute && <Navbar />}
+        {!isAdminRoute && <BackendWarmupBanner />}
         <main className="flex-1">
           <AppRoutes />
         </main>
-        <Footer />
+        {!isAdminRoute && <Footer />}
         {!isAdminRoute && <CartModal />}
         {!isAdminRoute && <CartButton />}
         <Toast />
