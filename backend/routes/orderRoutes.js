@@ -1,4 +1,5 @@
 import express from "express";
+import crypto from "crypto";
 import { Order } from "../models/Order.js";
 import { Product } from "../models/Product.js";
 import { PromoCode } from "../models/PromoCode.js";
@@ -257,6 +258,10 @@ router.put("/:id/status", authMiddleware, async (req, res, next) => {
     }
 
     order.status = status;
+    if (["delivered", "picked_up"].includes(status) && !order.reviewToken) {
+      order.reviewToken = crypto.randomBytes(12).toString("hex");
+      order.reviewTokenCreatedAt = new Date();
+    }
     await order.save();
 
     res.json(order);

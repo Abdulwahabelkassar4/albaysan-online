@@ -47,6 +47,10 @@ const orderSchema = new mongoose.Schema(
       default: "pending",
     },
     notes: { type: String },
+    reviewToken: { type: String, sparse: true, index: true },
+    reviewTokenCreatedAt: { type: Date },
+    hasReviewed: { type: Boolean, default: false },
+    reviewId: { type: mongoose.Schema.Types.ObjectId, ref: "Review" },
   },
   { timestamps: { createdAt: "createdAt", updatedAt: "updatedAt" } }
 );

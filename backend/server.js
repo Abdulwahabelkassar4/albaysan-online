@@ -15,6 +15,7 @@ import colorRoutes from "./routes/colorRoutes.js";
 import promoCodeRoutes from "./routes/promoCodeRoutes.js";
 import uploadRoute from "./routes/upload.js";
 import healthRoutes from "./routes/healthRoutes.js";
+import reviewRoutes from "./routes/reviewRoutes.js";
 import { notFound, errorHandler } from "./middleware/errorMiddleware.js";
 
 validateEnv();
@@ -82,6 +83,7 @@ app.use("/api/categories", categoryRoutes);
 app.use("/api/colors", colorRoutes);
 app.use("/api/offer-settings", offerSettingRoutes);
 app.use("/api/promo-codes", promoCodeRoutes);
+app.use("/api/reviews", reviewRoutes);
 app.use("/api", uploadRoute);
 
 app.get("/", (_req, res) => {

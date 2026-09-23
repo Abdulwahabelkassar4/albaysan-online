@@ -10,6 +10,7 @@ const controlLinks = [
   { to: "/admin/categories", icon: ChartIcon, labelKey: "admin.links.categories" },
   { to: "/admin/colors", icon: PaletteIcon, labelKey: "🎨 دليل وركام الألوان" },
   { to: "/admin/orders", icon: ClipboardIcon, labelKey: "admin.links.orders" },
+  { to: "/admin/reviews", icon: SparkleIcon, labelKey: "⭐ تقييمات وآراء العملاء" },
   { to: "/admin/offers-config", icon: ClockIcon, labelKey: "عداد العروض والتخفيضات" },
 ];
 

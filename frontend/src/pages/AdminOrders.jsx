@@ -89,6 +89,21 @@ const AdminOrders = () => {
     return `https://wa.me/${base}?text=${encodeURIComponent(message)}`;
   };
 
+  const sendReviewRequestWhatsApp = async (order) => {
+    try {
+      const res = await axiosClient.post(`/api/reviews/admin/generate-token/${order._id || order.id}`);
+      const token = res.data.token;
+      const origin = window.location.origin;
+      const reviewUrl = `${origin}/review?token=${token}`;
+      const phoneBase = normalizeJordanPhoneForWhatsApp(order.phone);
+      const msg = `مرحباً ${order.customerName}! 🌸\nيسعدنا أن طلبك من متجر البيلسان وصلك بالسلامة.\nرأيك يهمنا ويسعدنا جداً! يمكنك مشاركة تجربتك وتقييمك عبر رابطك الخاص خلال دقيقة واحدة:\n${reviewUrl}`;
+      window.open(`https://wa.me/${phoneBase}?text=${encodeURIComponent(msg)}`, "_blank");
+      showToast("تم إنشاء رابط التقييم وفتح محادثة الواتساب", "success");
+    } catch (err) {
+      showToast("تعذر إنشاء رابط التقييم", "error");
+    }
+  };
+
   // CSV Export
   const exportToCSV = () => {
     if (!orders.length) {
@@ -211,6 +226,17 @@ const AdminOrders = () => {
                     <span>
                       {t("adminOrdersPage.cards.date")}: {formatDate(order.createdAt)}
                     </span>
+                    {order.hasReviewed ? (
+                      <span className="rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2.5 py-0.5 font-bold">
+                        ✓ تم استلام التقييم
+                      </span>
+                    ) : (
+                      order.reviewToken && (
+                        <span className="rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30 px-2.5 py-0.5">
+                          رابط التقييم مُنشأ
+                        </span>
+                      )
+                    )}
                   </div>
 
                   <h3 className="text-lg font-bold text-white">{order.customerName}</h3>
@@ -299,6 +325,13 @@ const AdminOrders = () => {
                     className="rounded-full border border-primary-500/50 bg-primary-950/40 px-4 py-2 text-xs font-bold text-primary-300 hover:bg-primary-900/50 transition"
                   >
                     🖨️ طباعة الفاتورة
+                  </button>
+
+                  <button
+                    onClick={() => sendReviewRequestWhatsApp(order)}
+                    className="rounded-full border border-amber-500/40 bg-amber-950/30 px-4 py-2 text-xs font-bold text-amber-300 hover:bg-amber-900/50 transition"
+                  >
+                    ⭐ إرسال رابط التقييم (واتساب)
                   </button>
 
                   <a

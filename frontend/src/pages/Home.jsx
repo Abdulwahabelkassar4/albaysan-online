@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import axiosClient from "../api/axiosClient.js";
 import Hero from "../components/Hero.jsx";
 import ProductCard from "../components/ProductCard.jsx";
+import TestimonialsSection from "../components/TestimonialsSection.jsx";
 import { CalendarIcon, ShieldIcon, TruckIcon, WhatsAppIcon, FireIcon } from "../components/icons.jsx";
 import { requestWithRetry } from "../utils/requestWithRetry.js";
 
@@ -149,6 +150,10 @@ const Home = () => {
           </div>
         </div>
       </section>
+
+      {/* Verified Testimonials Showcase */}
+      <TestimonialsSection />
+
       <section className="mx-auto max-w-6xl px-6 py-16">
         <div className="glass-card animate-reveal grid gap-8 p-10 md:grid-cols-3">
           {milestones.map((milestone, index) => {

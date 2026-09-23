@@ -16,6 +16,8 @@ import AdminCategories from "./pages/AdminCategories.jsx";
 import AdminOrders from "./pages/AdminOrders.jsx";
 import AdminOffersConfig from "./pages/AdminOffersConfig.jsx";
 import AdminColors from "./pages/AdminColors.jsx";
+import AdminReviews from "./pages/AdminReviews.jsx";
+import ReviewSubmission from "./pages/ReviewSubmission.jsx";
 
 const AppRoutes = () => (
   <Routes>
@@ -29,6 +31,7 @@ const AppRoutes = () => (
     <Route path="/contact" element={<Contact />} />
     <Route path="/delivery" element={<Delivery />} />
     <Route path="/reservation" element={<Reservation />} />
+    <Route path="/review" element={<ReviewSubmission />} />
     <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
     <Route path="/admin/login" element={<AdminLogin />} />
     <Route element={<ProtectedRoute />}>
@@ -38,6 +41,7 @@ const AppRoutes = () => (
       <Route path="/admin/colors" element={<AdminColors />} />
       <Route path="/admin/orders" element={<AdminOrders />} />
       <Route path="/admin/offers-config" element={<AdminOffersConfig />} />
+      <Route path="/admin/reviews" element={<AdminReviews />} />
     </Route>
   </Routes>
 );
