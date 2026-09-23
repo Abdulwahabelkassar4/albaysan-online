@@ -149,9 +149,35 @@
 
 ---
 
-## 9️⃣ حالة النشر والتحديث الأخير (Latest Deployment Status)
+## 🔟 نظام المنتجات متعددة القطع والخيارات والصور التفاعلية (Configurable Products & Option Images)
+
+### 🔹 القرار النهائي والتنفيذ:
+1. **نظام المنتجات متعددة القطع (`Configurable Products`)**:
+   - إتاحة ميزة تخصيص القطع للمنتج (مثل: تنورة + بلوزة + خمار).
+   - إمكانية إضافة خيارات وقيم مع زيادة بالسعر (`priceAdjustment`) ووصف مخصص (`descriptionOverride`).
+   - دعم التبعية الشرطية بين الخيارات (`dependsOnOptionId` و `dependsOnValueId`).
+2. **إسناد صور للخيارات والتبديل التفاعلي (`Option Images & Dynamic Swapping`)**:
+   - رفع صور خاصة لكل خيار (مثل قصة كلوش / قصة بليسيه) عبر ImageKit.
+   - تبديل صورة المنتج المعروضة تلقائياً في صفحة المنتج فور اختيار الزبون للخيار.
+3. **تحديد صورة الغلاف وإعادة ترتيب الصور مع مراعاة اتجاه الكتابة (Cover Photo & RTL/LTR Reordering)**:
+   - إضافة خيار تحديد الصورة الرئيسية / صورة الغلاف (`👑 صورة الغلاف`) بنقرة واحدة في لوحة الأدمن.
+   - أزرار تقديم وتأخير الصور تأخذ بعين الاعتبار اتجاه الواجهة (RTL/LTR) بدقة.
+4. **معالجة وحل خطأ حفظ وتعديل المنتجات (500 CastError Fix)**:
+   - إضافة دالة `sanitizePiecesForSave` في الـ Backend لتحويل المعرّفات المؤقتة (`_new_...`) والحقول الفارغة إلى `ObjectId` صالحة لقاعدة البيانات Mongoose تلقائياً، وتفادي انهيار الخادم مع كود 500.
+
+### 🔹 الملفات المضافة والمعدلة:
+- `backend/models/Product.js`: إضافة الحقول `configurable` و `pieces` مع `image` لقيم الخيارات.
+- `backend/routes/productRoutes.js`: إضافة تعقيم وتوليد `ObjectId`s ودعم حساب الأسعار المخصصة في السيرفر.
+- `frontend/src/components/ProductConfigBuilder.jsx`: أداة بناء القطع والخيارات ورفع صور الخيارات.
+- `frontend/src/components/ProductConfigSelector.jsx`: واجهة اختيار القطع والخيارات التفاعلية للمشتري.
+- `frontend/src/pages/AdminProducts.jsx`: منتقي صورة الغلاف والترتيب بالأسهم مع RTL، ونظام إدارة المنتجات المخصصة.
+- `frontend/src/pages/ProductDetails.jsx`: التبديل الديناميكي لصورة المنتج فور اختيار خيار ذو صورة.
+
+---
+
+## 1️⃣1️⃣ حالة النشر والتحديث الأخير (Latest Deployment Status)
 
 - **الحالة**: ✅ **تم التنفيذ بالكامل والنشر بنجاح (Fully Implemented & Deployed)**.
-- **التاريخ**: 2026-09-17.
-- **المستودع (Git Commit)**: تم الرفع والتطبيق المباشر على فرع `main -> main` (`feat: implement multi-promo code engine and flexible offer scopes`).
+- **التاريخ**: 2026-09-23.
+- **المستودع (Git Commit)**: تم الرفع والتطبيق المباشر على فرع `main -> main` (`Fix 500 error on product update by sanitizing piece and option ObjectIds`).
 
