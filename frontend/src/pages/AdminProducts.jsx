@@ -677,29 +677,35 @@ const AdminProducts = () => {
 
                   {/* Interactive Color Guide Chips */}
                   {colorGuides.length > 0 && (
-                    <div className="rounded-2xl bg-white/5 border border-white/10 p-4 space-y-2">
-                      <span className="text-[11px] font-bold text-white/60 block">
-                        🎨 دليل الألوان الجاهز (اضغط للإضافة السريعة):
+                    <div className="rounded-2xl bg-white/5 border border-white/10 p-4 space-y-2.5">
+                      <span className="text-[11px] font-bold text-white/70 block">
+                        🎨 دليل وركام الألوان المعتمدة (اضغط للإضافة أو الحذف السريع):
                       </span>
                       <div className="flex flex-wrap gap-2">
                         {colorGuides.map((guide) => {
-                          const isSelected = (formData.colors || "").includes(guide.name);
+                          const currentColors = formData.colors
+                            ? formData.colors.split(",").map((c) => c.trim()).filter(Boolean)
+                            : [];
+                          const isSelected = currentColors.includes(guide.name);
+                          const colorHex = guide.hexCode || guide.hex || "#333333";
+
                           return (
                             <button
                               key={guide._id || guide.id}
                               type="button"
                               onClick={() => toggleColor(guide.name)}
-                              className={`flex items-center gap-1.5 rounded-xl px-2.5 py-1 text-xs font-bold border transition ${
+                              className={`flex items-center gap-2 rounded-xl px-3 py-1.5 text-xs font-bold border transition-all duration-200 ${
                                 isSelected
-                                  ? "border-primary-400 bg-primary-600 text-white shadow"
-                                  : "border-white/10 bg-white/5 text-white/70 hover:bg-white/10"
+                                  ? "border-emerald-400 bg-emerald-950/70 text-emerald-200 ring-2 ring-emerald-400/40 shadow-md shadow-emerald-950/50 scale-[1.02]"
+                                  : "border-white/10 bg-neutral-900/80 text-white/80 hover:bg-white/10 hover:border-white/20"
                               }`}
                             >
                               <span
-                                className="h-3 w-3 rounded-full border border-white/30"
-                                style={{ backgroundColor: guide.hex || "#333" }}
+                                className="h-3.5 w-3.5 rounded-full border border-white/40 shadow-sm shrink-0"
+                                style={{ backgroundColor: colorHex }}
                               />
                               <span>{guide.name}</span>
+                              {isSelected && <span className="text-[10px] text-emerald-400 font-mono">✓</span>}
                             </button>
                           );
                         })}
