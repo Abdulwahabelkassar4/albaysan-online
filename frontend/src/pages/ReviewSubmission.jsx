@@ -304,12 +304,18 @@ const ReviewSubmission = () => {
 
           {/* Comment Text Area */}
           <div className="space-y-2">
-            <label className="block text-sm font-bold text-white/90">
-              اكتبي رأيك وتجربتك بكل صراحة:
-            </label>
+            <div className="flex items-center justify-between">
+              <label className="block text-sm font-bold text-white/90">
+                اكتبي رأيك وتجربتك بكل صراحة:
+              </label>
+              <span className={`text-[11px] font-mono ${comment.length >= 950 ? "text-rose-400 font-bold" : "text-white/50"}`}>
+                {comment.length} / 1000 حرف
+              </span>
+            </div>
             <textarea
               required
               rows={4}
+              maxLength={1000}
               value={comment}
               onChange={(e) => setComment(e.target.value)}
               placeholder="مثال: القماش جداً راقي والمقاس مضبوط تماماً، والتوصيل كان سريع وتعاملهم راقي..."
