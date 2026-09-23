@@ -31,6 +31,18 @@ const AdminOrders = () => {
     status: "",
     search: "",
   });
+  const [pagination, setPagination] = useState({
+    page: 1,
+    limit: 20,
+    total: 0,
+    pages: 1,
+  });
+  const [stats, setStats] = useState({
+    totalOrders: 0,
+    pendingOrders: 0,
+    confirmedOrders: 0,
+    completedOrders: 0,
+  });
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
 
@@ -39,18 +51,39 @@ const AdminOrders = () => {
   const isRTL = i18n.language === "ar";
   const locale = isRTL ? "ar-JO" : "en-US";
 
-  const loadOrders = async () => {
+  const loadOrders = async (targetPage = pagination.page, targetLimit = pagination.limit) => {
     setLoading(true);
     try {
-      const res = await axiosClient.get("/api/orders", {
-        params: {
-          type: filters.type || undefined,
-          status: filters.status || undefined,
-          search: filters.search || undefined,
-        },
-      });
-      const data = res.data?.data || (Array.isArray(res.data) ? res.data : []);
+      const [{ data: ordersRes }, { data: statsRes }] = await Promise.all([
+        axiosClient.get("/api/orders", {
+          params: {
+            page: targetPage,
+            limit: targetLimit,
+            type: filters.type || undefined,
+            status: filters.status || undefined,
+            search: filters.search || undefined,
+          },
+        }),
+        axiosClient.get("/api/orders/stats"),
+      ]);
+
+      const data = ordersRes?.data || (Array.isArray(ordersRes) ? ordersRes : []);
       setOrders(data);
+
+      if (ordersRes?.pagination) {
+        setPagination({
+          page: ordersRes.pagination.page || targetPage,
+          limit: targetLimit,
+          total: ordersRes.pagination.total || data.length,
+          pages: ordersRes.pagination.pages || Math.ceil((ordersRes.pagination.total || data.length) / targetLimit) || 1,
+        });
+      } else {
+        setPagination((prev) => ({ ...prev, page: targetPage, limit: targetLimit, total: data.length, pages: 1 }));
+      }
+
+      if (statsRes) {
+        setStats(statsRes);
+      }
     } catch (error) {
       showToast("تعذر تحميل الطلبات", "error");
     } finally {
@@ -59,7 +92,7 @@ const AdminOrders = () => {
   };
 
   useEffect(() => {
-    loadOrders();
+    loadOrders(1, pagination.limit);
   }, [filters]);
 
   const updateStatus = async (orderId, newStatus) => {
@@ -134,15 +167,15 @@ const AdminOrders = () => {
     return order.items.reduce((sum, item) => sum + (item.price || 0) * (item.qty || 1), 0);
   };
 
-  // Filter counters
+  // Filter counters using database-wide stats
   const counts = useMemo(() => {
     return {
-      all: orders.length,
-      pending: orders.filter((o) => o.status === "pending").length,
-      confirmed: orders.filter((o) => o.status === "confirmed").length,
-      completed: orders.filter((o) => o.status === "completed").length,
+      all: stats.totalOrders || pagination.total || orders.length,
+      pending: stats.pendingOrders || 0,
+      confirmed: stats.confirmedOrders || 0,
+      completed: stats.completedOrders || 0,
     };
-  }, [orders]);
+  }, [stats, pagination.total, orders.length]);
 
   return (
     <div className="mx-auto max-w-7xl px-2.5 sm:px-4 md:px-8 py-4 sm:py-8 space-y-4 sm:space-y-6 overflow-x-hidden">
@@ -154,7 +187,7 @@ const AdminOrders = () => {
             <span>إدارة الطلبات والحجوزات</span>
           </h1>
           <p className="text-xs md:text-sm text-white/60 mt-1">
-            إجمالي {orders.length} طلب • متابعة الحالات والتواصل مع الزبائن
+            إجمالي {pagination.total || stats.totalOrders || orders.length} طلب مسجل • متابعة الحالات وتحديث الطلبات
           </p>
         </div>
 
@@ -166,7 +199,7 @@ const AdminOrders = () => {
             <span>📥 تصدير CSV</span>
           </button>
           <button
-            onClick={loadOrders}
+            onClick={() => loadOrders(pagination.page, pagination.limit)}
             className="inline-flex items-center gap-2 rounded-2xl bg-primary-600 px-4 py-2.5 text-xs font-bold text-white shadow-lg shadow-primary-950/40 hover:bg-primary-500 transition"
           >
             <span>تحديث القائمة ⟳</span>
@@ -191,6 +224,15 @@ const AdminOrders = () => {
 
           {statusOptions.map((st) => {
             const isSelected = filters.status === st.value;
+            const countValue =
+              st.value === "pending"
+                ? counts.pending
+                : st.value === "confirmed"
+                ? counts.confirmed
+                : st.value === "completed"
+                ? counts.completed
+                : null;
+
             return (
               <button
                 key={st.value}
@@ -202,6 +244,9 @@ const AdminOrders = () => {
                 }`}
               >
                 <span>{st.label}</span>
+                {countValue !== null && (
+                  <span className="text-[10px] opacity-80">({countValue})</span>
+                )}
               </button>
             );
           })}
@@ -474,6 +519,81 @@ const AdminOrders = () => {
               );
             })}
           </div>
+
+          {/* ─── PAGINATION CONTROLS ─── */}
+          {pagination.total > 0 && (
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 rounded-2xl border border-white/10 bg-neutral-900/80 p-3.5 backdrop-blur-xl text-xs text-white/70">
+              <div className="flex items-center gap-2">
+                <span>
+                  عرض{" "}
+                  <strong className="text-white">
+                    {Math.min((pagination.page - 1) * pagination.limit + 1, pagination.total)}
+                  </strong>{" "}
+                  -{" "}
+                  <strong className="text-white">
+                    {Math.min(pagination.page * pagination.limit, pagination.total)}
+                  </strong>{" "}
+                  من أصل <strong className="text-primary-400">{pagination.total}</strong> طلب
+                </span>
+
+                {/* Per-page selector */}
+                <select
+                  value={pagination.limit}
+                  onChange={(e) => {
+                    const newLimit = Number(e.target.value);
+                    loadOrders(1, newLimit);
+                  }}
+                  aria-label="عدد الطلبات لكل صفحة"
+                  className="rounded-lg border border-white/10 bg-neutral-950 px-2 py-1 text-xs text-white focus:outline-none focus:border-primary-500"
+                >
+                  <option value={20}>20 / صفحة</option>
+                  <option value={50}>50 / صفحة</option>
+                  <option value={100}>100 / صفحة</option>
+                </select>
+              </div>
+
+              {/* Page Number Buttons */}
+              <div className="flex items-center gap-1.5 flex-wrap justify-center">
+                <button
+                  disabled={pagination.page <= 1}
+                  onClick={() => loadOrders(pagination.page - 1, pagination.limit)}
+                  className="rounded-xl border border-white/10 bg-white/5 px-2.5 py-1.5 font-bold text-white disabled:opacity-30 disabled:cursor-not-allowed hover:bg-white/10 transition"
+                >
+                  ◀ السابق
+                </button>
+
+                {Array.from({ length: pagination.pages }, (_, i) => i + 1)
+                  .filter((p) => p === 1 || p === pagination.pages || Math.abs(p - pagination.page) <= 1)
+                  .map((p, idx, arr) => {
+                    const prev = arr[idx - 1];
+                    const showEllipsis = prev && p - prev > 1;
+                    return (
+                      <React.Fragment key={p}>
+                        {showEllipsis && <span className="px-1 text-white/40">...</span>}
+                        <button
+                          onClick={() => loadOrders(p, pagination.limit)}
+                          className={`min-w-[32px] h-8 rounded-xl font-bold transition ${
+                            pagination.page === p
+                              ? "bg-primary-600 text-white shadow-lg shadow-primary-950/40"
+                              : "border border-white/10 bg-white/5 text-white/70 hover:bg-white/10 hover:text-white"
+                          }`}
+                        >
+                          {p}
+                        </button>
+                      </React.Fragment>
+                    );
+                  })}
+
+                <button
+                  disabled={pagination.page >= pagination.pages}
+                  onClick={() => loadOrders(pagination.page + 1, pagination.limit)}
+                  className="rounded-xl border border-white/10 bg-white/5 px-2.5 py-1.5 font-bold text-white disabled:opacity-30 disabled:cursor-not-allowed hover:bg-white/10 transition"
+                >
+                  التالي ▶
+                </button>
+              </div>
+            </div>
+          )}
         </>
       )}
 
