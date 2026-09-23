@@ -291,6 +291,28 @@ const AdminProducts = () => {
     setUploadedImages((prev) => prev.filter((image) => image !== url));
   };
 
+  const setAsCover = (index) => {
+    if (index === 0) return;
+    setUploadedImages((prev) => {
+      const copy = [...prev];
+      const [selected] = copy.splice(index, 1);
+      return [selected, ...copy];
+    });
+    showToast("تم تعيين الصورة كغلاف أساسي للمنتج ⭐", "success");
+  };
+
+  const reorderImage = (index, direction) => {
+    const targetIndex = index + direction;
+    if (targetIndex < 0 || targetIndex >= uploadedImages.length) return;
+    setUploadedImages((prev) => {
+      const copy = [...prev];
+      const temp = copy[index];
+      copy[index] = copy[targetIndex];
+      copy[targetIndex] = temp;
+      return copy;
+    });
+  };
+
   return (
     <div className="mx-auto max-w-7xl px-4 py-12 md:px-6">
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
@@ -557,21 +579,96 @@ const AdminProducts = () => {
                 </button>
               </div>
 
-              {/* Uploaded Thumbnails */}
-              <div className="mt-4 flex flex-wrap gap-3">
-                {uploadedImages.map((imageUrl, index) => (
-                  <div key={`${imageUrl}-${index}`} className="relative h-20 w-20 overflow-hidden rounded-2xl border border-white/10 group">
-                    <img src={imageUrl} alt="product" className="h-full w-full object-cover" />
-                    <button
-                      type="button"
-                      onClick={() => removeImage(imageUrl)}
-                      className="absolute inset-0 flex items-center justify-center bg-black/70 text-xs font-bold text-rose-300 opacity-0 group-hover:opacity-100 transition"
-                    >
-                      حذف ✕
-                    </button>
+              {/* Uploaded Thumbnails with Cover Selector */}
+              {uploadedImages.length > 0 && (
+                <div className="mt-4 space-y-2">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-white/80 font-bold">الصور المرفوعة ({uploadedImages.length}):</span>
+                    <span className="text-[11px] text-amber-300 font-medium">
+                      💡 الصورة الأولى ذات الإطار الذهبي ⭐ هي صورة الغلاف المعروضة في الكتالوج
+                    </span>
                   </div>
-                ))}
-              </div>
+
+                  <div className="flex flex-wrap gap-3.5">
+                    {uploadedImages.map((imageUrl, index) => {
+                      const isCover = index === 0;
+                      return (
+                        <div
+                          key={`${imageUrl}-${index}`}
+                          className={`relative rounded-2xl overflow-hidden border-2 transition-all p-1 group flex flex-col items-center ${
+                            isCover
+                              ? "border-amber-400 bg-amber-950/20 shadow-lg shadow-amber-950/40 ring-2 ring-amber-400/40"
+                              : "border-white/10 bg-white/5 hover:border-white/30"
+                          }`}
+                        >
+                          <div className="relative h-24 w-24 overflow-hidden rounded-xl">
+                            <img src={imageUrl} alt={`product-${index}`} className="h-full w-full object-cover" />
+
+                            {/* Cover Badge */}
+                            {isCover && (
+                              <span className="absolute top-1 right-1 rounded-md bg-amber-500 px-1.5 py-0.5 text-[9px] font-black text-black shadow-md flex items-center gap-0.5">
+                                ⭐ الغلاف
+                              </span>
+                            )}
+
+                            {/* Delete Button on Hover */}
+                            <button
+                              type="button"
+                              onClick={() => removeImage(imageUrl)}
+                              className="absolute top-1 left-1 rounded-md bg-black/80 p-1 text-rose-400 opacity-0 group-hover:opacity-100 transition hover:bg-rose-900 hover:text-white"
+                              title="حذف الصورة"
+                            >
+                              ✕
+                            </button>
+                          </div>
+
+                          {/* Action Controls */}
+                          <div className="mt-1.5 flex items-center justify-between w-full gap-1 px-0.5">
+                            {!isCover ? (
+                              <button
+                                type="button"
+                                onClick={() => setAsCover(index)}
+                                className="flex-1 rounded-lg bg-white/10 px-2 py-0.5 text-[10px] font-bold text-amber-300 hover:bg-amber-500 hover:text-black transition"
+                                title="تعيين كصورة غلاف أساسية"
+                              >
+                                ⭐ غلاف
+                              </button>
+                            ) : (
+                              <span className="flex-1 text-center text-[10px] font-bold text-amber-400">
+                                أساسي
+                              </span>
+                            )}
+
+                            {/* Reorder Buttons */}
+                            <div className="flex items-center gap-0.5">
+                              {index > 0 && (
+                                <button
+                                  type="button"
+                                  onClick={() => reorderImage(index, -1)}
+                                  className="h-5 w-5 rounded bg-white/10 text-[9px] text-white hover:bg-white/20 flex items-center justify-center"
+                                  title="تحريك لليمين"
+                                >
+                                  ▶
+                                </button>
+                              )}
+                              {index < uploadedImages.length - 1 && (
+                                <button
+                                  type="button"
+                                  onClick={() => reorderImage(index, 1)}
+                                  className="h-5 w-5 rounded bg-white/10 text-[9px] text-white hover:bg-white/20 flex items-center justify-center"
+                                  title="تحريك لليسار"
+                                >
+                                  ◀
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className={`flex gap-3 ${isRTL ? "justify-start" : "justify-end"}`}>
