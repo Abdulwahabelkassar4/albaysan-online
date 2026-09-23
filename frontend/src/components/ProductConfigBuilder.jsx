@@ -91,13 +91,15 @@ const OptionImageUploader = ({ image, onImageChange }) => {
     try {
       const formData = new FormData();
       formData.append("images", file);
-      const res = await axiosClient.post("/api/upload", formData);
+      const res = await axiosClient.post("/api/upload", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
       if (res.data?.urls?.[0]) {
         onImageChange(res.data.urls[0]);
       }
     } catch (err) {
       console.error("Upload error:", err);
-      alert("فشل رفع الصورة");
+      alert("فشل رفع الصورة: " + (err.response?.data?.message || err.message || ""));
     } finally {
       setUploading(false);
     }

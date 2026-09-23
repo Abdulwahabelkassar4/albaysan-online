@@ -639,27 +639,56 @@ const AdminProducts = () => {
                               </span>
                             )}
 
-                            {/* Reorder Buttons */}
+                            {/* Reorder Buttons respecting RTL/LTR */}
                             <div className="flex items-center gap-0.5">
-                              {index > 0 && (
-                                <button
-                                  type="button"
-                                  onClick={() => reorderImage(index, -1)}
-                                  className="h-5 w-5 rounded bg-white/10 text-[9px] text-white hover:bg-white/20 flex items-center justify-center"
-                                  title="تحريك لليمين"
-                                >
-                                  ▶
-                                </button>
-                              )}
-                              {index < uploadedImages.length - 1 && (
-                                <button
-                                  type="button"
-                                  onClick={() => reorderImage(index, 1)}
-                                  className="h-5 w-5 rounded bg-white/10 text-[9px] text-white hover:bg-white/20 flex items-center justify-center"
-                                  title="تحريك لليسار"
-                                >
-                                  ◀
-                                </button>
+                              {isRTL ? (
+                                <>
+                                  {/* In RTL: Right arrow → moves towards cover (index - 1), Left arrow ← moves forward (index + 1) */}
+                                  {index > 0 && (
+                                    <button
+                                      type="button"
+                                      onClick={() => reorderImage(index, -1)}
+                                      className="h-5 w-5 rounded bg-white/10 text-[10px] text-white hover:bg-white/20 flex items-center justify-center font-bold transition"
+                                      title="تقديم نحو الغلاف (يمين)"
+                                    >
+                                      →
+                                    </button>
+                                  )}
+                                  {index < uploadedImages.length - 1 && (
+                                    <button
+                                      type="button"
+                                      onClick={() => reorderImage(index, 1)}
+                                      className="h-5 w-5 rounded bg-white/10 text-[10px] text-white hover:bg-white/20 flex items-center justify-center font-bold transition"
+                                      title="تأخير (يسار)"
+                                    >
+                                      ←
+                                    </button>
+                                  )}
+                                </>
+                              ) : (
+                                <>
+                                  {/* In LTR: Left arrow ← moves towards cover (index - 1), Right arrow → moves forward (index + 1) */}
+                                  {index > 0 && (
+                                    <button
+                                      type="button"
+                                      onClick={() => reorderImage(index, -1)}
+                                      className="h-5 w-5 rounded bg-white/10 text-[10px] text-white hover:bg-white/20 flex items-center justify-center font-bold transition"
+                                      title="Move Left (Towards cover)"
+                                    >
+                                      ←
+                                    </button>
+                                  )}
+                                  {index < uploadedImages.length - 1 && (
+                                    <button
+                                      type="button"
+                                      onClick={() => reorderImage(index, 1)}
+                                      className="h-5 w-5 rounded bg-white/10 text-[10px] text-white hover:bg-white/20 flex items-center justify-center font-bold transition"
+                                      title="Move Right"
+                                    >
+                                      →
+                                    </button>
+                                  )}
+                                </>
                               )}
                             </div>
                           </div>
