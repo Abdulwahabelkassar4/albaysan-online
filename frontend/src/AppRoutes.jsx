@@ -32,6 +32,8 @@ const AppRoutes = () => (
     <Route path="/delivery" element={<Delivery />} />
     <Route path="/reservation" element={<Reservation />} />
     <Route path="/review" element={<ReviewSubmission />} />
+    <Route path="/review/:token" element={<ReviewSubmission />} />
+    <Route path="/r/:token" element={<ReviewSubmission />} />
     <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
     <Route path="/admin/login" element={<AdminLogin />} />
     <Route element={<ProtectedRoute />}>

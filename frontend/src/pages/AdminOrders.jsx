@@ -94,7 +94,7 @@ const AdminOrders = () => {
       const res = await axiosClient.post(`/api/reviews/admin/generate-token/${order._id || order.id}`);
       const token = res.data.token;
       const origin = window.location.origin;
-      const reviewUrl = `${origin}/review?token=${token}`;
+      const reviewUrl = `${origin}/r/${token}`;
       const phoneBase = normalizeJordanPhoneForWhatsApp(order.phone);
       const msg = `مرحباً ${order.customerName}! 🌸\nيسعدنا أن طلبك من متجر البيلسان وصلك بالسلامة.\nرأيك يهمنا ويسعدنا جداً! يمكنك مشاركة تجربتك وتقييمك عبر رابطك الخاص خلال دقيقة واحدة:\n${reviewUrl}`;
       window.open(`https://wa.me/${phoneBase}?text=${encodeURIComponent(msg)}`, "_blank");

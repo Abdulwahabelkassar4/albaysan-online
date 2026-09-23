@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useSearchParams, Link } from "react-router-dom";
+import { useSearchParams, useParams, Link } from "react-router-dom";
 import axiosClient from "../api/axiosClient.js";
 import { SparkleIcon } from "../components/icons.jsx";
 
@@ -12,8 +12,9 @@ const ratingLabels = {
 };
 
 const ReviewSubmission = () => {
+  const { token: routeToken } = useParams();
   const [searchParams] = useSearchParams();
-  const token = searchParams.get("token") || "";
+  const token = routeToken || searchParams.get("token") || "";
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -45,6 +46,13 @@ const ReviewSubmission = () => {
           // By default, select all purchased products for tagging
           if (res.data.items && res.data.items.length > 0) {
             setSelectedProductIds(res.data.items.map((_, idx) => idx));
+          }
+
+          // Clean up the browser address bar to hide the token from the URL!
+          try {
+            window.history.replaceState(null, "", "/review");
+          } catch (e) {
+            // Ignore if in test env
           }
         }
       } catch (err) {
