@@ -74,6 +74,12 @@ const formatProduct = (productDoc, offerContext = { isOfferActive: false, offerP
     }
   }
 
+  // Configuration data (included in all responses)
+  const configData = {
+    configurable: product.configurable || false,
+    pieces: product.configurable ? (product.pieces || []) : [],
+  };
+
   // If raw mode (admin) OR product is in active offer campaign, keep stored discounted price & original price
   if (raw || isProductInOffer) {
     return {
@@ -91,6 +97,7 @@ const formatProduct = (productDoc, offerContext = { isOfferActive: false, offerP
       images: normalizedImages,
       inStock: typeof product.inStock === "boolean" ? product.inStock : true,
       isInActiveOffer: isProductInOffer,
+      ...configData,
     };
   }
 
@@ -112,6 +119,7 @@ const formatProduct = (productDoc, offerContext = { isOfferActive: false, offerP
     images: normalizedImages,
     inStock: typeof product.inStock === "boolean" ? product.inStock : true,
     isInActiveOffer: false,
+    ...configData,
   };
 };
 
@@ -214,6 +222,8 @@ router.post("/", authMiddleware, async (req, res, next) => {
       colors = [],
       images = [],
       inStock,
+      configurable,
+      pieces,
     } = req.body;
 
     const product = new Product({
@@ -227,6 +237,8 @@ router.post("/", authMiddleware, async (req, res, next) => {
       sizes: Array.isArray(sizes) ? sizes : [],
       colors: Array.isArray(colors) ? colors : [],
       images: parseImagesInput(images),
+      configurable: configurable === true,
+      pieces: configurable === true && Array.isArray(pieces) ? pieces : [],
     });
 
     if (typeof inStock === "boolean") {
@@ -255,6 +267,8 @@ router.put("/:id", authMiddleware, async (req, res, next) => {
       colors,
       images,
       inStock,
+      configurable,
+      pieces,
     } = req.body;
 
     const updateData = {};
@@ -270,6 +284,8 @@ router.put("/:id", authMiddleware, async (req, res, next) => {
     if (colors !== undefined) updateData.colors = Array.isArray(colors) ? colors : [];
     if (images !== undefined) updateData.images = parseImagesInput(images);
     if (typeof inStock === "boolean") updateData.inStock = inStock;
+    if (configurable !== undefined) updateData.configurable = configurable === true;
+    if (pieces !== undefined) updateData.pieces = Array.isArray(pieces) ? pieces : [];
 
     const product = await Product.findByIdAndUpdate(req.params.id, updateData, {
       new: true,
@@ -315,6 +331,122 @@ router.post("/bulk", authMiddleware, async (req, res, next) => {
     }
 
     res.status(400).json({ message: "إجراء غير صالح" });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// --- Server-side price calculation & config validation ---
+// Used by cart/checkout to validate configuration and compute the correct price
+router.post("/:id/calculate-price", async (req, res, next) => {
+  try {
+    const product = await Product.findById(req.params.id);
+    if (!product) {
+      return res.status(404).json({ message: "المنتج غير موجود" });
+    }
+
+    // For non-configurable products, just return the base price
+    if (!product.configurable || !product.pieces?.length) {
+      const offerContext = await checkOfferSettings();
+      const formatted = formatProduct(product, offerContext);
+      return res.json({
+        valid: true,
+        basePrice: formatted.price,
+        totalAdjustment: 0,
+        configuredPrice: formatted.price,
+        configSnapshot: [],
+      });
+    }
+
+    const { selections } = req.body;
+    // selections expected as: { [optionId]: valueId }
+    if (!selections || typeof selections !== "object") {
+      return res.status(400).json({ message: "الاختيارات مطلوبة" });
+    }
+
+    const offerContext = await checkOfferSettings();
+    const formatted = formatProduct(product, offerContext);
+    const basePrice = formatted.price;
+
+    let totalAdjustment = 0;
+    const configSnapshot = [];
+    const errors = [];
+
+    // Flatten all options across all pieces for validation
+    for (const piece of product.pieces) {
+      for (const option of piece.options) {
+        const optionIdStr = option._id.toString();
+        const selectedValueId = selections[optionIdStr];
+
+        // Check conditional dependency: skip validation if parent condition not met
+        if (option.dependsOnOptionId && option.dependsOnValueId) {
+          const parentSelectedValue = selections[option.dependsOnOptionId.toString()];
+          if (parentSelectedValue !== option.dependsOnValueId.toString()) {
+            continue; // Dependent option is hidden, skip it
+          }
+        }
+
+        if (option.required && !selectedValueId) {
+          errors.push(`الخيار "${option.name}" مطلوب`);
+          continue;
+        }
+
+        if (!selectedValueId) continue; // Optional and not selected
+
+        const value = option.values.find(
+          (v) => v._id.toString() === selectedValueId && v.active !== false
+        );
+
+        if (!value) {
+          errors.push(`قيمة غير صالحة للخيار "${option.name}"`);
+          continue;
+        }
+
+        const adjustment = Number(value.priceAdjustment) || 0;
+        if (adjustment < 0) {
+          errors.push(`تعديل سعر غير صالح للخيار "${option.name}"`);
+          continue;
+        }
+
+        totalAdjustment += adjustment;
+
+        configSnapshot.push({
+          pieceName: piece.name,
+          optionName: option.name,
+          selectedValue: value.label,
+          priceAdjustment: adjustment,
+        });
+      }
+    }
+
+    if (errors.length > 0) {
+      return res.status(400).json({ valid: false, errors });
+    }
+
+    const configuredPrice = basePrice + totalAdjustment;
+
+    // Determine which description to use
+    let descriptionUsed = product.description || "";
+    // Find the last selected value that has a descriptionOverride
+    for (const piece of product.pieces) {
+      for (const option of piece.options) {
+        const selectedValueId = selections[option._id.toString()];
+        if (!selectedValueId) continue;
+        const value = option.values.find((v) => v._id.toString() === selectedValueId);
+        if (value?.descriptionOverride) {
+          descriptionUsed = value.descriptionOverride;
+        }
+      }
+    }
+
+    res.json({
+      valid: true,
+      basePrice,
+      totalAdjustment,
+      configuredPrice,
+      configSnapshot,
+      descriptionUsed,
+    });
   } catch (error) {
     next(error);
   }

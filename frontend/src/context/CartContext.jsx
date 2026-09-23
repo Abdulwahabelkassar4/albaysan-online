@@ -9,10 +9,21 @@ const initialState = {
   isOpen: false,
 };
 
+// Build a deterministic string hash from configuration selections
+const buildConfigKey = (configuration) => {
+  if (!configuration?.selections || typeof configuration.selections !== "object") return "";
+  // Sort by option ID for deterministic ordering
+  return Object.entries(configuration.selections)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([optId, valId]) => `${optId}:${valId}`)
+    .join("|");
+};
+
 const buildLineId = (item) => {
   const sizeKey = item.size || "default";
   const colorKey = item.color || "default";
-  return `${item.id}_${sizeKey}_${colorKey}`;
+  const configKey = buildConfigKey(item.configuration);
+  return `${item.id}_${sizeKey}_${colorKey}${configKey ? `_${configKey}` : ""}`;
 };
 
 const sanitizeQty = (qty) => {
@@ -66,6 +77,14 @@ const reducer = (state, action) => {
   }
 };
 
+// Get the effective price for a cart item (uses configuredPrice for configured products)
+const getItemPrice = (item) => {
+  if (item.configuredPrice !== undefined && item.configuredPrice !== null) {
+    return Number(item.configuredPrice);
+  }
+  return Number(item.price) || 0;
+};
+
 export const CartProvider = ({ children }) => {
   const [state, dispatch] = useReducer(reducer, initialState);
 
@@ -89,7 +108,7 @@ export const CartProvider = ({ children }) => {
 
   const value = useMemo(() => {
     const totalQuantity = state.items.reduce((sum, item) => sum + item.qty, 0);
-    const totalPrice = state.items.reduce((sum, item) => sum + item.price * item.qty, 0);
+    const totalPrice = state.items.reduce((sum, item) => sum + getItemPrice(item) * item.qty, 0);
 
     return {
       items: state.items,
@@ -97,6 +116,7 @@ export const CartProvider = ({ children }) => {
       isOpen: state.isOpen,
       totalQuantity,
       totalPrice,
+      getItemPrice,
       addItem: (item) => dispatch({ type: "ADD_ITEM", payload: item }),
       removeItem: (lineId) => dispatch({ type: "REMOVE_ITEM", payload: lineId }),
       updateQty: (lineId, qty) =>

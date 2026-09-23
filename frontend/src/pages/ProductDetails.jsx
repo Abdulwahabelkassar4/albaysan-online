@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import axiosClient from "../api/axiosClient.js";
@@ -9,6 +9,13 @@ import ProductCard from "../components/ProductCard.jsx";
 import { ProductSkeleton } from "../components/SkeletonLoader.jsx";
 import { CloseIcon, ArrowForwardIcon, SparkleIcon, WhatsAppIcon, PaletteIcon } from "../components/icons.jsx";
 import ColorGuideModal from "../components/ColorGuideModal.jsx";
+import ProductConfigSelector, {
+  getDefaultSelections,
+  getActiveDescription,
+  getConfiguredPrice,
+  validateSelections,
+  buildConfigSnapshot,
+} from "../components/ProductConfigSelector.jsx";
 
 const normalizeImages = (images, fallbackImage) => {
   const normalized = Array.isArray(images)
@@ -34,6 +41,8 @@ const ProductDetails = () => {
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
   const [colorGuides, setColorGuides] = useState([]);
   const [isColorGuideOpen, setIsColorGuideOpen] = useState(false);
+  const [configSelections, setConfigSelections] = useState({});
+  const [configErrors, setConfigErrors] = useState([]);
 
   const { addItem, openCart } = useCart();
   const { t, i18n } = useTranslation();
@@ -70,6 +79,14 @@ const ProductDetails = () => {
         setSelectedColor(data.colors?.[0] || defaultColor);
         setSelectedImage(normalizedImages[0] || data.image || "");
 
+        // Initialize default config selections
+        if (data.configurable && data.pieces?.length) {
+          setConfigSelections(getDefaultSelections(data));
+        } else {
+          setConfigSelections({});
+        }
+        setConfigErrors([]);
+
         // Fetch related products in same category
         if (data.category) {
           setLoadingRelated(true);
@@ -93,9 +110,26 @@ const ProductDetails = () => {
     fetchProduct();
   }, [id, defaultSize, defaultColor]);
 
+  // Dynamic price and description based on config selections
+  const isConfigurable = product?.configurable && product?.pieces?.length > 0;
+  const configuredPrice = isConfigurable
+    ? getConfiguredPrice(product, configSelections)
+    : product?.price || 0;
+  const activeDescription = isConfigurable
+    ? getActiveDescription(product, configSelections)
+    : product?.description || "";
+
   const handleAddToCart = () => {
     if (!product) return;
-    addItem({
+
+    // Validate required config options
+    if (isConfigurable) {
+      const errors = validateSelections(product, configSelections);
+      setConfigErrors(errors);
+      if (errors.length > 0) return;
+    }
+
+    const cartItem = {
       id: product._id || product.id,
       name: product.name,
       price: product.price,
@@ -103,7 +137,19 @@ const ProductDetails = () => {
       color: selectedColor,
       image: primaryImage,
       qty: 1,
-    });
+    };
+
+    // Add configuration data for configured products
+    if (isConfigurable) {
+      cartItem.configuredPrice = configuredPrice;
+      cartItem.configSnapshot = buildConfigSnapshot(product, configSelections);
+      cartItem.configuration = {
+        productId: product._id || product.id,
+        selections: { ...configSelections },
+      };
+    }
+
+    addItem(cartItem);
     openCart();
   };
 
@@ -200,7 +246,7 @@ const ProductDetails = () => {
             <h1 className="text-3xl font-bold text-white leading-tight">{product.name}</h1>
             <div className="flex items-center gap-3">
               <span className="text-3xl font-black text-primary-400">
-                {product.price} {t("product.priceSuffix")}
+                {isConfigurable ? configuredPrice : product.price} {t("product.priceSuffix")}
               </span>
               {product.originalPrice && product.originalPrice > product.price && (
                 <span className="text-lg text-white/40 line-through">
@@ -209,7 +255,7 @@ const ProductDetails = () => {
               )}
             </div>
             <p className="text-sm leading-relaxed text-white/70">
-              {product.description || t("product.descriptionFallback")}
+              {isConfigurable ? activeDescription : (product.description || t("product.descriptionFallback"))}
             </p>
           </div>
 
@@ -276,6 +322,28 @@ const ProductDetails = () => {
                   );
                 })}
               </div>
+            </div>
+          )}
+
+          {/* ──── Product Configuration Selector ──── */}
+          {isConfigurable && (
+            <div className="space-y-2 border-t border-white/10 pt-4">
+              <ProductConfigSelector
+                product={product}
+                selections={configSelections}
+                onSelectionsChange={(newSelections) => {
+                  setConfigSelections(newSelections);
+                  setConfigErrors([]);
+                }}
+                priceSuffix={t("product.priceSuffix")}
+              />
+              {configErrors.length > 0 && (
+                <div className="rounded-xl border border-rose-500/30 bg-rose-950/30 px-3 py-2 space-y-1">
+                  {configErrors.map((err, i) => (
+                    <p key={i} className="text-xs text-rose-300 font-semibold">⚠ {err}</p>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 

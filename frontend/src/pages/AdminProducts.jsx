@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import axiosClient from "../api/axiosClient.js";
 import { useToast } from "../context/ToastContext.jsx";
+import ProductConfigBuilder from "../components/ProductConfigBuilder.jsx";
 
 const defaultValues = {
   name: "",
@@ -15,6 +16,8 @@ const defaultValues = {
   sizes: "",
   colors: "",
   inStock: true,
+  configurable: false,
+  pieces: [],
 };
 
 const fallbackCategories = [
@@ -148,6 +151,8 @@ const AdminProducts = () => {
           .filter(Boolean)
       : [],
     images: uploadedImages,
+    configurable: formData.configurable,
+    pieces: formData.configurable ? formData.pieces : [],
   });
 
   const resetForm = () => {
@@ -202,6 +207,8 @@ const AdminProducts = () => {
       inStock: product.inStock !== false,
       sizes: product.sizes?.join(", ") || "",
       colors: product.colors?.join(", ") || "",
+      configurable: product.configurable || false,
+      pieces: product.pieces || [],
     });
   };
 
@@ -424,6 +431,34 @@ const AdminProducts = () => {
                 onChange={handleChange("description")}
                 className="w-full rounded-2xl border border-white/20 bg-neutral-800/80 px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
               />
+            </div>
+
+            {/* ──── Product Configuration Toggle & Builder ──── */}
+            <div className="rounded-2xl border border-secondary-400/30 bg-secondary-950/20 p-4 space-y-4">
+              <div className="flex items-center gap-3">
+                <input
+                  type="checkbox"
+                  id="configurable"
+                  checked={formData.configurable}
+                  onChange={handleChange("configurable")}
+                  className="h-5 w-5 rounded border-white/20 bg-neutral-800 text-secondary-500 focus:ring-secondary-400"
+                />
+                <label htmlFor="configurable" className="text-sm font-semibold text-secondary-200 cursor-pointer">
+                  🧩 تفعيل تهيئة المنتج المتقدمة
+                </label>
+              </div>
+              {formData.configurable && (
+                <p className="text-xs text-white/50 -mt-2">
+                  حدد قطع المنتج والخيارات المتاحة لكل قطعة. يمكنك تعديل السعر والوصف لكل خيار.
+                </p>
+              )}
+              {formData.configurable && (
+                <ProductConfigBuilder
+                  pieces={formData.pieces}
+                  onChange={(newPieces) => setFormData((prev) => ({ ...prev, pieces: newPieces }))}
+                  baseDescription={formData.description}
+                />
+              )}
             </div>
 
             <div className="grid gap-4 md:grid-cols-2">

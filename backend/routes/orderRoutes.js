@@ -7,7 +7,7 @@ import { validate, orderSchema } from "../middleware/validate.js";
 
 const router = express.Router();
 
-// Create new order (Public)
+// Create new order (Public) — with server-side configuration validation
 router.post("/", async (req, res, next) => {
   try {
     const { type, customerName, phone, address, items, pickupDate, promoCode, discountAmount } = req.body;
@@ -24,8 +24,103 @@ router.post("/", async (req, res, next) => {
       return res.status(400).json({ message: "تاريخ الاستلام مطلوب للحجز" });
     }
 
+    // Server-side price recalculation for configured products
+    const validatedItems = [];
+    for (const item of (items || [])) {
+      const validatedItem = { ...item };
+
+      // If this item has product configuration, validate & recalculate server-side
+      if (item.configuration && item.configuration.productId && item.configuration.selections) {
+        const product = await Product.findById(item.configuration.productId);
+        if (!product || !product.configurable) {
+          return res.status(400).json({
+            message: `المنتج غير موجود أو غير قابل للتهيئة: ${item.name || item.configuration.productId}`,
+          });
+        }
+
+        const selections = item.configuration.selections;
+        let totalAdjustment = 0;
+        const configSnapshot = [];
+
+        for (const piece of product.pieces) {
+          for (const option of piece.options) {
+            const optionIdStr = option._id.toString();
+            const selectedValueId = selections[optionIdStr];
+
+            // Check conditional dependency
+            if (option.dependsOnOptionId && option.dependsOnValueId) {
+              const parentSelectedValue = selections[option.dependsOnOptionId.toString()];
+              if (parentSelectedValue !== option.dependsOnValueId.toString()) {
+                continue;
+              }
+            }
+
+            if (option.required && !selectedValueId) {
+              return res.status(400).json({
+                message: `الخيار "${option.name}" مطلوب في المنتج "${product.name}"`,
+              });
+            }
+
+            if (!selectedValueId) continue;
+
+            const value = option.values.find(
+              (v) => v._id.toString() === selectedValueId && v.active !== false
+            );
+
+            if (!value) {
+              return res.status(400).json({
+                message: `قيمة غير صالحة للخيار "${option.name}" في المنتج "${product.name}"`,
+              });
+            }
+
+            const adjustment = Number(value.priceAdjustment) || 0;
+            if (adjustment < 0) {
+              return res.status(400).json({
+                message: `تعديل سعر غير صالح للخيار "${option.name}"`,
+              });
+            }
+
+            totalAdjustment += adjustment;
+
+            configSnapshot.push({
+              pieceName: piece.name,
+              optionName: option.name,
+              selectedValue: value.label,
+              priceAdjustment: adjustment,
+            });
+          }
+        }
+
+        const serverBasePrice = Number(product.price);
+        const serverConfiguredPrice = serverBasePrice + totalAdjustment;
+
+        // Override client price with server-calculated price
+        validatedItem.price = serverConfiguredPrice;
+        validatedItem.basePrice = serverBasePrice;
+        validatedItem.configuredPrice = serverConfiguredPrice;
+        validatedItem.configSnapshot = configSnapshot;
+
+        // Determine description used
+        let descUsed = product.description || "";
+        for (const piece of product.pieces) {
+          for (const option of piece.options) {
+            const selVal = selections[option._id.toString()];
+            if (!selVal) continue;
+            const val = option.values.find((v) => v._id.toString() === selVal);
+            if (val?.descriptionOverride) descUsed = val.descriptionOverride;
+          }
+        }
+        validatedItem.descriptionUsed = descUsed;
+      }
+
+      // Remove frontend-only fields
+      delete validatedItem.lineId;
+      delete validatedItem.configuration;
+      validatedItems.push(validatedItem);
+    }
+
     const deliveryFee = type === "delivery" ? 2 : 0;
-    const itemsPrice = (items || []).reduce(
+    const itemsPrice = validatedItems.reduce(
       (sum, item) => sum + (Number(item.price) || 0) * (Number(item.qty) || 1),
       0
     );
@@ -34,6 +129,7 @@ router.post("/", async (req, res, next) => {
 
     const order = await Order.create({
       ...req.body,
+      items: validatedItems,
       address: type === "delivery" ? address : (address || "استلام من المتجر"),
       deliveryFee,
       discountAmount: validDiscount,

@@ -11,7 +11,7 @@ const Reservation = () => {
   const { register, handleSubmit, reset, formState } = useForm();
   const { showToast } = useToast();
   const { t, i18n } = useTranslation();
-  const { cartItems, totalPrice, clearCart } = useCart();
+  const { cartItems, totalPrice, clearCart, getItemPrice } = useCart();
   const isRTL = i18n.language === "ar";
 
   const [promoCodeInput, setPromoCodeInput] = useState("");
@@ -74,9 +74,15 @@ const Reservation = () => {
     if (!cartItems.length) {
       return t("orders.cartEmpty");
     }
-    const lines = cartItems.map((item) =>
-      `• ${item.name} (${item.size || "وسيط"}، ${item.color || "افتراضي"}) × ${item.qty} = ${((item.price || 0) * item.qty).toFixed(2)} د.أ`
-    );
+    const lines = cartItems.map((item) => {
+      const itemPrice = getItemPrice(item);
+      let line = `• ${item.name} (${item.size || "وسيط"}، ${item.color || "افتراضي"}) × ${item.qty} = ${(itemPrice * item.qty).toFixed(2)} د.أ`;
+      if (item.configSnapshot?.length) {
+        const configStr = item.configSnapshot.map((e) => `${e.optionName}: ${e.selectedValue}`).join(", ");
+        line += `\n  └ تهيئة: ${configStr}`;
+      }
+      return line;
+    });
     let summary = `${lines.join("\n")}\n\nالمجموع الفرعي: ${subtotal.toFixed(2)} د.أ`;
     if (discountAmount > 0) {
       summary += `\nخصم الكود (${appliedPromo.promoCode} - ${discountLabel}): -${discountAmount.toFixed(2)} د.أ`;
@@ -98,9 +104,14 @@ const Reservation = () => {
       const locale = isRTL ? "ar-JO" : "en-US";
       const formattedDate = pickupDate ? new Date(pickupDate).toLocaleDateString(locale) : "";
 
-      const itemLines = cartItems.map((item) =>
-        `• ${item.name} (المقاس ${item.size || "وسيط"}، اللون ${item.color || "افتراضي"}) × ${item.qty}`
-      ).join("\n");
+      const itemLines = cartItems.map((item) => {
+        let line = `• ${item.name} (المقاس ${item.size || "وسيط"}، اللون ${item.color || "افتراضي"}) × ${item.qty}`;
+        if (item.configSnapshot?.length) {
+          const configStr = item.configSnapshot.map((e) => `${e.optionName}: ${e.selectedValue}`).join(", ");
+          line += ` [تهيئة: ${configStr}]`;
+        }
+        return line;
+      }).join("\n");
 
       const messageLines = [
         `🛵 طلب جديد من ${customerName}`,
@@ -133,7 +144,13 @@ const Reservation = () => {
         pickupDate,
         height,
         weight,
-        items: cartItems.map(({ lineId, ...item }) => ({ ...item })),
+        items: cartItems.map(({ lineId, ...item }) => {
+          const orderItem = { ...item };
+          if (orderItem.configuredPrice != null) {
+            orderItem.price = orderItem.configuredPrice;
+          }
+          return orderItem;
+        }),
         deliveryFee: 0,
         discountAmount,
         promoCode: appliedPromo?.promoCode || "",

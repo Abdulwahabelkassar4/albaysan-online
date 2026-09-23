@@ -1,5 +1,15 @@
 import mongoose from "mongoose";
 
+const configSnapshotEntrySchema = new mongoose.Schema(
+  {
+    pieceName: { type: String },
+    optionName: { type: String },
+    selectedValue: { type: String },
+    priceAdjustment: { type: Number, default: 0 },
+  },
+  { _id: false }
+);
+
 const orderItemSchema = new mongoose.Schema(
   {
     productId: { type: mongoose.Schema.Types.ObjectId, ref: "Product" },
@@ -8,6 +18,11 @@ const orderItemSchema = new mongoose.Schema(
     color: { type: String },
     price: { type: Number },
     image: { type: String },
+    // Product configuration snapshot fields
+    basePrice: { type: Number },
+    configuredPrice: { type: Number },
+    configSnapshot: { type: [configSnapshotEntrySchema], default: [] },
+    descriptionUsed: { type: String },
   },
   { _id: false }
 );

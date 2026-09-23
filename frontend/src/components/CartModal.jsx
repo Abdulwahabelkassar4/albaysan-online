@@ -14,7 +14,7 @@ import {
 } from "./icons.jsx";
 
 const CartModal = () => {
-  const { items, isOpen, closeCart, removeItem, updateQty, totalPrice } = useCart();
+  const { items, isOpen, closeCart, removeItem, updateQty, totalPrice, getItemPrice } = useCart();
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const isRTL = i18n.language === "ar";
@@ -94,6 +94,22 @@ const CartModal = () => {
                           {t("cart.color")}: <span className="text-white">{item.color}</span>
                         </span>
                       </div>
+                      {/* Configuration details */}
+                      {item.configSnapshot && item.configSnapshot.length > 0 && (
+                        <div className="flex flex-wrap gap-1.5 mt-1">
+                          {item.configSnapshot.map((entry, idx) => (
+                            <span
+                              key={idx}
+                              className="inline-flex items-center gap-1 rounded-lg bg-primary-500/15 border border-primary-400/20 px-2 py-0.5 text-[10px] font-semibold text-primary-200"
+                            >
+                              {entry.optionName}: {entry.selectedValue}
+                              {entry.priceAdjustment > 0 && (
+                                <span className="text-primary-300/70">+{entry.priceAdjustment}</span>
+                              )}
+                            </span>
+                          ))}
+                        </div>
+                      )}
                       <div className={`flex items-center justify-between ${isRTL ? "flex-row-reverse" : ""}`}>
                         <div className={`flex items-center gap-2 ${isRTL ? "flex-row-reverse" : ""}`}>
                           <button
@@ -120,7 +136,7 @@ const CartModal = () => {
                         </div>
                         <span className="inline-flex items-center gap-1 text-sm font-semibold text-secondary-200">
                           <PriceTagIcon className="h-4 w-4" />
-                          {(item.price * item.qty).toFixed(2)} {t("product.priceSuffix")}
+                          {(getItemPrice(item) * item.qty).toFixed(2)} {t("product.priceSuffix")}
                         </span>
                       </div>
                     </div>
