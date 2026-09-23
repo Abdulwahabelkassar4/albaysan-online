@@ -1,4 +1,5 @@
 import express from "express";
+import mongoose from "mongoose";
 import { Product } from "../models/Product.js";
 import { OfferSetting } from "../models/OfferSetting.js";
 import { authMiddleware } from "../middleware/authMiddleware.js";
@@ -47,6 +48,90 @@ const parseImagesInput = (images) => {
   }
 
   return [];
+};
+
+const sanitizePiecesForSave = (piecesInput) => {
+  if (!Array.isArray(piecesInput)) return [];
+
+  const idMap = new Map();
+  const pieces = JSON.parse(JSON.stringify(piecesInput));
+
+  // Step 1: Assign valid ObjectIds and record mappings for temporary IDs
+  pieces.forEach((piece, pieceIndex) => {
+    piece.sortOrder = typeof piece.sortOrder === "number" ? piece.sortOrder : pieceIndex;
+
+    if (!piece._id || !mongoose.Types.ObjectId.isValid(piece._id)) {
+      const newId = new mongoose.Types.ObjectId();
+      if (piece._id) idMap.set(piece._id.toString(), newId);
+      piece._id = newId;
+    } else {
+      piece._id = new mongoose.Types.ObjectId(piece._id);
+    }
+
+    (piece.options || []).forEach((opt, optIndex) => {
+      opt.sortOrder = typeof opt.sortOrder === "number" ? opt.sortOrder : optIndex;
+
+      if (!opt._id || !mongoose.Types.ObjectId.isValid(opt._id)) {
+        const newId = new mongoose.Types.ObjectId();
+        if (opt._id) idMap.set(opt._id.toString(), newId);
+        opt._id = newId;
+      } else {
+        opt._id = new mongoose.Types.ObjectId(opt._id);
+      }
+
+      (opt.values || []).forEach((val, valIndex) => {
+        val.sortOrder = typeof val.sortOrder === "number" ? val.sortOrder : valIndex;
+        val.priceAdjustment = Number(val.priceAdjustment) || 0;
+        if (!val.descriptionOverride || !val.descriptionOverride.trim()) {
+          val.descriptionOverride = null;
+        }
+        val.image = typeof val.image === "string" ? val.image : "";
+        val.isDefault = Boolean(val.isDefault);
+        val.active = val.active !== false;
+
+        if (!val._id || !mongoose.Types.ObjectId.isValid(val._id)) {
+          const newId = new mongoose.Types.ObjectId();
+          if (val._id) idMap.set(val._id.toString(), newId);
+          val._id = newId;
+        } else {
+          val._id = new mongoose.Types.ObjectId(val._id);
+        }
+      });
+    });
+  });
+
+  // Step 2: Remap dependsOnOptionId and dependsOnValueId
+  pieces.forEach((piece) => {
+    (piece.options || []).forEach((opt) => {
+      if (opt.dependsOnOptionId) {
+        const optStr = opt.dependsOnOptionId.toString();
+        if (idMap.has(optStr)) {
+          opt.dependsOnOptionId = idMap.get(optStr);
+        } else if (mongoose.Types.ObjectId.isValid(optStr)) {
+          opt.dependsOnOptionId = new mongoose.Types.ObjectId(optStr);
+        } else {
+          opt.dependsOnOptionId = null;
+        }
+      } else {
+        opt.dependsOnOptionId = null;
+      }
+
+      if (opt.dependsOnValueId) {
+        const valStr = opt.dependsOnValueId.toString();
+        if (idMap.has(valStr)) {
+          opt.dependsOnValueId = idMap.get(valStr);
+        } else if (mongoose.Types.ObjectId.isValid(valStr)) {
+          opt.dependsOnValueId = new mongoose.Types.ObjectId(valStr);
+        } else {
+          opt.dependsOnValueId = null;
+        }
+      } else {
+        opt.dependsOnValueId = null;
+      }
+    });
+  });
+
+  return pieces;
 };
 
 const formatProduct = (productDoc, offerContext = { isOfferActive: false, offerProductIds: new Set(), scope: "selective", offerCategories: new Set() }, raw = false) => {
@@ -226,6 +311,8 @@ router.post("/", authMiddleware, async (req, res, next) => {
       pieces,
     } = req.body;
 
+    const isConfigurable = configurable === true;
+
     const product = new Product({
       name,
       price: Number(price),
@@ -237,8 +324,8 @@ router.post("/", authMiddleware, async (req, res, next) => {
       sizes: Array.isArray(sizes) ? sizes : [],
       colors: Array.isArray(colors) ? colors : [],
       images: parseImagesInput(images),
-      configurable: configurable === true,
-      pieces: configurable === true && Array.isArray(pieces) ? pieces : [],
+      configurable: isConfigurable,
+      pieces: isConfigurable && Array.isArray(pieces) ? sanitizePiecesForSave(pieces) : [],
     });
 
     if (typeof inStock === "boolean") {
@@ -285,7 +372,10 @@ router.put("/:id", authMiddleware, async (req, res, next) => {
     if (images !== undefined) updateData.images = parseImagesInput(images);
     if (typeof inStock === "boolean") updateData.inStock = inStock;
     if (configurable !== undefined) updateData.configurable = configurable === true;
-    if (pieces !== undefined) updateData.pieces = Array.isArray(pieces) ? pieces : [];
+    if (pieces !== undefined) {
+      const isConfig = configurable !== undefined ? configurable === true : true;
+      updateData.pieces = isConfig ? sanitizePiecesForSave(pieces) : [];
+    }
 
     const product = await Product.findByIdAndUpdate(req.params.id, updateData, {
       new: true,
