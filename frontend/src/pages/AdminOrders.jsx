@@ -271,34 +271,73 @@ const AdminOrders = () => {
                   )}
 
                   {order.items && order.items.length > 0 && (
-                    <div className="mt-3 rounded-2xl bg-black/40 p-3 space-y-2 text-xs text-white/80 border border-white/5">
-                      <p className="font-semibold text-primary-300 mb-1">{t("adminOrdersPage.cards.items")}</p>
+                    <div className="mt-3 rounded-2xl bg-black/40 p-3 space-y-2.5 text-xs text-white/80 border border-white/5">
+                      <p className="font-semibold text-primary-300 mb-1 flex items-center justify-between">
+                        <span>{t("adminOrdersPage.cards.items")} ({order.items.length})</span>
+                      </p>
                       {order.items.map((item, index) => (
-                        <div key={index} className="flex items-center justify-between gap-3">
-                          <div className="flex items-center gap-2.5 min-w-0">
-                            {item.image ? (
-                              <img src={item.image} alt={item.name} className="h-10 w-10 rounded-xl object-cover border border-white/10 shrink-0" />
-                            ) : (
-                              <div className="h-10 w-10 rounded-xl bg-neutral-800 flex items-center justify-center text-[9px] text-white/40 shrink-0">بدون صورة</div>
-                            )}
-                            <span className="truncate">• {item.name || "منتج"} ({item.size || "وسيط"} - {item.color || "افتراضي"}) × {item.qty || 1}</span>
+                        <div key={index} className="rounded-xl bg-white/[0.03] p-2.5 border border-white/5 space-y-2">
+                          <div className="flex items-center justify-between gap-3">
+                            <div className="flex items-center gap-2.5 min-w-0">
+                              {item.image ? (
+                                <img src={item.image} alt={item.name} className="h-11 w-11 rounded-xl object-cover border border-white/10 shrink-0" />
+                              ) : (
+                                <div className="h-11 w-11 rounded-xl bg-neutral-800 flex items-center justify-center text-[9px] text-white/40 shrink-0">بدون صورة</div>
+                              )}
+                              <div className="min-w-0">
+                                <p className="font-bold text-white truncate flex items-center gap-1.5">
+                                  <span>{item.name || "منتج"}</span>
+                                  {item.configSnapshot?.length > 0 && (
+                                    <span className="rounded-md bg-purple-500/20 text-purple-300 border border-purple-500/30 px-1.5 py-0.5 text-[9px] font-bold">
+                                      طقم مخصص 🧩
+                                    </span>
+                                  )}
+                                </p>
+                                <p className="text-[11px] text-white/60">
+                                  المقاس: <strong className="text-white/80">{item.size || "وسيط"}</strong> • اللون: <strong className="text-white/80">{item.color || "افتراضي"}</strong> • الكمية: <strong className="text-white/80">{item.qty || 1}</strong>
+                                </p>
+                              </div>
+                            </div>
+                            <span className="font-mono text-emerald-300 shrink-0 font-bold text-sm">
+                              {((item.price || 0) * (item.qty || 1)).toFixed(2)} د.أ
+                            </span>
                           </div>
-                          <span className="font-mono text-emerald-300 shrink-0">{((item.price || 0) * (item.qty || 1)).toFixed(2)} د.أ</span>
+
+                          {/* Combo Pieces Tree Breakdown */}
+                          {item.configSnapshot && item.configSnapshot.length > 0 && (
+                            <div className="mr-4 pr-3 border-r-2 border-primary-500/50 space-y-1 pt-1 text-[11px] text-white/85 bg-black/25 rounded-lg p-2">
+                              <p className="text-[10px] font-bold text-primary-300">تفصيل قطع الطقم:</p>
+                              {item.configSnapshot.map((cfg, cIdx) => (
+                                <div key={cIdx} className="flex items-center justify-between gap-2">
+                                  <span>
+                                    ├─ <strong>{cfg.pieceName ? `${cfg.pieceName}: ` : ""}</strong>
+                                    {cfg.optionName ? `${cfg.optionName} ➔ ` : ""}
+                                    <span className="text-secondary-300 font-semibold">{cfg.selectedValue}</span>
+                                  </span>
+                                  {cfg.priceAdjustment > 0 && (
+                                    <span className="text-amber-300 font-mono text-[10px] bg-amber-950/40 px-1.5 py-0.5 rounded border border-amber-500/20">
+                                      +{cfg.priceAdjustment.toFixed(2)} د.أ
+                                    </span>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          )}
                         </div>
                       ))}
                       {order.discountAmount > 0 && (
-                        <div className="flex justify-between text-[11px] text-amber-300 pt-1 font-medium">
+                        <div className="flex justify-between text-[11px] text-amber-300 pt-1 font-medium px-1">
                           <span>خصم الكود ({order.promoCode || "عرض"}):</span>
                           <span>-{order.discountAmount.toFixed(2)} د.أ</span>
                         </div>
                       )}
                       {order.deliveryFee > 0 && (
-                        <div className="flex justify-between text-[11px] text-white/60 pt-1">
+                        <div className="flex justify-between text-[11px] text-white/60 pt-1 px-1">
                           <span>رسوم التوصيل:</span>
                           <span>{order.deliveryFee.toFixed(2)} د.أ</span>
                         </div>
                       )}
-                      <div className="pt-2 mt-2 border-t border-white/10 flex justify-between font-bold text-sm text-white">
+                      <div className="pt-2 mt-2 border-t border-white/10 flex justify-between font-bold text-sm text-white px-1">
                         <span>المجموع الإجمالي:</span>
                         <span className="text-emerald-400">{(order.totalPrice || total).toFixed(2)} د.أ</span>
                       </div>
@@ -409,18 +448,39 @@ const AdminOrders = () => {
                 </thead>
                 <tbody className="divide-y divide-neutral-200">
                   {(selectedInvoiceOrder.items || []).map((item, idx) => (
-                    <tr key={idx}>
-                      <td className="py-2.5 font-medium flex items-center gap-2">
-                        {item.image ? (
-                          <img src={item.image} alt={item.name} className="h-9 w-9 rounded-lg object-cover border border-neutral-200 shrink-0" />
-                        ) : (
-                          <div className="h-9 w-9 rounded-lg bg-neutral-100 flex items-center justify-center text-[9px] text-neutral-400 shrink-0">بدون صورة</div>
+                    <tr key={idx} className="align-top">
+                      <td className="py-2.5 font-medium">
+                        <div className="flex items-center gap-2">
+                          {item.image ? (
+                            <img src={item.image} alt={item.name} className="h-9 w-9 rounded-lg object-cover border border-neutral-200 shrink-0" />
+                          ) : (
+                            <div className="h-9 w-9 rounded-lg bg-neutral-100 flex items-center justify-center text-[9px] text-neutral-400 shrink-0">بدون صورة</div>
+                          )}
+                          <div>
+                            <span className="font-bold">{item.name || "منتج"}</span>
+                            {item.configSnapshot?.length > 0 && (
+                              <span className="mr-1 rounded bg-purple-100 text-purple-800 px-1.5 py-0.5 text-[9px] font-bold">
+                                طقم مخصص
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Invoice Combo Pieces Breakdown */}
+                        {item.configSnapshot && item.configSnapshot.length > 0 && (
+                          <div className="mr-8 mt-1 space-y-0.5 text-[10px] text-neutral-600 bg-neutral-50 p-1.5 rounded-lg border border-neutral-200">
+                            {item.configSnapshot.map((cfg, cIdx) => (
+                              <div key={cIdx} className="flex justify-between">
+                                <span>• <strong>{cfg.pieceName ? `${cfg.pieceName}: ` : ""}</strong>{cfg.optionName ? `${cfg.optionName} - ` : ""}{cfg.selectedValue}</span>
+                                {cfg.priceAdjustment > 0 && <span className="font-mono text-neutral-800">+{cfg.priceAdjustment.toFixed(2)}</span>}
+                              </div>
+                            ))}
+                          </div>
                         )}
-                        <span>{item.name || "منتج"}</span>
                       </td>
-                      <td className="py-2 text-center">{item.size || "-"} / {item.color || "-"}</td>
-                      <td className="py-2 text-center">{item.qty || 1}</td>
-                      <td className="py-2 text-left font-mono">{((item.price || 0) * (item.qty || 1)).toFixed(2)} د.أ</td>
+                      <td className="py-2.5 text-center">{item.size || "-"} / {item.color || "-"}</td>
+                      <td className="py-2.5 text-center font-bold">{item.qty || 1}</td>
+                      <td className="py-2.5 text-left font-mono font-bold">{((item.price || 0) * (item.qty || 1)).toFixed(2)} د.أ</td>
                     </tr>
                   ))}
                 </tbody>

@@ -14,6 +14,7 @@ const ProductConfigSelector = ({
   product,
   selections,
   onSelectionsChange,
+  onImageChange,
   priceSuffix = "د.أ",
 }) => {
   if (!product?.configurable || !product?.pieces?.length) return null;
@@ -77,8 +78,8 @@ const ProductConfigSelector = ({
     return errors;
   }, [product.pieces, selections, isOptionVisible]);
 
-  const handleSelect = (optionId, valueId) => {
-    const newSelections = { ...selections, [optionId]: valueId };
+  const handleSelect = (optionId, val) => {
+    const newSelections = { ...selections, [optionId]: val._id };
 
     // Clear dependent options when parent changes
     for (const opt of allOptions) {
@@ -88,6 +89,11 @@ const ProductConfigSelector = ({
     }
 
     onSelectionsChange(newSelections);
+
+    // Dynamic image swap if option value has an image
+    if (val.image && onImageChange) {
+      onImageChange(val.image);
+    }
   };
 
   const configuredPrice = (product.price || 0) + totalAdjustment;
@@ -141,16 +147,23 @@ const ProductConfigSelector = ({
                           <button
                             key={val._id}
                             type="button"
-                            onClick={() => handleSelect(option._id, val._id)}
-                            className={`group relative rounded-xl px-4 py-2.5 text-xs font-bold transition-all duration-200 ${
+                            onClick={() => handleSelect(option._id, val)}
+                            className={`group relative flex items-center gap-2 rounded-xl px-3.5 py-2 text-xs font-bold transition-all duration-200 ${
                               isSelected
                                 ? "bg-gradient-to-r from-primary-600 to-secondary-600 text-white shadow-lg shadow-primary-900/30 scale-[1.02] ring-2 ring-primary-400/50"
                                 : "bg-white/10 text-white/70 hover:bg-white/20 hover:text-white border border-white/10 hover:border-white/25"
                             }`}
                           >
+                            {val.image && (
+                              <img
+                                src={val.image}
+                                alt={val.label}
+                                className="h-5 w-5 rounded-md object-cover border border-white/30 shrink-0"
+                              />
+                            )}
                             <span>{val.label}</span>
                             {adjustment > 0 && (
-                              <span className={`mr-1.5 text-[10px] ${isSelected ? "text-white/80" : "text-primary-300"}`}>
+                              <span className={`text-[10px] ${isSelected ? "text-white/80" : "text-primary-300"}`}>
                                 +{adjustment} {priceSuffix}
                               </span>
                             )}

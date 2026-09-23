@@ -6,6 +6,7 @@ const productOptionValueSchema = new mongoose.Schema({
   label: { type: String, required: true },
   priceAdjustment: { type: Number, default: 0 },
   descriptionOverride: { type: String, default: null },
+  image: { type: String, default: "" },
   isDefault: { type: Boolean, default: false },
   sortOrder: { type: Number, default: 0 },
   active: { type: Boolean, default: true },

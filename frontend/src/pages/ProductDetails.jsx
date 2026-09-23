@@ -335,6 +335,7 @@ const ProductDetails = () => {
                   setConfigSelections(newSelections);
                   setConfigErrors([]);
                 }}
+                onImageChange={setSelectedImage}
                 priceSuffix={t("product.priceSuffix")}
               />
               {configErrors.length > 0 && (

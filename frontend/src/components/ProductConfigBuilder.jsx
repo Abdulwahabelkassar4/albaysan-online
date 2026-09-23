@@ -1,4 +1,5 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
+import axiosClient from "../api/axiosClient.js";
 
 // ─── Utility: generate a temporary client-side ID for new items ───
 let _tempIdCounter = 0;
@@ -78,9 +79,69 @@ const DescriptionOverrideEditor = ({ value, baseDescription, onChange }) => {
   );
 };
 
+// ─── Option Image Uploader ───
+const OptionImageUploader = ({ image, onImageChange }) => {
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef(null);
+
+  const handleFileChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("images", file);
+      const res = await axiosClient.post("/api/upload", formData);
+      if (res.data?.urls?.[0]) {
+        onImageChange(res.data.urls[0]);
+      }
+    } catch (err) {
+      console.error("Upload error:", err);
+      alert("فشل رفع الصورة");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  return (
+    <div className="flex items-center gap-2">
+      <input
+        type="file"
+        ref={fileInputRef}
+        onChange={handleFileChange}
+        accept="image/*"
+        className="hidden"
+      />
+      {image ? (
+        <div className="flex items-center gap-1.5 rounded-lg bg-white/10 p-1 pr-2 border border-white/10">
+          <img src={image} alt="Option preview" className="h-6 w-6 rounded-md object-cover" />
+          <span className="text-[10px] text-emerald-300 font-semibold">صورة محددة ✓</span>
+          <button
+            type="button"
+            onClick={() => onImageChange("")}
+            className="text-rose-400 hover:text-rose-300 text-xs px-1 font-bold"
+            title="إزالة الصورة"
+          >
+            ×
+          </button>
+        </div>
+      ) : (
+        <button
+          type="button"
+          disabled={uploading}
+          onClick={() => fileInputRef.current?.click()}
+          className="rounded-lg border border-dashed border-white/20 bg-white/5 px-2 py-1 text-[10px] font-semibold text-white/70 hover:bg-white/10 hover:text-white transition flex items-center gap-1"
+        >
+          {uploading ? "جاري الرفع..." : "📷 رفع صورة لهذا الخيار"}
+        </button>
+      )}
+    </div>
+  );
+};
+
 // ─── Option Value Row ───
 const OptionValueRow = ({ val, index, onUpdate, onRemove, baseDescription }) => (
-  <div className="rounded-xl border border-white/10 bg-black/30 p-3 space-y-2">
+  <div className="rounded-xl border border-white/10 bg-black/30 p-3 space-y-2.5">
     <div className="flex items-center gap-2">
       <span className="text-[10px] text-white/40 font-mono w-5 text-center">{index + 1}</span>
       <input
@@ -123,11 +184,19 @@ const OptionValueRow = ({ val, index, onUpdate, onRemove, baseDescription }) => 
         <TrashIcon className="h-3.5 w-3.5" />
       </button>
     </div>
-    <DescriptionOverrideEditor
-      value={val.descriptionOverride}
-      baseDescription={baseDescription}
-      onChange={(desc) => onUpdate({ ...val, descriptionOverride: desc })}
-    />
+
+    {/* Image & Description Controls */}
+    <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-white/5">
+      <OptionImageUploader
+        image={val.image || ""}
+        onImageChange={(imgUrl) => onUpdate({ ...val, image: imgUrl })}
+      />
+      <DescriptionOverrideEditor
+        value={val.descriptionOverride}
+        baseDescription={baseDescription}
+        onChange={(desc) => onUpdate({ ...val, descriptionOverride: desc })}
+      />
+    </div>
   </div>
 );
 

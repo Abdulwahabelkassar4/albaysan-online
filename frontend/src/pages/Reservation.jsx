@@ -76,10 +76,12 @@ const Reservation = () => {
     }
     const lines = cartItems.map((item) => {
       const itemPrice = getItemPrice(item);
-      let line = `• ${item.name} (${item.size || "وسيط"}، ${item.color || "افتراضي"}) × ${item.qty} = ${(itemPrice * item.qty).toFixed(2)} د.أ`;
+      let line = `👗 ${item.name} (${item.size || "وسيط"}، ${item.color || "افتراضي"}) × ${item.qty} = ${(itemPrice * item.qty).toFixed(2)} د.أ`;
       if (item.configSnapshot?.length) {
-        const configStr = item.configSnapshot.map((e) => `${e.optionName}: ${e.selectedValue}`).join(", ");
-        line += `\n  └ تهيئة: ${configStr}`;
+        const treeLines = item.configSnapshot.map(
+          (e, idx) => `   ${idx === item.configSnapshot.length - 1 ? "└─" : "├─"} ${e.pieceName ? `${e.pieceName}: ` : ""}${e.optionName} ➔ ${e.selectedValue}${e.priceAdjustment > 0 ? ` (+${e.priceAdjustment} د.أ)` : ""}`
+        );
+        line += `\n${treeLines.join("\n")}`;
       }
       return line;
     });
