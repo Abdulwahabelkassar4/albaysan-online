@@ -12,6 +12,7 @@ import {
   TruckIcon,
   CalendarIcon,
   MapPinIcon,
+  EyeIcon,
 } from "../components/icons.jsx";
 import { normalizeJordanPhoneForWhatsApp } from "../config/contact.js";
 
@@ -144,7 +145,7 @@ const AdminOrders = () => {
   }, [orders]);
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-8 md:px-8 space-y-6">
+    <div className="mx-auto max-w-7xl px-2.5 sm:px-4 md:px-8 py-4 sm:py-8 space-y-4 sm:space-y-6 overflow-x-hidden">
       {/* ─── Top Header & Actions ─── */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
@@ -386,7 +387,7 @@ const AdminOrders = () => {
           </div>
 
           {/* MOBILE RESPONSIVE CARD STACK (< lg) */}
-          <div className="lg:hidden space-y-3.5">
+          <div className="lg:hidden space-y-2.5">
             {orders.map((order) => {
               const orderId = order._id || order.id;
               const phoneBase = normalizeJordanPhoneForWhatsApp(order.phone);
@@ -396,42 +397,42 @@ const AdminOrders = () => {
               return (
                 <div
                   key={orderId}
-                  className="rounded-3xl border border-white/10 bg-neutral-900/90 p-5 shadow-xl backdrop-blur-xl space-y-3"
+                  className="rounded-2xl border border-white/10 bg-neutral-900/90 p-3.5 shadow-xl backdrop-blur-xl space-y-2.5"
                   onClick={() => setSelectedOrder(order)}
                 >
                   <div className="flex items-start justify-between gap-2">
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-base font-black text-white">{order.customerName}</span>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className="text-sm font-black text-white truncate max-w-[150px]">{order.customerName}</span>
                         {order.type === "delivery" ? (
-                          <span className="rounded-md bg-blue-500/20 text-blue-300 text-[10px] font-bold px-1.5 py-0.5">
+                          <span className="rounded bg-blue-500/20 text-blue-300 text-[9px] font-bold px-1.5 py-0.5">
                             توصيل
                           </span>
                         ) : (
-                          <span className="rounded-md bg-purple-500/20 text-purple-300 text-[10px] font-bold px-1.5 py-0.5">
+                          <span className="rounded bg-purple-500/20 text-purple-300 text-[9px] font-bold px-1.5 py-0.5">
                             استلام
                           </span>
                         )}
                       </div>
-                      <p className="text-xs text-white/60 font-mono mt-0.5">{order.phone}</p>
+                      <p className="text-[11px] text-white/60 font-mono mt-0.5">{order.phone}</p>
                     </div>
 
-                    <span className="text-lg font-black text-emerald-400">
-                      {total.toFixed(2)} <span className="text-xs font-normal">د.أ</span>
+                    <span className="text-base font-black text-emerald-400 shrink-0">
+                      {total.toFixed(2)} <span className="text-[10px] font-normal text-white/60">د.أ</span>
                     </span>
                   </div>
 
-                  <div className="flex items-center justify-between text-xs text-white/60 pt-2 border-t border-white/10">
-                    <span className="truncate max-w-[180px]">{order.address || "استلام من المتجر"}</span>
-                    <span>{order.createdAt ? new Date(order.createdAt).toLocaleDateString(locale) : ""}</span>
+                  <div className="flex items-center justify-between text-[11px] text-white/60 pt-1.5 border-t border-white/10">
+                    <span className="truncate max-w-[160px]">{order.address || "استلام من المتجر"}</span>
+                    <span className="text-[10px]">{order.createdAt ? new Date(order.createdAt).toLocaleDateString(locale) : ""}</span>
                   </div>
 
-                  <div className="flex items-center justify-between gap-2 pt-2" onClick={(e) => e.stopPropagation()}>
+                  <div className="flex items-center justify-between gap-1.5 pt-1.5" onClick={(e) => e.stopPropagation()}>
                     <select
                       value={order.status}
                       disabled={isUpdatingStatus}
                       onChange={(e) => updateStatus(orderId, e.target.value)}
-                      className={`flex-1 rounded-xl px-2.5 py-2 text-xs font-bold border bg-neutral-900 ${currentStatus.bg}`}
+                      className={`flex-1 rounded-xl px-2 py-1.5 text-xs font-bold border bg-neutral-900 ${currentStatus.bg}`}
                     >
                       {statusOptions.map((st) => (
                         <option key={st.value} value={st.value} className="bg-neutral-900 text-white font-medium">
@@ -445,17 +446,28 @@ const AdminOrders = () => {
                         href={`https://wa.me/${phoneBase}`}
                         target="_blank"
                         rel="noreferrer"
-                        className="rounded-xl bg-emerald-500/20 border border-emerald-500/30 p-2 text-emerald-400 hover:bg-emerald-500/30"
+                        className="rounded-xl bg-emerald-500/20 border border-emerald-500/30 p-2 text-emerald-400 hover:bg-emerald-500/30 shrink-0"
+                        title="محادثة واتساب"
                       >
-                        <WhatsAppIcon className="h-5 w-5" />
+                        <WhatsAppIcon className="h-4 w-4" />
                       </a>
                     )}
 
                     <button
-                      onClick={() => setSelectedOrder(order)}
-                      className="rounded-xl bg-white/10 px-3 py-2 text-xs font-bold text-white hover:bg-white/20"
+                      onClick={() => sendReviewRequestWhatsApp(order)}
+                      className="rounded-xl bg-purple-500/10 border border-purple-500/20 p-2 text-purple-300 hover:bg-purple-500/20 shrink-0"
+                      title="إرسال رابط التقييم"
                     >
-                      التفاصيل
+                      <SparkleIcon className="h-4 w-4" />
+                    </button>
+
+                    <button
+                      onClick={() => setSelectedOrder(order)}
+                      className="rounded-xl bg-white/10 border border-white/15 p-2 text-white hover:bg-white/20 shrink-0"
+                      title="عرض كامل التفاصيل"
+                      aria-label="View Details"
+                    >
+                      <EyeIcon className="h-4 w-4" />
                     </button>
                   </div>
                 </div>

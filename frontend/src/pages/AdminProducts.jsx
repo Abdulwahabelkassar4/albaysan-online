@@ -10,6 +10,8 @@ import {
   SparkleIcon,
   CloseIcon,
   FilterIcon,
+  EditIcon,
+  TrashIcon,
 } from "../components/icons.jsx";
 
 const defaultValues = {
@@ -844,7 +846,7 @@ const AdminProducts = () => {
             ) : filteredProducts.length === 0 ? (
               <div className="p-8 text-center text-xs text-white/40">لا توجد منتجات مطابقة للبحث.</div>
             ) : (
-              <div className="space-y-2.5 max-h-[620px] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-white/10">
+              <div className="space-y-2 max-h-[620px] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-white/10">
                 {filteredProducts.map((product) => {
                   const prodId = product._id || product.id;
                   const isSelected = selectedProductIds.includes(prodId);
@@ -853,64 +855,73 @@ const AdminProducts = () => {
                   return (
                     <div
                       key={prodId}
-                      className={`rounded-2xl border p-3 transition flex items-center justify-between gap-3 group ${
+                      className={`rounded-2xl border p-2.5 sm:p-3 transition flex items-center justify-between gap-2 sm:gap-3 group ${
                         isSelected
                           ? "border-primary-500 bg-primary-950/30"
                           : "border-white/10 bg-white/5 hover:border-white/20"
                       }`}
                     >
-                      <div className="flex items-center gap-3 min-w-0">
+                      <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
                         <input
                           type="checkbox"
                           checked={isSelected}
                           onChange={() => toggleSelectProduct(prodId)}
-                          className="h-4 w-4 rounded border-white/20 bg-neutral-800 text-primary-600 cursor-pointer"
+                          className="h-4 w-4 rounded border-white/20 bg-neutral-800 text-primary-600 cursor-pointer shrink-0"
                         />
 
-                        <div className="h-14 w-14 overflow-hidden rounded-xl bg-neutral-800 shrink-0 border border-white/10">
+                        <div className="h-11 w-11 sm:h-14 sm:w-14 overflow-hidden rounded-xl bg-neutral-800 shrink-0 border border-white/10">
                           {coverImage ? (
                             <img src={coverImage} alt={product.name} className="h-full w-full object-cover group-hover:scale-105 transition" />
                           ) : (
-                            <div className="flex h-full items-center justify-center text-[10px] text-white/40">
+                            <div className="flex h-full items-center justify-center text-[9px] text-white/40">
                               بدون صورة
                             </div>
                           )}
                         </div>
 
-                        <div className="min-w-0">
-                          <p className="text-xs font-bold text-white truncate max-w-[180px]">{product.name}</p>
-                          <div className="flex items-center gap-2 mt-1">
-                            <span className="text-xs font-black text-emerald-400 font-mono">{product.price} د.أ</span>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-xs font-bold text-white truncate max-w-[110px] xs:max-w-[150px] sm:max-w-[220px]">
+                            {product.name}
+                          </p>
+                          <div className="flex items-center gap-1.5 sm:gap-2 mt-0.5">
+                            <span className="text-xs font-black text-emerald-400 font-mono">
+                              {product.price} <span className="text-[9px] font-normal text-white/50">د.أ</span>
+                            </span>
                             <button
                               type="button"
                               onClick={(e) => toggleQuickInStock(product, e)}
-                              className={`rounded-full px-2 py-0.5 text-[10px] font-bold border transition ${
+                              className={`rounded-full px-1.5 py-0.5 text-[9px] sm:text-[10px] font-bold border transition ${
                                 product.inStock === false
                                   ? "bg-rose-500/20 text-rose-300 border-rose-500/30 hover:bg-rose-500/30"
                                   : "bg-emerald-500/20 text-emerald-300 border-emerald-500/30 hover:bg-emerald-500/30"
                               }`}
                               title="اضغط للتبديل السريع لحالة التوفر"
                             >
-                              {product.inStock === false ? "غير متوفر ✕" : "متوفر ✓"}
+                              {product.inStock === false ? "✕ نفذ" : "✓ متاح"}
                             </button>
                           </div>
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-1.5 shrink-0">
+                      {/* Icon Actions */}
+                      <div className="flex items-center gap-1 shrink-0">
                         <button
                           type="button"
                           onClick={() => handleEdit(product)}
-                          className="rounded-xl border border-white/15 bg-white/5 px-2.5 py-1.5 text-xs font-bold text-white hover:bg-white/15 transition"
+                          className="rounded-xl border border-white/15 bg-white/5 p-2 text-white/90 hover:bg-white/20 hover:text-white transition"
+                          title="تعديل بيانات المنتج"
+                          aria-label="Edit product"
                         >
-                          تعديل
+                          <EditIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                         </button>
                         <button
                           type="button"
                           onClick={() => handleDelete(prodId)}
-                          className="rounded-xl border border-rose-500/20 bg-rose-500/10 px-2.5 py-1.5 text-xs font-bold text-rose-300 hover:bg-rose-500/20 transition"
+                          className="rounded-xl border border-rose-500/20 bg-rose-500/10 p-2 text-rose-300 hover:bg-rose-500/20 hover:text-rose-200 transition"
+                          title="حذف المنتج"
+                          aria-label="Delete product"
                         >
-                          حذف
+                          <TrashIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                         </button>
                       </div>
                     </div>

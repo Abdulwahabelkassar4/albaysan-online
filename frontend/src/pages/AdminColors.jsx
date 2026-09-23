@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import axiosClient from "../api/axiosClient.js";
 import { useToast } from "../context/ToastContext.jsx";
-import { PaletteIcon, SparkleIcon } from "../components/icons.jsx";
+import { PaletteIcon, SparkleIcon, EditIcon, TrashIcon } from "../components/icons.jsx";
 
 const PRESET_HEX_COLORS = [
   "#121212", "#1f2937", "#0f172a", "#1e3a8a", "#312e81", "#581c87", 
@@ -342,18 +342,22 @@ const AdminColors = () => {
                     </div>
                   </div>
 
-                  <div className="flex gap-2 shrink-0">
+                  <div className="flex gap-1.5 shrink-0">
                     <button
                       onClick={() => handleEdit(color)}
-                      className="rounded-xl border border-white/20 px-3 py-1.5 text-xs text-white hover:bg-white/10"
+                      className="rounded-xl border border-white/15 bg-white/5 p-2 text-white/90 hover:bg-white/20 transition"
+                      title="تعديل اللون"
+                      aria-label="Edit color"
                     >
-                      تعديل
+                      <EditIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                     </button>
                     <button
                       onClick={() => handleDelete(color._id)}
-                      className="rounded-xl border border-rose-500/30 px-3 py-1.5 text-xs text-rose-300 hover:bg-rose-500/20"
+                      className="rounded-xl border border-rose-500/20 bg-rose-500/10 p-2 text-rose-300 hover:bg-rose-500/20 transition"
+                      title="حذف اللون"
+                      aria-label="Delete color"
                     >
-                      حذف
+                      <TrashIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                     </button>
                   </div>
                 </div>

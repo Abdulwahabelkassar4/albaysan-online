@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import axiosClient from "../api/axiosClient.js";
 import { useToast } from "../context/ToastContext.jsx";
-import { ChartIcon, PlusIcon, CloseIcon } from "../components/icons.jsx";
+import { ChartIcon, PlusIcon, CloseIcon, TrashIcon } from "../components/icons.jsx";
 
 const AdminCategories = () => {
   const { t, i18n } = useTranslation();
@@ -75,9 +75,9 @@ const AdminCategories = () => {
   const collectionList = categories.filter((c) => c.type === "collection");
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-8 md:px-8 space-y-6">
+    <div className="mx-auto max-w-7xl px-2.5 sm:px-4 md:px-8 py-4 sm:py-8 space-y-4 sm:space-y-6 overflow-x-hidden">
       {/* ─── Top Header ─── */}
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-1.5">
         <h1 className="text-2xl md:text-3xl font-black text-white flex items-center gap-2.5">
           <ChartIcon className="h-7 w-7 text-emerald-400" />
           <span>إدارة التصنيفات والمجموعات</span>
@@ -88,9 +88,9 @@ const AdminCategories = () => {
       </div>
 
       {/* ─── Add Category Form ─── */}
-      <div className="rounded-3xl border border-white/10 bg-neutral-900/80 p-6 shadow-2xl backdrop-blur-xl">
-        <h2 className="text-base font-bold text-white mb-4">إضافة تصنيف أو كوليكشن جديد</h2>
-        <form onSubmit={handleAdd} className="flex flex-col sm:flex-row gap-3">
+      <div className="rounded-2xl sm:rounded-3xl border border-white/10 bg-neutral-900/80 p-4 sm:p-6 shadow-2xl backdrop-blur-xl">
+        <h2 className="text-sm sm:text-base font-bold text-white mb-3">إضافة تصنيف أو كوليكشن جديد</h2>
+        <form onSubmit={handleAdd} className="flex flex-col sm:flex-row gap-2.5 sm:gap-3">
           <input
             type="text"
             value={name}
@@ -118,12 +118,12 @@ const AdminCategories = () => {
       </div>
 
       {/* ─── Categories & Collections Grid ─── */}
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2">
         {/* Categories Section */}
-        <div className="rounded-3xl border border-white/10 bg-neutral-900/80 p-6 shadow-xl backdrop-blur-xl">
-          <div className="flex items-center justify-between pb-3 border-b border-white/10 mb-4">
-            <h3 className="text-sm font-bold text-emerald-400 flex items-center gap-2">
-              <span>🏷️ الفئات والتصنيفات الرئيسية ({categoryList.length})</span>
+        <div className="rounded-2xl sm:rounded-3xl border border-white/10 bg-neutral-900/80 p-4 sm:p-6 shadow-xl backdrop-blur-xl">
+          <div className="flex items-center justify-between pb-2.5 border-b border-white/10 mb-3">
+            <h3 className="text-xs sm:text-sm font-bold text-emerald-400 flex items-center gap-2">
+              <span>🏷️ الفئات والتصنيفات ({categoryList.length})</span>
             </h3>
           </div>
 
@@ -136,17 +136,17 @@ const AdminCategories = () => {
           ) : categoryList.length === 0 ? (
             <p className="text-xs text-white/50 text-center py-6">لا توجد فئات مسجلة حالياً.</p>
           ) : (
-            <ul className="space-y-2.5">
+            <ul className="space-y-2">
               {categoryList.map((item) => (
                 <li
                   key={item._id}
-                  className="flex items-center justify-between rounded-2xl border border-white/5 bg-white/5 p-3 text-xs text-white hover:border-white/15 transition"
+                  className="flex items-center justify-between rounded-xl border border-white/5 bg-white/5 p-2.5 sm:p-3 text-xs text-white hover:border-white/15 transition"
                 >
-                  <span className="font-bold text-sm">{item.name}</span>
-                  <div className="flex items-center gap-2">
+                  <span className="font-bold text-xs sm:text-sm truncate max-w-[180px]">{item.name}</span>
+                  <div className="flex items-center gap-1.5">
                     <button
                       onClick={() => handleToggleActive(item._id, item.isActive)}
-                      className={`rounded-xl px-2.5 py-1 text-[10px] font-bold border transition ${
+                      className={`rounded-xl px-2 py-1 text-[10px] font-bold border transition ${
                         item.isActive
                           ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/30"
                           : "bg-rose-500/20 text-rose-300 border-rose-500/30"
@@ -156,9 +156,11 @@ const AdminCategories = () => {
                     </button>
                     <button
                       onClick={() => handleDelete(item._id)}
-                      className="rounded-xl border border-rose-500/30 bg-rose-500/10 px-2.5 py-1 text-[10px] font-bold text-rose-300 hover:bg-rose-500/20 transition"
+                      className="rounded-xl border border-rose-500/20 bg-rose-500/10 p-1.5 text-rose-300 hover:bg-rose-500/20 transition"
+                      title="حذف"
+                      aria-label="Delete category"
                     >
-                      حذف
+                      <TrashIcon className="h-3.5 w-3.5" />
                     </button>
                   </div>
                 </li>
@@ -168,9 +170,9 @@ const AdminCategories = () => {
         </div>
 
         {/* Collections Section */}
-        <div className="rounded-3xl border border-white/10 bg-neutral-900/80 p-6 shadow-xl backdrop-blur-xl">
-          <div className="flex items-center justify-between pb-3 border-b border-white/10 mb-4">
-            <h3 className="text-sm font-bold text-secondary-300 flex items-center gap-2">
+        <div className="rounded-2xl sm:rounded-3xl border border-white/10 bg-neutral-900/80 p-4 sm:p-6 shadow-xl backdrop-blur-xl">
+          <div className="flex items-center justify-between pb-2.5 border-b border-white/10 mb-3">
+            <h3 className="text-xs sm:text-sm font-bold text-secondary-300 flex items-center gap-2">
               <span>✨ المجموعات والكوليكشن ({collectionList.length})</span>
             </h3>
           </div>
@@ -184,17 +186,17 @@ const AdminCategories = () => {
           ) : collectionList.length === 0 ? (
             <p className="text-xs text-white/50 text-center py-6">لا توجد مجموعات مسجلة حالياً.</p>
           ) : (
-            <ul className="space-y-2.5">
+            <ul className="space-y-2">
               {collectionList.map((item) => (
                 <li
                   key={item._id}
-                  className="flex items-center justify-between rounded-2xl border border-white/5 bg-white/5 p-3 text-xs text-white hover:border-white/15 transition"
+                  className="flex items-center justify-between rounded-xl border border-white/5 bg-white/5 p-2.5 sm:p-3 text-xs text-white hover:border-white/15 transition"
                 >
-                  <span className="font-bold text-sm">{item.name}</span>
-                  <div className="flex items-center gap-2">
+                  <span className="font-bold text-xs sm:text-sm truncate max-w-[180px]">{item.name}</span>
+                  <div className="flex items-center gap-1.5">
                     <button
                       onClick={() => handleToggleActive(item._id, item.isActive)}
-                      className={`rounded-xl px-2.5 py-1 text-[10px] font-bold border transition ${
+                      className={`rounded-xl px-2 py-1 text-[10px] font-bold border transition ${
                         item.isActive
                           ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/30"
                           : "bg-rose-500/20 text-rose-300 border-rose-500/30"
@@ -204,9 +206,11 @@ const AdminCategories = () => {
                     </button>
                     <button
                       onClick={() => handleDelete(item._id)}
-                      className="rounded-xl border border-rose-500/30 bg-rose-500/10 px-2.5 py-1 text-[10px] font-bold text-rose-300 hover:bg-rose-500/20 transition"
+                      className="rounded-xl border border-rose-500/20 bg-rose-500/10 p-1.5 text-rose-300 hover:bg-rose-500/20 transition"
+                      title="حذف"
+                      aria-label="Delete collection"
                     >
-                      حذف
+                      <TrashIcon className="h-3.5 w-3.5" />
                     </button>
                   </div>
                 </li>

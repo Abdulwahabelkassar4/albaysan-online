@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import axiosClient from "../api/axiosClient.js";
 import { useToast } from "../context/ToastContext.jsx";
 import OfferCountdown from "../components/OfferCountdown.jsx";
-import { ArrowForwardIcon, ClockIcon, SparkleIcon, CloseIcon } from "../components/icons.jsx";
+import { ArrowForwardIcon, ClockIcon, SparkleIcon, CloseIcon, EditIcon, TrashIcon } from "../components/icons.jsx";
 
 // Helper to format ISO Date string into HTML <input type="datetime-local"> format YYYY-MM-DDTHH:mm
 const toDatetimeLocal = (dateString) => {
@@ -679,10 +679,10 @@ const AdminOffersConfig = () => {
                         )}
                       </div>
 
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1.5 shrink-0">
                         <button
                           onClick={() => togglePromoStatus(promo)}
-                          className={`text-xs px-2.5 py-1 rounded-lg border transition ${
+                          className={`text-[11px] font-bold px-2 py-1 rounded-xl border transition ${
                             promo.isEnabled
                               ? "bg-white/10 text-white/80 border-white/20 hover:bg-white/20"
                               : "bg-emerald-500/20 text-emerald-300 border-emerald-500/30 hover:bg-emerald-500/30"
@@ -692,15 +692,19 @@ const AdminOffersConfig = () => {
                         </button>
                         <button
                           onClick={() => handleEditPromoModal(promo)}
-                          className="text-xs px-2.5 py-1 rounded-lg bg-primary-500/20 text-primary-300 border border-primary-500/30 hover:bg-primary-500/30 transition"
+                          className="p-1.5 rounded-xl bg-primary-500/20 text-primary-300 border border-primary-500/30 hover:bg-primary-500/30 transition"
+                          title="تعديل كود الخصم"
+                          aria-label="Edit promo code"
                         >
-                          تعديل
+                          <EditIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                         </button>
                         <button
                           onClick={() => handleDeletePromo(promo._id || promo.id)}
-                          className="text-xs px-2.5 py-1 rounded-lg bg-red-500/20 text-red-300 border border-red-500/30 hover:bg-red-500/30 transition"
+                          className="p-1.5 rounded-xl bg-red-500/20 text-red-300 border border-red-500/30 hover:bg-red-500/30 transition"
+                          title="حذف كود الخصم"
+                          aria-label="Delete promo code"
                         >
-                          حذف
+                          <TrashIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                         </button>
                       </div>
                     </div>

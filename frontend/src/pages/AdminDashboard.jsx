@@ -88,7 +88,7 @@ const AdminDashboard = () => {
   };
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-8 md:px-8 space-y-8">
+    <div className="mx-auto max-w-7xl px-2.5 sm:px-4 md:px-8 py-4 sm:py-8 space-y-6 sm:space-y-8 overflow-x-hidden">
       {/* ─── Header & Quick Action Launcher ─── */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
