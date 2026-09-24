@@ -106,64 +106,59 @@ const Reservation = () => {
       const locale = isRTL ? "ar-JO" : "en-US";
       const formattedDate = pickupDate ? new Date(pickupDate).toLocaleDateString(locale) : "";
 
-      const itemBlocks = cartItems.map((item, index) => {
-        const itemUnitPrice = item.configuredPrice != null ? item.configuredPrice : item.price;
-        const itemLineTotal = (itemUnitPrice * (item.qty || 1)).toFixed(2);
-        
-        let details = [];
-        // Size and Color
-        const sizeStr = item.size ? `المقاس: ${item.size}` : "مقاس موحد";
-        const colorStr = item.color ? `اللون: ${item.color}` : "لون قياسي";
-        details.push(`   ▫️ ${sizeStr} | ${colorStr}`);
+      const itemBlocks = cartItems.map((item) => {
+        const sizeStr = item.size ? `المقاس ${item.size}` : "المقاس موحد";
+        const colorStr = item.color ? `اللون ${item.color}` : "لون قياسي";
+        let lines = [`* ${item.name} (${sizeStr}، ${colorStr}) × ${item.qty || 1}`];
 
         // Customization / Pieces options
         if (item.configSnapshot?.length) {
-          const configDetails = item.configSnapshot.map((c) => {
-            let optStr = `${c.pieceName ? `${c.pieceName}: ` : ""}${c.optionName}: ${c.selectedValue}`;
+          item.configSnapshot.forEach((c) => {
+            let optStr = `${c.pieceName ? `${c.pieceName} : ` : ""}${c.optionName} : ${c.selectedValue}`;
             if (c.priceAdjustment && c.priceAdjustment > 0) {
               optStr += ` (+${c.priceAdjustment} د.أ)`;
             }
-            return optStr;
-          }).join(" ، ");
-          details.push(`   ▫️ الخيارات: ${configDetails}`);
+            lines.push(`  ↳ [${optStr} ]`);
+          });
         }
 
-        // Product description (if available)
-        if (item.description && item.description.trim()) {
-          const cleanDesc = item.description.trim().replace(/\n+/g, " ");
-          const shortDesc = cleanDesc.length > 70 ? cleanDesc.slice(0, 70) + "..." : cleanDesc;
-          details.push(`   ▫️ الوصف: ${shortDesc}`);
+        // Product description
+        const itemDesc = item.description || item.descriptionUsed;
+        if (itemDesc && itemDesc.trim()) {
+          const cleanDesc = itemDesc.trim().replace(/\r?\n/g, " ");
+          lines.push(`  ↳ [الوصف : ${cleanDesc} ]`);
         }
 
-        // Unit price & line total
-        details.push(`   ▫️ السعر: ${Number(itemUnitPrice).toFixed(2)} د.أ × ${item.qty} = *${itemLineTotal} د.أ*`);
+        return lines.join("\n");
+      }).join("\n");
 
-        return `*${index + 1}.* *${item.name}*\n${details.join("\n")}`;
-      }).join("\n\n");
+      let messageParts = [
+        `🛍️ طلب حجز واستلام من المتجر\n`,
+        `👤 الاسم: ${customerName}\n`,
+        `📞 رقم الهاتف: ${phone}\n`,
+      ];
 
-      const messageLines = [
-        `🛍️ *طلب حجز واستلام من المتجر*`,
-        `━━━━━━━━━━━━━━━━━━`,
-        `👤 *بيانات العميل:*`,
-        `• *الاسم:* ${customerName}`,
-        `• *الهاتف:* ${phone}`,
-        formattedDate ? `• *تاريخ الاستلام:* ${formattedDate}` : null,
-        (height || weight) ? `• *المقاسات:* ${height ? `الطول: ${height} سم` : ""} ${height && weight ? "|" : ""} ${weight ? `الوزن: ${weight} كغم` : ""}`.trim() : null,
-        `━━━━━━━━━━━━━━━━━━`,
-        `📦 *المنتجات المطلوبة (${cartItems.length}):*`,
-        "",
-        itemBlocks,
-        "",
-        `━━━━━━━━━━━━━━━━━━`,
-        `💵 *ملخص الحساب:*`,
-        `• *المجموع الفرعي:* ${subtotal.toFixed(2)} د.أ`,
-        appliedPromo && discountAmount > 0 ? `• 🏷️ *كود الخصم:* ${appliedPromo.promoCode} (${discountLabel} = -${discountAmount.toFixed(2)} د.أ)` : null,
-        `• 💰 *الإجمالي النهائي:* *${finalTotal.toFixed(2)} د.أ*`,
-        `━━━━━━━━━━━━━━━━━━`,
-        `✨ *تم الإرسال من موقع البيلسان أونلاين*`
-      ].filter(Boolean);
+      if (formattedDate) {
+        messageParts.push(`📅 تاريخ الاستلام: ${formattedDate}\n`);
+      }
+      if (height) {
+        messageParts.push(`📏 الطول: ${height} سم\n`);
+      }
+      if (weight) {
+        messageParts.push(`⚖️ الوزن: ${weight} كغم\n`);
+      }
 
-      const orderText = messageLines.join("\n");
+      messageParts.push(`📦 المنتجات المطلوبة:\n${itemBlocks}\n`);
+      messageParts.push(`💵 المجموع الفرعي: ${subtotal.toFixed(2)} د.أ\n`);
+
+      if (appliedPromo && discountAmount > 0) {
+        messageParts.push(`🏷️ كود الخصم (${appliedPromo.promoCode} - ${discountLabel}): -${discountAmount.toFixed(2)} د.أ\n`);
+      }
+
+      messageParts.push(`💰 الإجمالي النهائي: ${finalTotal.toFixed(2)} د.أ\n\n`);
+      messageParts.push(`✨ تم الإرسال من موقع البيلسان أونلاين`);
+
+      const orderText = messageParts.join("\n");
       const whatsappURL = buildWhatsAppLink({ message: orderText });
 
       await axiosClient.post("/api/orders", {

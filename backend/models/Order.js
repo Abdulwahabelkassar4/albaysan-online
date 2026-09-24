@@ -13,6 +13,8 @@ const configSnapshotEntrySchema = new mongoose.Schema(
 const orderItemSchema = new mongoose.Schema(
   {
     productId: { type: mongoose.Schema.Types.ObjectId, ref: "Product" },
+    name: { type: String },
+    description: { type: String },
     qty: { type: Number, default: 1 },
     size: { type: String },
     color: { type: String },

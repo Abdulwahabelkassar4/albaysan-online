@@ -114,6 +114,16 @@ router.post("/", async (req, res, next) => {
         validatedItem.descriptionUsed = descUsed;
       }
 
+      if (!validatedItem.productId && item.id) {
+        validatedItem.productId = item.id;
+      }
+      if (!validatedItem.name && item.name) {
+        validatedItem.name = item.name;
+      }
+      if (!validatedItem.description && item.description) {
+        validatedItem.description = item.description;
+      }
+
       // Remove frontend-only fields
       delete validatedItem.lineId;
       delete validatedItem.configuration;

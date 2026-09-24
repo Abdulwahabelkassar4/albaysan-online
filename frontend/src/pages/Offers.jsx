@@ -6,6 +6,7 @@ import { useCart } from "../context/CartContext.jsx";
 import { useToast } from "../context/ToastContext.jsx";
 import { FireIcon, ShoppingBagIcon } from "../components/icons.jsx";
 import OfferCountdown from "../components/OfferCountdown.jsx";
+import QuickAddModal from "../components/QuickAddModal.jsx";
 
 const Offers = () => {
   const { t, i18n } = useTranslation();
@@ -16,6 +17,7 @@ const Offers = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [offerSetting, setOfferSetting] = useState(null);
+  const [selectedProductForQuickAdd, setSelectedProductForQuickAdd] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -45,8 +47,7 @@ const Offers = () => {
   const handleQuickAdd = (product, e) => {
     e.preventDefault();
     e.stopPropagation();
-    addToCart(product, { qty: 1 });
-    showToast(t("productCard.quickAddSuccess") || "تمت إضافة المنتج إلى السلة 🛍️", "success");
+    setSelectedProductForQuickAdd(product);
   };
 
   return (
@@ -166,6 +167,13 @@ const Offers = () => {
           </div>
         )}
       </div>
+
+      {/* Quick Add Modal for Offers */}
+      <QuickAddModal
+        product={selectedProductForQuickAdd}
+        isOpen={Boolean(selectedProductForQuickAdd)}
+        onClose={() => setSelectedProductForQuickAdd(null)}
+      />
     </section>
   );
 };

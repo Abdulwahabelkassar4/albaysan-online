@@ -265,9 +265,9 @@ const OrderInvoiceModal = ({ order, onClose }) => {
                         <td className="p-2.5 text-center font-bold text-primary-700">{idx + 1}</td>
                         <td className="p-2.5 space-y-1">
                           <div className="font-bold text-slate-900 text-sm">{item.name}</div>
-                          {item.description && (
+                          {(item.description || item.descriptionUsed) && (
                             <p className="text-[11px] text-slate-500 leading-snug line-clamp-2">
-                              {item.description}
+                              {item.description || item.descriptionUsed}
                             </p>
                           )}
                           <div className="flex flex-wrap gap-1.5 text-[10.5px]">
