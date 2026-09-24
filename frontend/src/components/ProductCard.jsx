@@ -26,6 +26,7 @@ const ProductCard = ({ product }) => {
     addItem({
       id: productId,
       name: product.name,
+      description: product.description || "",
       price: product.price,
       size: product.sizes?.[0] || t("product.defaultSize"),
       color: product.colors?.[0] || t("product.defaultColor"),

@@ -13,7 +13,9 @@ import {
   CalendarIcon,
   MapPinIcon,
   EyeIcon,
+  PrinterIcon,
 } from "../components/icons.jsx";
+import OrderInvoiceModal from "../components/admin/OrderInvoiceModal.jsx";
 import { normalizeJordanPhoneForWhatsApp } from "../config/contact.js";
 
 const statusOptions = [
@@ -44,6 +46,7 @@ const AdminOrders = () => {
     completedOrders: 0,
   });
   const [selectedOrder, setSelectedOrder] = useState(null);
+  const [printingOrder, setPrintingOrder] = useState(null);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
 
   const { showToast } = useToast();
@@ -507,6 +510,15 @@ const AdminOrders = () => {
                     </button>
 
                     <button
+                      onClick={() => setPrintingOrder(order)}
+                      className="rounded-xl bg-primary-500/10 border border-primary-500/20 p-2 text-primary-300 hover:bg-primary-500/20 shrink-0"
+                      title="طباعة الفاتورة الرسمية"
+                      aria-label="Print Invoice"
+                    >
+                      <PrinterIcon className="h-4 w-4" />
+                    </button>
+
+                    <button
                       onClick={() => setSelectedOrder(order)}
                       className="rounded-xl bg-white/10 border border-white/15 p-2 text-white hover:bg-white/20 shrink-0"
                       title="عرض كامل التفاصيل"
@@ -737,7 +749,16 @@ const AdminOrders = () => {
             </div>
 
             {/* Drawer Footer Actions */}
-            <div className="pt-6 border-t border-white/10 flex items-center gap-3">
+            <div className="pt-6 border-t border-white/10 flex flex-wrap items-center gap-2">
+              <button
+                onClick={() => setPrintingOrder(selectedOrder)}
+                className="flex items-center justify-center gap-1.5 rounded-2xl bg-primary-600/20 border border-primary-500/30 px-4 py-3 text-xs font-bold text-primary-300 hover:bg-primary-500/30 transition active:scale-95"
+                title="طباعة الفاتورة الرسمية"
+              >
+                <PrinterIcon className="h-4 w-4" />
+                <span>طباعة الفاتورة</span>
+              </button>
+
               <button
                 onClick={() => sendReviewRequestWhatsApp(selectedOrder)}
                 className="flex-1 flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-purple-600 to-pink-600 py-3 text-xs font-bold text-white shadow-lg shadow-purple-950/50 hover:scale-[1.02] transition"
@@ -748,13 +769,21 @@ const AdminOrders = () => {
 
               <button
                 onClick={() => setSelectedOrder(null)}
-                className="rounded-2xl border border-white/10 bg-white/5 px-5 py-3 text-xs font-bold text-white/80 hover:bg-white/10"
+                className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-xs font-bold text-white/80 hover:bg-white/10"
               >
                 إغلاق
               </button>
             </div>
           </div>
         </div>
+      )}
+
+      {/* ─── PRINTABLE / PDF INVOICE MODAL ─── */}
+      {printingOrder && (
+        <OrderInvoiceModal
+          order={printingOrder}
+          onClose={() => setPrintingOrder(null)}
+        />
       )}
     </div>
   );

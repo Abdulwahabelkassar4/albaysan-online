@@ -106,30 +106,60 @@ const Reservation = () => {
       const locale = isRTL ? "ar-JO" : "en-US";
       const formattedDate = pickupDate ? new Date(pickupDate).toLocaleDateString(locale) : "";
 
-      const itemLines = cartItems.map((item) => {
-        let line = `• ${item.name} (${item.size ? `المقاس ${item.size}` : "مقاس موحد"}، ${item.color ? `اللون ${item.color}` : "لون قياسي"}) × ${item.qty}`;
+      const itemBlocks = cartItems.map((item, index) => {
+        const itemUnitPrice = item.configuredPrice != null ? item.configuredPrice : item.price;
+        const itemLineTotal = (itemUnitPrice * (item.qty || 1)).toFixed(2);
+        
+        let details = [];
+        // Size and Color
+        const sizeStr = item.size ? `المقاس: ${item.size}` : "مقاس موحد";
+        const colorStr = item.color ? `اللون: ${item.color}` : "لون قياسي";
+        details.push(`   ▫️ ${sizeStr} | ${colorStr}`);
+
+        // Customization / Pieces options
         if (item.configSnapshot?.length) {
-          const configStr = item.configSnapshot.map((e) => `${e.optionName}: ${e.selectedValue}`).join("، ");
-          line += `\n  ↳ [${configStr}]`;
+          const configDetails = item.configSnapshot.map((c) => {
+            let optStr = `${c.pieceName ? `${c.pieceName}: ` : ""}${c.optionName}: ${c.selectedValue}`;
+            if (c.priceAdjustment && c.priceAdjustment > 0) {
+              optStr += ` (+${c.priceAdjustment} د.أ)`;
+            }
+            return optStr;
+          }).join(" ، ");
+          details.push(`   ▫️ الخيارات: ${configDetails}`);
         }
-        return line;
-      }).join("\n");
+
+        // Product description (if available)
+        if (item.description && item.description.trim()) {
+          const cleanDesc = item.description.trim().replace(/\n+/g, " ");
+          const shortDesc = cleanDesc.length > 70 ? cleanDesc.slice(0, 70) + "..." : cleanDesc;
+          details.push(`   ▫️ الوصف: ${shortDesc}`);
+        }
+
+        // Unit price & line total
+        details.push(`   ▫️ السعر: ${Number(itemUnitPrice).toFixed(2)} د.أ × ${item.qty} = *${itemLineTotal} د.أ*`);
+
+        return `*${index + 1}.* *${item.name}*\n${details.join("\n")}`;
+      }).join("\n\n");
 
       const messageLines = [
         `🛍️ *طلب حجز واستلام من المتجر*`,
-        `👤 *الاسم:* ${customerName}`,
-        `📞 *رقم الهاتف:* ${phone}`,
-        formattedDate ? `📅 *تاريخ الاستلام:* ${formattedDate}` : null,
-        `📏 *الطول:* ${height} سم`,
-        `⚖️ *الوزن:* ${weight} كغم`,
+        `━━━━━━━━━━━━━━━━━━`,
+        `👤 *بيانات العميل:*`,
+        `• *الاسم:* ${customerName}`,
+        `• *الهاتف:* ${phone}`,
+        formattedDate ? `• *تاريخ الاستلام:* ${formattedDate}` : null,
+        (height || weight) ? `• *المقاسات:* ${height ? `الطول: ${height} سم` : ""} ${height && weight ? "|" : ""} ${weight ? `الوزن: ${weight} كغم` : ""}`.trim() : null,
+        `━━━━━━━━━━━━━━━━━━`,
+        `📦 *المنتجات المطلوبة (${cartItems.length}):*`,
         "",
-        `📦 *المنتجات المطلوبة:*`,
-        itemLines,
+        itemBlocks,
         "",
-        `💵 *المجموع الفرعي:* ${subtotal.toFixed(2)} د.أ`,
-        appliedPromo && discountAmount > 0 ? `🏷️ *كود الخصم:* ${appliedPromo.promoCode} (${discountLabel} = -${discountAmount.toFixed(2)} د.أ)` : null,
-        `💰 *الإجمالي النهائي:* ${finalTotal.toFixed(2)} د.أ`,
-        "",
+        `━━━━━━━━━━━━━━━━━━`,
+        `💵 *ملخص الحساب:*`,
+        `• *المجموع الفرعي:* ${subtotal.toFixed(2)} د.أ`,
+        appliedPromo && discountAmount > 0 ? `• 🏷️ *كود الخصم:* ${appliedPromo.promoCode} (${discountLabel} = -${discountAmount.toFixed(2)} د.أ)` : null,
+        `• 💰 *الإجمالي النهائي:* *${finalTotal.toFixed(2)} د.أ*`,
+        `━━━━━━━━━━━━━━━━━━`,
         `✨ *تم الإرسال من موقع البيلسان أونلاين*`
       ].filter(Boolean);
 
