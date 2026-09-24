@@ -14,6 +14,7 @@ import {
   MapPinIcon,
   EyeIcon,
   PrinterIcon,
+  DownloadIcon,
 } from "../components/icons.jsx";
 import OrderInvoiceModal from "../components/admin/OrderInvoiceModal.jsx";
 import { normalizeJordanPhoneForWhatsApp } from "../config/contact.js";
@@ -546,10 +547,10 @@ const AdminOrders = () => {
                     <button
                       onClick={() => setPrintingOrder(order)}
                       className="rounded-xl bg-primary-500/10 border border-primary-500/20 p-2 text-primary-300 hover:bg-primary-500/20 shrink-0"
-                      title="طباعة الفاتورة الرسمية"
-                      aria-label="Print Invoice"
+                      title="تحميل الفاتورة PDF"
+                      aria-label="Download Invoice PDF"
                     >
-                      <PrinterIcon className="h-4 w-4" />
+                      <DownloadIcon className="h-4 w-4" />
                     </button>
 
                     <button
@@ -796,10 +797,10 @@ const AdminOrders = () => {
               <button
                 onClick={() => setPrintingOrder(selectedOrder)}
                 className="flex items-center justify-center gap-1.5 rounded-2xl bg-primary-600/20 border border-primary-500/30 px-4 py-3 text-xs font-bold text-primary-300 hover:bg-primary-500/30 transition active:scale-95"
-                title="طباعة الفاتورة الرسمية"
+                title="تحميل الفاتورة PDF"
               >
-                <PrinterIcon className="h-4 w-4" />
-                <span>طباعة الفاتورة</span>
+                <DownloadIcon className="h-4 w-4" />
+                <span>تحميل الفاتورة PDF</span>
               </button>
 
               <button

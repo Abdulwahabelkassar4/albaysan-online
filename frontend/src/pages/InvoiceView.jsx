@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import axiosClient from "../api/axiosClient.js";
 import logoImg from "../assets/logo.jpg";
-import { PrinterIcon, SparkleIcon } from "../components/icons.jsx";
+import { DownloadIcon, SparkleIcon } from "../components/icons.jsx";
 
 const InvoiceView = () => {
   const { id } = useParams();
@@ -28,8 +28,19 @@ const InvoiceView = () => {
     }
   }, [id]);
 
-  const handlePrint = () => {
+  const handleDownloadPDF = () => {
+    if (!order) return;
+    const cleanCustomer = (order.customerName || "الزبون").trim().replace(/[\/\\:*?"<>|]/g, "_");
+    const cleanShortId = (order._id || order.id || "").slice(-6).toUpperCase();
+    const originalTitle = document.title;
+    
+    // Set contextual filename for saving PDF
+    document.title = `فاتورة_البيلسان_${cleanCustomer}_ORD-${cleanShortId}`;
     window.print();
+    
+    setTimeout(() => {
+      document.title = originalTitle;
+    }, 1000);
   };
 
   if (loading) {
@@ -108,11 +119,12 @@ const InvoiceView = () => {
           </Link>
 
           <button
-            onClick={handlePrint}
+            onClick={handleDownloadPDF}
             className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-primary-600 to-secondary-600 hover:from-primary-500 hover:to-secondary-500 px-4 py-2 text-xs font-bold text-white shadow-lg shadow-primary-950/40 transition active:scale-95"
+            title="تحميل الفاتورة كملف PDF"
           >
-            <PrinterIcon className="h-4 w-4" />
-            <span>طباعة / حفظ كـ PDF</span>
+            <DownloadIcon className="h-4 w-4" />
+            <span>تحميل الفاتورة PDF</span>
           </button>
         </div>
 

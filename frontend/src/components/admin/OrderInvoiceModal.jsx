@@ -1,6 +1,6 @@
 import React from "react";
 import logoImg from "../../assets/logo.jpg";
-import { CloseIcon, PrinterIcon, WhatsAppIcon } from "../icons.jsx";
+import { CloseIcon, DownloadIcon, WhatsAppIcon } from "../icons.jsx";
 import { normalizeJordanPhoneForWhatsApp } from "../../config/contact.js";
 
 const OrderInvoiceModal = ({ order, onClose }) => {
@@ -39,8 +39,18 @@ const OrderInvoiceModal = ({ order, onClose }) => {
   const discountAmount = order.discountAmount || 0;
   const totalPrice = order.totalPrice != null ? order.totalPrice : subtotal + deliveryFee - discountAmount;
 
-  const handlePrint = () => {
+  const handleDownloadPDF = () => {
+    const cleanCustomer = (order.customerName || "الزبون").trim().replace(/[\/\\:*?"<>|]/g, "_");
+    const cleanShortId = (orderId ? orderId.slice(-6).toUpperCase() : "OFFICIAL");
+    const originalTitle = document.title;
+    
+    // Set contextual filename for saving PDF
+    document.title = `فاتورة_البيلسان_${cleanCustomer}_ORD-${cleanShortId}`;
     window.print();
+    
+    setTimeout(() => {
+      document.title = originalTitle;
+    }, 1000);
   };
 
   const handleSendWhatsApp = () => {
@@ -80,11 +90,12 @@ const OrderInvoiceModal = ({ order, onClose }) => {
             )}
 
             <button
-              onClick={handlePrint}
+              onClick={handleDownloadPDF}
               className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-primary-600 to-secondary-600 hover:from-primary-500 hover:to-secondary-500 px-4 py-2 text-xs font-bold text-white shadow-lg shadow-primary-950/40 transition active:scale-95"
+              title="تحميل الفاتورة كملف PDF"
             >
-              <PrinterIcon className="h-4 w-4" />
-              <span>طباعة / حفظ كـ PDF</span>
+              <DownloadIcon className="h-4 w-4" />
+              <span>تحميل الفاتورة PDF</span>
             </button>
 
             <button
