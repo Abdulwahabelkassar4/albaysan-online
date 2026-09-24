@@ -1,6 +1,6 @@
 import React from "react";
 import logoImg from "../../assets/logo.jpg";
-import { CloseIcon, DownloadIcon, WhatsAppIcon } from "../icons.jsx";
+import { CloseIcon, DownloadIcon, PrinterIcon, WhatsAppIcon } from "../icons.jsx";
 import { normalizeJordanPhoneForWhatsApp } from "../../config/contact.js";
 
 const OrderInvoiceModal = ({ order, onClose }) => {
@@ -38,6 +38,10 @@ const OrderInvoiceModal = ({ order, onClose }) => {
   const deliveryFee = order.deliveryFee || 0;
   const discountAmount = order.discountAmount || 0;
   const totalPrice = order.totalPrice != null ? order.totalPrice : subtotal + deliveryFee - discountAmount;
+
+  const handlePrint = () => {
+    window.print();
+  };
 
   const handleDownloadPDF = () => {
     const cleanCustomer = (order.customerName || "الزبون").trim().replace(/[\/\\:*?"<>|]/g, "_");
@@ -77,25 +81,34 @@ const OrderInvoiceModal = ({ order, onClose }) => {
             </span>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             {order.phone && (
               <button
                 onClick={handleSendWhatsApp}
-                className="flex items-center gap-1.5 rounded-xl bg-emerald-600/20 border border-emerald-500/30 hover:bg-emerald-600/30 px-3.5 py-2 text-xs font-bold text-emerald-300 transition active:scale-95"
+                className="flex items-center gap-1.5 rounded-xl bg-emerald-600/20 border border-emerald-500/30 hover:bg-emerald-600/30 px-3 py-2 text-xs font-bold text-emerald-300 transition active:scale-95"
                 title="إرسال رابط الفاتورة للزبونة عبر واتساب"
               >
                 <WhatsAppIcon className="h-4 w-4" />
-                <span>إرسال عبر واتساب</span>
+                <span>إرسال واتساب</span>
               </button>
             )}
 
             <button
+              onClick={handlePrint}
+              className="flex items-center gap-1.5 rounded-xl bg-white/10 border border-white/15 hover:bg-white/20 px-3 py-2 text-xs font-bold text-white transition active:scale-95"
+              title="طباعة الفاتورة على الطابعة"
+            >
+              <PrinterIcon className="h-4 w-4" />
+              <span>طباعة</span>
+            </button>
+
+            <button
               onClick={handleDownloadPDF}
-              className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-primary-600 to-secondary-600 hover:from-primary-500 hover:to-secondary-500 px-4 py-2 text-xs font-bold text-white shadow-lg shadow-primary-950/40 transition active:scale-95"
+              className="flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-primary-600 to-secondary-600 hover:from-primary-500 hover:to-secondary-500 px-3.5 py-2 text-xs font-bold text-white shadow-lg shadow-primary-950/40 transition active:scale-95"
               title="تحميل الفاتورة كملف PDF"
             >
               <DownloadIcon className="h-4 w-4" />
-              <span>تحميل الفاتورة PDF</span>
+              <span>تحميل PDF</span>
             </button>
 
             <button
