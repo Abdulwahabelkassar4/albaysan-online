@@ -1,15 +1,70 @@
-import React from "react";
-import logoImg from "../../assets/logo.jpg";
-import { CloseIcon, PrinterIcon, WhatsAppIcon } from "../icons.jsx";
-import { normalizeJordanPhoneForWhatsApp } from "../../config/contact.js";
+import React, { useEffect, useState } from "react";
+import { useParams, Link } from "react-router-dom";
+import axiosClient from "../api/axiosClient.js";
+import logoImg from "../assets/logo.jpg";
+import { PrinterIcon, SparkleIcon } from "../components/icons.jsx";
 
-const OrderInvoiceModal = ({ order, onClose }) => {
-  if (!order) return null;
+const InvoiceView = () => {
+  const { id } = useParams();
+  const [order, setOrder] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchInvoice = async () => {
+      try {
+        setLoading(true);
+        const { data } = await axiosClient.get(`/api/orders/invoice/${id}`);
+        setOrder(data);
+      } catch (err) {
+        setError("عذراً، تعذر العثور على الفاتورة المطلوبة أو تم حذفها.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (id) {
+      fetchInvoice();
+    }
+  }, [id]);
+
+  const handlePrint = () => {
+    window.print();
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4">
+        <div className="w-full max-w-md bg-neutral-900 border border-white/10 p-8 rounded-3xl text-center space-y-4 animate-pulse">
+          <div className="h-12 w-12 bg-primary-500/20 rounded-2xl mx-auto" />
+          <div className="h-5 w-48 bg-white/10 rounded-lg mx-auto" />
+          <div className="h-4 w-64 bg-white/5 rounded-lg mx-auto" />
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !order) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4">
+        <div className="w-full max-w-md bg-neutral-900 border border-white/10 p-8 rounded-3xl text-center space-y-4 shadow-2xl">
+          <span className="text-4xl block">🔍</span>
+          <h2 className="text-xl font-black text-white">الفاتورة غير متوفرة</h2>
+          <p className="text-xs text-white/60 leading-relaxed">{error || "لم يتم العثور على الفاتورة"}</p>
+          <Link
+            to="/"
+            className="inline-block mt-4 rounded-xl bg-primary-600 px-6 py-2.5 text-xs font-bold text-white hover:bg-primary-500 transition"
+          >
+            العودة للمتجر 🛍️
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   const orderId = order._id || order.id || "";
   const shortId = orderId ? `#ORD-${orderId.slice(-6).toUpperCase()}` : "#ORD-OFFICIAL";
   
-  // Deterministic 16-char security hash based on order ID
   const securityHash = orderId
     ? orderId.slice(0, 16).match(/.{1,4}/g)?.join("-").toUpperCase() || "8F4C-E991-A0B3"
     : "8F4C-E991-A0B3";
@@ -39,75 +94,42 @@ const OrderInvoiceModal = ({ order, onClose }) => {
   const discountAmount = order.discountAmount || 0;
   const totalPrice = order.totalPrice != null ? order.totalPrice : subtotal + deliveryFee - discountAmount;
 
-  const handlePrint = () => {
-    window.print();
-  };
-
-  const handleSendWhatsApp = () => {
-    const origin = window.location.origin;
-    const invoiceUrl = `${origin}/invoice/${orderId}`;
-    const phoneBase = normalizeJordanPhoneForWhatsApp(order.phone);
-    const msg = `مرحباً ${order.customerName}! 🌸\nيسعدنا تزويدك برابط فاتورة طلبك الرسمية المعتمدة من متجر البيلسان أونلاين:\n\n📄 رقم الفاتورة: ${shortId}\n💰 المبلغ الإجمالي: ${totalPrice.toFixed(2)} د.أ\n🔗 رابط الفاتورة الإلكترونية والتحميل (PDF):\n${invoiceUrl}\n\n✨ نسعد دائماً بخدمتكم!`;
-    window.open(`https://wa.me/${phoneBase}?text=${encodeURIComponent(msg)}`, "_blank");
-  };
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 overflow-y-auto bg-neutral-950/80 backdrop-blur-md">
-      {/* Background click to close */}
-      <div className="fixed inset-0" onClick={onClose} />
+    <div className="min-h-screen py-8 px-4 sm:px-6 flex flex-col items-center justify-center">
+      <div className="w-full max-w-3xl space-y-4">
+        {/* Navigation & Print Actions (Hidden in Print) */}
+        <div className="no-print flex items-center justify-between gap-3 bg-neutral-900 border border-white/10 px-4 py-3 rounded-2xl shadow-xl">
+          <Link
+            to="/"
+            className="text-xs font-bold text-white/70 hover:text-white transition flex items-center gap-1.5"
+          >
+            <span>←</span>
+            <span>العودة للمتجر</span>
+          </Link>
 
-      {/* Modal Container */}
-      <div className="relative z-10 w-full max-w-3xl flex flex-col my-auto max-h-[95vh]">
-        {/* Action Header Bar (Hidden during print) */}
-        <div className="no-print mb-3 flex flex-wrap items-center justify-between gap-3 bg-neutral-900 border border-white/10 px-4 py-3 rounded-2xl shadow-xl">
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-bold text-white">معاينة فاتورة الطلب الرسمية</span>
-            <span className="rounded bg-primary-500/20 text-primary-300 px-2 py-0.5 text-xs font-mono font-bold">
-              {shortId}
-            </span>
-          </div>
-
-          <div className="flex items-center gap-2">
-            {order.phone && (
-              <button
-                onClick={handleSendWhatsApp}
-                className="flex items-center gap-1.5 rounded-xl bg-emerald-600/20 border border-emerald-500/30 hover:bg-emerald-600/30 px-3.5 py-2 text-xs font-bold text-emerald-300 transition active:scale-95"
-                title="إرسال رابط الفاتورة للزبونة عبر واتساب"
-              >
-                <WhatsAppIcon className="h-4 w-4" />
-                <span>إرسال عبر واتساب</span>
-              </button>
-            )}
-
-            <button
-              onClick={handlePrint}
-              className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-primary-600 to-secondary-600 hover:from-primary-500 hover:to-secondary-500 px-4 py-2 text-xs font-bold text-white shadow-lg shadow-primary-950/40 transition active:scale-95"
-            >
-              <PrinterIcon className="h-4 w-4" />
-              <span>طباعة / حفظ كـ PDF</span>
-            </button>
-
-            <button
-              onClick={onClose}
-              className="rounded-xl border border-white/10 bg-white/5 p-2 text-white/70 hover:bg-white/10 hover:text-white transition"
-              title="إغلاق"
-            >
-              <CloseIcon className="h-4 w-4" />
-            </button>
-          </div>
+          <button
+            onClick={handlePrint}
+            className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-primary-600 to-secondary-600 hover:from-primary-500 hover:to-secondary-500 px-4 py-2 text-xs font-bold text-white shadow-lg shadow-primary-950/40 transition active:scale-95"
+          >
+            <PrinterIcon className="h-4 w-4" />
+            <span>طباعة / حفظ كـ PDF</span>
+          </button>
         </div>
 
-        {/* Printable Invoice Card */}
-        <div className="overflow-y-auto rounded-2xl border border-slate-200 bg-white p-6 sm:p-8 text-slate-900 shadow-2xl relative select-text" id="printable-invoice-content">
+        {/* Printable Card */}
+        <div
+          className="rounded-3xl border border-slate-200 bg-white p-6 sm:p-8 text-slate-900 shadow-2xl relative select-text"
+          id="public-printable-invoice"
+        >
           <style>{`
             @media print {
               body * {
                 visibility: hidden !important;
               }
-              #printable-invoice-content, #printable-invoice-content * {
+              #public-printable-invoice, #public-printable-invoice * {
                 visibility: visible !important;
               }
-              #printable-invoice-content {
+              #public-printable-invoice {
                 position: absolute !important;
                 left: 0 !important;
                 top: 0 !important;
@@ -151,9 +173,9 @@ const OrderInvoiceModal = ({ order, onClose }) => {
               </div>
             </div>
 
-            <div className="text-left sm:text-left direction-ltr">
+            <div className="text-left direction-ltr">
               <div className="inline-block rounded-full bg-primary-50 border border-primary-200 px-3 py-1 text-xs font-bold text-primary-700 mb-1.5">
-                {order.type === "delivery" ? "🛵 طلب توصيل جديد" : "🛍️ طلب حجز واستلام"}
+                {order.type === "delivery" ? "🛵 طلب توصيل" : "🛍️ طلب حجز واستلام"}
               </div>
               <div className="font-mono text-sm font-black text-slate-900">{shortId}</div>
               <div className="text-xs text-slate-500 mt-0.5">{orderDate}</div>
@@ -357,4 +379,4 @@ const OrderInvoiceModal = ({ order, onClose }) => {
   );
 };
 
-export default OrderInvoiceModal;
+export default InvoiceView;

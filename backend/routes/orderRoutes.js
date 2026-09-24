@@ -152,6 +152,19 @@ router.post("/", async (req, res, next) => {
   }
 });
 
+// Get single order for verified invoice viewing (Public)
+router.get("/invoice/:id", async (req, res, next) => {
+  try {
+    const order = await Order.findById(req.params.id);
+    if (!order) {
+      return res.status(404).json({ message: "الفاتورة غير موجودة أو تم حذفها" });
+    }
+    res.json(order);
+  } catch (error) {
+    next(error);
+  }
+});
+
 // Get admin analytics stats
 router.get("/stats", authMiddleware, async (req, res, next) => {
   try {

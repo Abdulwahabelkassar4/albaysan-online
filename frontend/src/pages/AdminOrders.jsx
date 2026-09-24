@@ -135,6 +135,31 @@ const AdminOrders = () => {
     }
   };
 
+  const sendInvoiceLinkWhatsApp = (order) => {
+    try {
+      const orderId = order._id || order.id;
+      const origin = window.location.origin;
+      const invoiceUrl = `${origin}/invoice/${orderId}`;
+      const phoneBase = normalizeJordanPhoneForWhatsApp(order.phone);
+      const shortId = `#ORD-${orderId.slice(-6).toUpperCase()}`;
+      
+      const subtotal = order.items?.reduce(
+        (sum, item) => sum + (item.price || 0) * (item.qty || 1),
+        0
+      ) || 0;
+      const deliveryFee = order.deliveryFee || 0;
+      const discountAmount = order.discountAmount || 0;
+      const finalPrice = order.totalPrice != null ? order.totalPrice : subtotal + deliveryFee - discountAmount;
+
+      const msg = `مرحباً ${order.customerName}! 🌸\nيسعدنا تزويدك برابط فاتورة طلبك الرسمية المعتمدة من متجر البيلسان أونلاين:\n\n📄 رقم الفاتورة: ${shortId}\n💰 المبلغ الإجمالي: ${finalPrice.toFixed(2)} د.أ\n🔗 رابط الفاتورة الإلكترونية والتحميل (PDF):\n${invoiceUrl}\n\n✨ نسعد دائماً بخدمتكم!`;
+      
+      window.open(`https://wa.me/${phoneBase}?text=${encodeURIComponent(msg)}`, "_blank");
+      showToast("تم فتح محادثة الواتساب مع رابط الفاتورة", "success");
+    } catch (err) {
+      showToast("تعذر إرسال رابط الفاتورة", "error");
+    }
+  };
+
   const exportToCSV = () => {
     if (!orders.length) {
       showToast("لا توجد طلبات للتصدير", "error");
@@ -502,6 +527,15 @@ const AdminOrders = () => {
                     )}
 
                     <button
+                      onClick={() => sendInvoiceLinkWhatsApp(order)}
+                      className="rounded-xl bg-emerald-500/10 border border-emerald-500/20 p-2 text-emerald-300 hover:bg-emerald-500/20 shrink-0"
+                      title="إرسال رابط الفاتورة للزبونة عبر واتساب"
+                      aria-label="Send Invoice via WhatsApp"
+                    >
+                      <WhatsAppIcon className="h-4 w-4" />
+                    </button>
+
+                    <button
                       onClick={() => sendReviewRequestWhatsApp(order)}
                       className="rounded-xl bg-purple-500/10 border border-purple-500/20 p-2 text-purple-300 hover:bg-purple-500/20 shrink-0"
                       title="إرسال رابط التقييم"
@@ -750,6 +784,15 @@ const AdminOrders = () => {
 
             {/* Drawer Footer Actions */}
             <div className="pt-6 border-t border-white/10 flex flex-wrap items-center gap-2">
+              <button
+                onClick={() => sendInvoiceLinkWhatsApp(selectedOrder)}
+                className="flex items-center justify-center gap-1.5 rounded-2xl bg-emerald-600/20 border border-emerald-500/30 px-3.5 py-3 text-xs font-bold text-emerald-300 hover:bg-emerald-500/30 transition active:scale-95"
+                title="إرسال رابط الفاتورة للزبونة عبر واتساب"
+              >
+                <WhatsAppIcon className="h-4 w-4" />
+                <span>إرسال الفاتورة</span>
+              </button>
+
               <button
                 onClick={() => setPrintingOrder(selectedOrder)}
                 className="flex items-center justify-center gap-1.5 rounded-2xl bg-primary-600/20 border border-primary-500/30 px-4 py-3 text-xs font-bold text-primary-300 hover:bg-primary-500/30 transition active:scale-95"
