@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { NavLink, Link, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import logoImg from "../assets/logo.jpg";
@@ -14,8 +14,10 @@ import {
   PhoneIcon,
   TruckIcon,
   CalendarIcon,
+  SparkleIcon,
 } from "./icons.jsx";
 import { useCart } from "../context/CartContext.jsx";
+import { bounceFlower } from "../utils/animeEffects.js";
 
 const navLinks = [
   { to: "/", key: "home", icon: HomeIcon },
@@ -31,6 +33,7 @@ const navLinks = [
 const Navbar = () => {
   const { t, i18n } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
+  const cartBtnRef = useRef(null);
 
   const { totalQuantity, openCart } = useCart();
   const location = useLocation();
@@ -45,34 +48,44 @@ const Navbar = () => {
     setIsOpen(false);
   }, [location.pathname]);
 
+  const handleCartClick = () => {
+    if (cartBtnRef.current) {
+      bounceFlower(cartBtnRef.current);
+    }
+    openCart();
+  };
+
   const linkClass = ({ isActive }) =>
-    `inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold whitespace-nowrap transition duration-200 ${
+    `inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold whitespace-nowrap transition-all duration-300 ${
       isActive
-        ? "bg-primary-600 text-white shadow-md shadow-primary-950/40"
-        : "text-white/80 hover:bg-white/10 hover:text-white"
+        ? "bg-gradient-to-r from-secondary-500 to-rose-500 text-white shadow-md shadow-rose-950/50 scale-[1.02]"
+        : "text-rose-100/80 hover:bg-rose-500/15 hover:text-white"
     }`;
 
   return (
-    <header className="sticky top-0 z-40 bg-neutral-900/95 backdrop-blur-md border-b border-white/10 shadow-xl">
+    <header className="sticky top-0 z-40 bg-neutral-950/90 backdrop-blur-xl border-b border-rose-300/15 shadow-xl shadow-neutral-950/40">
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 md:px-6">
         {/* Brand Logo & Name */}
         <Link to="/" className="flex items-center gap-3 text-white shrink-0 group">
-          <img
-            src={logoImg}
-            alt={t("brandName")}
-            className="h-12 w-12 rounded-full object-cover ring-2 ring-primary-500/50 group-hover:scale-105 transition duration-300 md:h-13 md:w-13"
-            draggable={false}
-          />
+          <div className="relative">
+            <img
+              src={logoImg}
+              alt={t("brandName")}
+              className="h-12 w-12 rounded-full object-cover ring-2 ring-rose-400/60 group-hover:scale-105 group-hover:ring-rose-300 transition duration-300 md:h-13 md:w-13 shadow-md shadow-rose-950/50"
+              draggable={false}
+            />
+            <span className="absolute -bottom-1 -right-1 text-xs">🌸</span>
+          </div>
           <div className="flex flex-col">
-            <span className="text-base font-bold tracking-wide md:text-lg group-hover:text-primary-300 transition">
+            <span className="text-base font-bold tracking-wide md:text-lg group-hover:text-rose-200 transition">
               {t("brandName")}
             </span>
-            <span className="text-[11px] text-white/60 hidden sm:inline">{t("navbar.femaleOnlyTag")}</span>
+            <span className="text-[11px] text-rose-300/70 hidden sm:inline">{t("navbar.femaleOnlyTag")}</span>
           </div>
         </Link>
 
-        {/* Desktop Navigation Links with Icons - Single Line (xl breakpoint prevents wrapping) */}
-        <nav className="hidden xl:flex items-center gap-1 bg-neutral-800/50 border border-white/10 rounded-full px-2.5 py-1 backdrop-blur-sm shrink-0">
+        {/* Desktop Navigation Links with Icons */}
+        <nav className="hidden xl:flex items-center gap-1 bg-neutral-900/70 border border-rose-300/20 rounded-full px-3 py-1 backdrop-blur-md shrink-0 shadow-inner">
           {navLinks.map((link) => {
             const IconComponent = link.icon;
             return (
@@ -84,7 +97,7 @@ const Navbar = () => {
               >
                 {({ isActive }) => (
                   <>
-                    <IconComponent className={`h-4 w-4 shrink-0 transition ${isActive ? "text-white" : "text-pink-400 group-hover:scale-110"}`} />
+                    <IconComponent className={`h-4 w-4 shrink-0 transition ${isActive ? "text-white" : "text-rose-300"}`} />
                     <span className="whitespace-nowrap">{t(`nav.${link.key}`)}</span>
                   </>
                 )}
@@ -93,18 +106,19 @@ const Navbar = () => {
           })}
         </nav>
 
-        {/* Header Action Controls (Cart Icon Badge, Language Toggle, Mobile Hamburger Button) */}
+        {/* Header Action Controls */}
         <div className="flex items-center gap-2.5 shrink-0">
-          {/* Cart Icon Button with Badge */}
+          {/* Cart Icon Button with Girlish Bounce & Badge */}
           <button
-            onClick={openCart}
-            className="relative inline-flex items-center justify-center rounded-full border border-white/15 bg-neutral-800/80 p-2.5 text-white hover:bg-neutral-800 hover:border-pink-400 transition"
+            ref={cartBtnRef}
+            onClick={handleCartClick}
+            className="relative inline-flex items-center justify-center rounded-full border border-rose-300/30 bg-rose-500/10 p-2.5 text-white hover:bg-rose-500/20 hover:border-rose-300/60 transition shadow-sm"
             aria-label="فتح السلة"
             title="سلة التسوق"
           >
-            <CartIcon className="h-5 w-5 text-pink-400" />
+            <CartIcon className="h-5 w-5 text-rose-300" />
             {totalQuantity > 0 && (
-              <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-rose-500 text-[10px] font-black text-white shadow-md animate-bounce">
+              <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-gradient-to-r from-secondary-500 to-rose-500 text-[10px] font-black text-white shadow-md shadow-rose-950/60 animate-bounce">
                 {totalQuantity}
               </span>
             )}
@@ -113,25 +127,25 @@ const Navbar = () => {
           {/* Language Toggle */}
           <button
             onClick={handleToggleLanguage}
-            className="hidden sm:inline-flex rounded-full border border-white/20 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-white/10 whitespace-nowrap"
+            className="hidden sm:inline-flex rounded-full border border-rose-300/30 bg-white/5 px-3 py-1.5 text-xs font-semibold text-rose-100 transition hover:bg-rose-500/20 hover:border-rose-300/50 whitespace-nowrap"
           >
             {i18n.language === "ar" ? "English" : "العربية"}
           </button>
 
           {/* Mobile Menu Toggle Button */}
           <button
-            className="inline-flex items-center justify-center rounded-full border border-white/20 p-2.5 text-white xl:hidden hover:bg-white/10"
+            className="inline-flex items-center justify-center rounded-full border border-rose-300/30 p-2.5 text-white xl:hidden hover:bg-rose-500/20"
             onClick={() => setIsOpen((prev) => !prev)}
             aria-label="Toggle navigation"
           >
-            {isOpen ? <CloseIcon className="h-5 w-5" /> : <MenuIcon className="h-5 w-5 text-pink-400" />}
+            {isOpen ? <CloseIcon className="h-5 w-5 text-rose-300" /> : <MenuIcon className="h-5 w-5 text-rose-300" />}
           </button>
         </div>
       </div>
 
       {/* Mobile Navigation Drawer */}
       {isOpen && (
-        <nav className="xl:hidden border-t border-white/10 bg-neutral-900/98 px-4 py-4 backdrop-blur-xl animate-fade-in-up">
+        <nav className="xl:hidden border-t border-rose-300/20 bg-neutral-950/98 px-4 py-4 backdrop-blur-xl animate-fade-in-up">
           <div className="grid grid-cols-2 gap-2 max-w-md mx-auto">
             {navLinks.map((link) => {
               const IconComponent = link.icon;
@@ -145,7 +159,7 @@ const Navbar = () => {
                 >
                   {({ isActive }) => (
                     <>
-                      <IconComponent className={`h-4 w-4 shrink-0 ${isActive ? "text-white" : "text-pink-400"}`} />
+                      <IconComponent className={`h-4 w-4 shrink-0 ${isActive ? "text-white" : "text-rose-300"}`} />
                       <span className="whitespace-nowrap">{t(`nav.${link.key}`)}</span>
                     </>
                   )}
@@ -153,10 +167,10 @@ const Navbar = () => {
               );
             })}
           </div>
-          <div className="mt-4 pt-3 border-t border-white/10 flex justify-center sm:hidden">
+          <div className="mt-4 pt-3 border-t border-rose-300/20 flex justify-center sm:hidden">
             <button
               onClick={handleToggleLanguage}
-              className="rounded-full border border-white/20 px-4 py-2 text-xs font-semibold text-white transition hover:bg-white/10"
+              className="rounded-full border border-rose-300/30 bg-rose-500/10 px-5 py-2 text-xs font-semibold text-rose-200 transition hover:bg-rose-500/20"
             >
               {i18n.language === "ar" ? "English" : "العربية"}
             </button>
