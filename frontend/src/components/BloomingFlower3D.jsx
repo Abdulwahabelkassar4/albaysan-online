@@ -3,9 +3,9 @@ import * as THREE from "three";
 
 /**
  * 3D Procedural Blooming Flower Component
+ * - 100% Autonomous (unaffected by mouse cursor)
  * - Concentric layers of 3D curved petals with soft rose/peony velvet finish
- * - Smooth, natural mouse tracking (flower gently faces cursor like leaning towards the light)
- * - Calibrated Euler angles: no inverted flips or extreme wobbling
+ * - Hypnotic blooming, gentle floating bob, and slow continuous rotation
  * - Seamless transparent WebGL canvas
  */
 const BloomingFlower3D = ({ className = "" }) => {
@@ -37,7 +37,7 @@ const BloomingFlower3D = ({ className = "" }) => {
     const ambientLight = new THREE.AmbientLight(0xfff0f6, 1.4);
     scene.add(ambientLight);
 
-    const mainLight = new THREE.DirectionalLight(0xffffff, 2.0);
+    const mainLight = new THREE.DirectionalLight(0xffffff, 2.2);
     mainLight.position.set(2, 4, 6);
     scene.add(mainLight);
 
@@ -85,12 +85,10 @@ const BloomingFlower3D = ({ className = "" }) => {
       return geometry;
     };
 
-    // Master Pivot & Flower Group
-    // Master pivot handles mouse tilt; inner group handles slow ambient spin and breathing
-    const tiltPivot = new THREE.Group();
+    // Master Flower Group (Fixed natural presentation angle)
     const flowerGroup = new THREE.Group();
-    tiltPivot.add(flowerGroup);
-    scene.add(tiltPivot);
+    flowerGroup.rotation.x = 0.22;
+    scene.add(flowerGroup);
 
     // Flower petal layers
     const tiers = [
@@ -173,29 +171,7 @@ const BloomingFlower3D = ({ className = "" }) => {
     const stamen = new THREE.Points(stamenGeo, stamenMat);
     flowerGroup.add(stamen);
 
-    // Initial slight natural angle facing the viewer
-    tiltPivot.rotation.x = 0.15;
-    tiltPivot.rotation.y = 0.0;
-
-    // Smooth, Calibrated Mouse Tracking
-    let targetTiltX = 0.15;
-    let targetTiltY = 0.0;
-    let currentTiltX = 0.15;
-    let currentTiltY = 0.0;
-
-    const handleMouseMove = (e) => {
-      // Normalize mouse to [-1, 1] relative to viewport center
-      const normX = (e.clientX / window.innerWidth - 0.5) * 2;
-      const normY = (e.clientY / window.innerHeight - 0.5) * 2;
-
-      // Restrict max tilt to subtle luxury range (max ±0.28 rad ~ 16 degrees)
-      targetTiltY = normX * 0.35;
-      targetTiltX = 0.15 - normY * 0.25;
-    };
-
-    window.addEventListener("mousemove", handleMouseMove, { passive: true });
-
-    // Render loop
+    // Autonomous render loop (zero mouse dependency)
     let animationFrameId;
     let clock = new THREE.Clock();
 
@@ -204,19 +180,15 @@ const BloomingFlower3D = ({ className = "" }) => {
 
       const elapsedTime = clock.getElapsedTime();
 
-      // Smooth damped lerp towards target mouse tilt
-      currentTiltX += (targetTiltX - currentTiltX) * 0.045;
-      currentTiltY += (targetTiltY - currentTiltY) * 0.045;
+      // Smooth slow rotation on Z axis
+      flowerGroup.rotation.z = elapsedTime * 0.15;
 
-      tiltPivot.rotation.x = currentTiltX;
-      tiltPivot.rotation.y = currentTiltY;
-
-      // Slow, relaxing continuous rotation on Z axis
-      flowerGroup.rotation.z = elapsedTime * 0.08;
+      // Gentle floating bob in 3D
+      flowerGroup.position.y = Math.sin(elapsedTime * 1.4) * 0.08;
 
       // Organic blooming / breathing pulse (petals open & close gently)
       const bloomFactor = Math.sin(elapsedTime * 1.3) * 0.12;
-      const breatheScale = 1 + Math.sin(elapsedTime * 1.6) * 0.025;
+      const breatheScale = 1 + Math.sin(elapsedTime * 1.6) * 0.03;
 
       petalMeshes.forEach((p) => {
         const layerMultiplier = 1 + (4 - p.tierIdx) * 0.3;
@@ -224,6 +196,7 @@ const BloomingFlower3D = ({ className = "" }) => {
       });
 
       flowerGroup.scale.set(breatheScale, breatheScale, breatheScale);
+      stamen.rotation.z = -elapsedTime * 0.25;
 
       renderer.render(scene, camera);
     };
@@ -232,7 +205,6 @@ const BloomingFlower3D = ({ className = "" }) => {
 
     return () => {
       cancelAnimationFrame(animationFrameId);
-      window.removeEventListener("mousemove", handleMouseMove);
 
       geometriesToDispose.forEach((g) => g.dispose());
       materialsToDispose.forEach((m) => m.dispose());

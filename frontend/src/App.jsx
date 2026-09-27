@@ -10,6 +10,7 @@ import AppRoutes from "./AppRoutes.jsx";
 import { WhatsAppIcon } from "./components/icons.jsx";
 import { buildWhatsAppLink } from "./config/contact.js";
 import BackendWarmupBanner from "./components/BackendWarmupBanner.jsx";
+import FloralCursorAndBurst from "./components/FloralCursorAndBurst.jsx";
 
 const App = () => {
   const location = useLocation();
@@ -74,6 +75,7 @@ const App = () => {
         {!isAdminRoute && <CartModal />}
         {!isAdminRoute && <CartButton />}
         <Toast />
+        <FloralCursorAndBurst />
         {!isAdminRoute && (
           <a
             href={whatsappLink}
