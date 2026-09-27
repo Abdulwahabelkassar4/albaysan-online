@@ -172,11 +172,11 @@ const FloralCanvas3D = ({ interactive = true, density = 45, className = "" }) =>
       const elapsedTime = clock.getElapsedTime();
 
       // Smooth mouse lerp
-      mouseX += (targetMouseX - mouseX) * 0.05;
-      mouseY += (targetMouseY - mouseY) * 0.05;
+      mouseX += (targetMouseX - mouseX) * 0.04;
+      mouseY += (targetMouseY - mouseY) * 0.04;
 
-      camera.position.x = mouseX * 1.5;
-      camera.position.y = -mouseY * 1.5;
+      camera.position.x = mouseX * 0.6;
+      camera.position.y = -mouseY * 0.6;
       camera.lookAt(0, 0, 0);
 
       // Animate Petals falling and swirling
