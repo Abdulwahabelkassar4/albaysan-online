@@ -3,10 +3,10 @@ import * as THREE from "three";
 
 /**
  * 3D Procedural Blooming Flower Component
- * - 100% Autonomous (unaffected by mouse cursor)
- * - Concentric layers of 3D curved petals with soft rose/peony velvet finish
- * - Hypnotic blooming, gentle floating bob, and slow continuous rotation
- * - Seamless transparent WebGL canvas
+ * - 100% Autonomous & faces directly forward towards the viewer
+ * - Perfectly symmetrical concentric petal crown
+ * - Gentle floating bob, rhythmic blooming/breathing, and smooth spin
+ * - 100% transparent WebGL canvas
  */
 const BloomingFlower3D = ({ className = "" }) => {
   const mountRef = useRef(null);
@@ -22,6 +22,7 @@ const BloomingFlower3D = ({ className = "" }) => {
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(40, width / height, 0.1, 100);
     camera.position.set(0, 0, 7.8);
+    camera.lookAt(0, 0, 0);
 
     // Renderer
     const renderer = new THREE.WebGLRenderer({
@@ -34,7 +35,7 @@ const BloomingFlower3D = ({ className = "" }) => {
     container.appendChild(renderer.domElement);
 
     // Dynamic Lighting
-    const ambientLight = new THREE.AmbientLight(0xfff0f6, 1.4);
+    const ambientLight = new THREE.AmbientLight(0xfff0f6, 1.5);
     scene.add(ambientLight);
 
     const mainLight = new THREE.DirectionalLight(0xffffff, 2.2);
@@ -45,12 +46,12 @@ const BloomingFlower3D = ({ className = "" }) => {
     roseLight.position.set(-2, -1, 3);
     scene.add(roseLight);
 
-    const goldCoreLight = new THREE.PointLight(0xfde047, 1.8, 8);
+    const goldCoreLight = new THREE.PointLight(0xfde047, 2.0, 8);
     goldCoreLight.position.set(0, 0, 2);
     scene.add(goldCoreLight);
 
     // Create 3D curved petal geometry
-    const createPetalGeometry = (widthFactor = 1, lengthFactor = 1, curveFactor = 0.45) => {
+    const createPetalGeometry = (widthFactor = 1, lengthFactor = 1, curveFactor = 0.4) => {
       const shape = new THREE.Shape();
       shape.moveTo(0, 0);
       shape.bezierCurveTo(
@@ -72,34 +73,36 @@ const BloomingFlower3D = ({ className = "" }) => {
 
       const geometry = new THREE.ShapeGeometry(shape, 12);
 
-      // Natural bowl curvature
+      // Natural forward cup curvature
       const pos = geometry.attributes.position;
       for (let i = 0; i < pos.count; i++) {
         const x = pos.getX(i);
         const y = pos.getY(i);
         const normY = y / (1.55 * lengthFactor);
-        const z = -Math.sin(normY * Math.PI) * curveFactor - (x * x) * 0.18;
+        const z = -Math.sin(normY * Math.PI) * curveFactor - (x * x) * 0.15;
         pos.setZ(i, z);
       }
       geometry.computeVertexNormals();
       return geometry;
     };
 
-    // Master Flower Group (Fixed natural presentation angle)
-    const flowerGroup = new THREE.Group();
-    flowerGroup.rotation.x = 0.22;
-    scene.add(flowerGroup);
+    // Master Flower & Spinner Hierarchy (faces directly at the camera)
+    const masterGroup = new THREE.Group();
+    scene.add(masterGroup);
 
-    // Flower petal layers
+    const spinnerGroup = new THREE.Group();
+    masterGroup.add(spinnerGroup);
+
+    // Flower petal layers (calibrated open bloom facing the user)
     const tiers = [
-      // Outer layer
-      { count: 8, radius: 0.38, scale: 1.35, pitch: 1.15, color: 0xf43f8e, roughness: 0.35, curve: 0.65 },
-      // Mid-outer layer
-      { count: 7, radius: 0.28, scale: 1.12, pitch: 0.92, color: 0xff639f, roughness: 0.3, curve: 0.55 },
-      // Mid-inner layer
-      { count: 6, radius: 0.18, scale: 0.9, pitch: 0.7, color: 0xfda4af, roughness: 0.25, curve: 0.45 },
-      // Inner bud layer
-      { count: 5, radius: 0.09, scale: 0.65, pitch: 0.45, color: 0xffe4e6, roughness: 0.2, curve: 0.38 },
+      // Outer broad petals
+      { count: 8, radius: 0.42, scale: 1.38, pitch: 0.7, color: 0xf43f8e, roughness: 0.35, curve: 0.5 },
+      // Mid-outer petals
+      { count: 7, radius: 0.3, scale: 1.15, pitch: 0.55, color: 0xff639f, roughness: 0.3, curve: 0.45 },
+      // Mid-inner petals
+      { count: 6, radius: 0.2, scale: 0.92, pitch: 0.4, color: 0xfda4af, roughness: 0.25, curve: 0.38 },
+      // Inner core blossom
+      { count: 5, radius: 0.1, scale: 0.68, pitch: 0.25, color: 0xffe4e6, roughness: 0.2, curve: 0.3 },
     ];
 
     const petalMeshes = [];
@@ -116,7 +119,7 @@ const BloomingFlower3D = ({ className = "" }) => {
         metalness: 0.08,
         side: THREE.DoubleSide,
         transparent: true,
-        opacity: 0.94,
+        opacity: 0.95,
       });
       materialsToDispose.push(mat);
 
@@ -126,14 +129,14 @@ const BloomingFlower3D = ({ className = "" }) => {
 
         mesh.position.x = Math.cos(angle) * tier.radius;
         mesh.position.y = Math.sin(angle) * tier.radius;
-        mesh.position.z = -tierIdx * 0.1;
+        mesh.position.z = -tierIdx * 0.08;
 
         mesh.scale.set(tier.scale, tier.scale, tier.scale);
 
         mesh.rotation.z = angle - Math.PI / 2;
         mesh.rotation.x = tier.pitch;
 
-        flowerGroup.add(mesh);
+        spinnerGroup.add(mesh);
 
         petalMeshes.push({
           mesh,
@@ -149,11 +152,11 @@ const BloomingFlower3D = ({ className = "" }) => {
     const stamenPositions = new Float32Array(stamenCount * 3);
 
     for (let i = 0; i < stamenCount * 3; i += 3) {
-      const r = Math.random() * 0.28;
+      const r = Math.random() * 0.25;
       const theta = Math.random() * Math.PI * 2;
       stamenPositions[i] = Math.cos(theta) * r;
       stamenPositions[i + 1] = Math.sin(theta) * r;
-      stamenPositions[i + 2] = 0.08 + Math.random() * 0.35;
+      stamenPositions[i + 2] = 0.08 + Math.random() * 0.3;
     }
 
     stamenGeo.setAttribute("position", new THREE.BufferAttribute(stamenPositions, 3));
@@ -169,9 +172,9 @@ const BloomingFlower3D = ({ className = "" }) => {
     materialsToDispose.push(stamenMat);
 
     const stamen = new THREE.Points(stamenGeo, stamenMat);
-    flowerGroup.add(stamen);
+    spinnerGroup.add(stamen);
 
-    // Autonomous render loop (zero mouse dependency)
+    // Render loop
     let animationFrameId;
     let clock = new THREE.Clock();
 
@@ -180,23 +183,23 @@ const BloomingFlower3D = ({ className = "" }) => {
 
       const elapsedTime = clock.getElapsedTime();
 
-      // Smooth slow rotation on Z axis
-      flowerGroup.rotation.z = elapsedTime * 0.15;
+      // Smooth slow rotation on Z axis (spinning directly facing the user)
+      spinnerGroup.rotation.z = elapsedTime * 0.14;
 
-      // Gentle floating bob in 3D
-      flowerGroup.position.y = Math.sin(elapsedTime * 1.4) * 0.08;
+      // Gentle vertical floating bob
+      masterGroup.position.y = Math.sin(elapsedTime * 1.4) * 0.06;
 
-      // Organic blooming / breathing pulse (petals open & close gently)
-      const bloomFactor = Math.sin(elapsedTime * 1.3) * 0.12;
-      const breatheScale = 1 + Math.sin(elapsedTime * 1.6) * 0.03;
+      // Organic blooming / breathing pulse (petals open & close softly)
+      const bloomFactor = Math.sin(elapsedTime * 1.3) * 0.1;
+      const breatheScale = 1 + Math.sin(elapsedTime * 1.6) * 0.025;
 
       petalMeshes.forEach((p) => {
-        const layerMultiplier = 1 + (4 - p.tierIdx) * 0.3;
+        const layerMultiplier = 1 + (4 - p.tierIdx) * 0.28;
         p.mesh.rotation.x = p.baseRotX + bloomFactor * layerMultiplier;
       });
 
-      flowerGroup.scale.set(breatheScale, breatheScale, breatheScale);
-      stamen.rotation.z = -elapsedTime * 0.25;
+      spinnerGroup.scale.set(breatheScale, breatheScale, breatheScale);
+      stamen.rotation.z = -elapsedTime * 0.22;
 
       renderer.render(scene, camera);
     };
